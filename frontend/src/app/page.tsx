@@ -1,17 +1,34 @@
-import styles from "./page.module.css";
+import Image from "next/image";
+import Link from "next/link";
+import { CategoryCard, FieldCard, ResearchRow } from "@/components/content-cards";
+import { HeroAtlas } from "@/components/hero-atlas";
+import { InteractiveMap } from "@/components/interactive-map";
+import { SectionHeading } from "@/components/site-shell";
+import { categories, featuredRecord, fieldObservations, locations, research } from "@/content/mock-data";
+import styles from "./home.module.css";
 
 export default function Home() {
-  return (
-    <main className={styles.page}>
-      <p className={styles.eyebrow}>Visitor showcase · planning phase</p>
-      <h1>Geo-Kurdistan</h1>
-      <p className={styles.summary}>
-        A geological knowledge platform for exploring the Kurdistan Region.
-      </p>
-      <p className={styles.status}>
-        The frontend foundation is ready. The visitor experience will be built
-        after the proposed information architecture is reviewed.
-      </p>
-    </main>
-  );
+  return <main>
+    <HeroAtlas />
+
+    <section className={`section feature-section ${styles.desktopSection} ${styles.feature}`}><div className="shell">
+      <SectionHeading eyebrow="Featured field story · 01" title="Where layers become landscape" text="Read the region at three scales: mountain belt, canyon wall and individual bed." link={{ href: `/explore/${featuredRecord.category}/${featuredRecord.slug}`, label: "Open the full record" }} />
+      <div className="feature-layout"><div className="feature-image"><Image src={featuredRecord.image.src} alt={featuredRecord.image.alt} fill sizes="(max-width: 800px) 100vw, 66vw" /><div className="image-index"><span>Fig. 01</span><span>Rawandiz field atlas</span></div></div><div className="feature-copy"><p className="pull-quote">“The landscape is not a backdrop. It is the geological record at mountain scale.”</p><p>{featuredRecord.description}</p><dl className="data-list"><div><dt>Landform</dt><dd>Incised mountain corridor</dd></div><div><dt>Structure</dt><dd>Folded sedimentary succession</dd></div><div><dt>Primary process</dt><dd>Uplift, deformation and erosion</dd></div></dl><Link className="text-link" href={`/explore/${featuredRecord.category}/${featuredRecord.slug}`}>Explore this discovery <span aria-hidden="true">↗</span></Link></div></div>
+      <div className="process-strip" aria-label="Geological process sequence"><div><b>01</b><span>Deposition</span><i className="strata-icon" /></div><div><b>02</b><span>Compression</span><i className="fold-icon" /></div><div><b>03</b><span>Uplift</span><i className="uplift-icon" /></div><div><b>04</b><span>Erosion</span><i className="erosion-icon" /></div></div>
+    </div></section>
+
+    <section className={`section categories-section ${styles.desktopSection} ${styles.categories}`}><div className="shell"><SectionHeading eyebrow="Collection atlas" title="Explore by geological evidence" text="Different records need different questions. Enter through the material, structure or trace you want to understand." link={{ href: "/explore/formations", label: "View collection" }} /><div className="category-grid">{categories.map((category, index) => <CategoryCard category={category} index={index} key={category.slug} />)}</div></div></section>
+
+    <section className={`section map-section ${styles.desktopSection} ${styles.map}`}><div className="shell"><SectionHeading eyebrow="Geology by place" title="The atlas begins on the ground" text="Move between regional localities and see how each place connects to formations, field records and research." link={{ href: "/maps", label: "Open full map" }} /><InteractiveMap locations={locations} compact /></div></section>
+
+    <section id="geologic-time" className={`section time-section ${styles.desktopSection} ${styles.time}`}><div className="shell"><SectionHeading eyebrow="Deep time" title="A regional story measured in millions of years" text="A simplified showcase timeline connects geological intervals with the records visitors can explore." /><div className="time-layout"><div className="time-rail" aria-label="Simplified geological timeline"><div className="time-block time-jurassic"><span>201–145 Ma</span><strong>Jurassic</strong><p>Marine sedimentation and carbonate environments.</p></div><div className="time-block time-cretaceous"><span>145–66 Ma</span><strong>Cretaceous</strong><p>Thick regional successions recorded across the fold belt.</p></div><div className="time-block time-cenozoic"><span>66 Ma–present</span><strong>Cenozoic</strong><p>Mountain building, uplift and continuing landscape evolution.</p></div></div><aside className="time-note"><span className="micro-label">How to read this</span><h3>Time is a navigation tool, not decoration.</h3><p>Visitors can use geological age to move between formations, fossil evidence, places and related publications.</p><div className="time-specimen"><Image src="/images/catalog/ammonite.jpg" alt="Ammonite fossil illustrating a geological time record" fill sizes="280px" /></div><span className="figure-caption">Comparative ammonite specimen · exact age and provenance unassigned</span></aside></div></div></section>
+
+    <section className={`section research-section ${styles.desktopSection} ${styles.research}`}><div className="shell"><SectionHeading eyebrow="Research library" title="Field evidence, connected to reading" text="Research appears as part of the same geological system—not as a separate document dump." link={{ href: "/research", label: "Browse research" }} /><div className="research-list">{research.map((item, index) => <ResearchRow item={item} index={index} key={item.slug} />)}</div></div></section>
+
+    <section className={`section field-section ${styles.desktopSection} ${styles.field}`}><div className="shell"><SectionHeading eyebrow="Field notebook" title="Observation before interpretation" text="Photography, coordinates and concise notes preserve what was seen before conclusions are attached." link={{ href: "/field", label: "Enter the field gallery" }} /><div className="field-grid"><FieldCard item={fieldObservations[0]} large /><div className="field-stack"><FieldCard item={fieldObservations[1]} /><FieldCard item={fieldObservations[2]} /></div></div></div></section>
+
+    <section id="learning" className={`section learning-section ${styles.desktopSection} ${styles.learning}`}><div className="shell learning-layout"><div><p className="eyebrow">Learning material · secondary collection</p><h2>Take the field atlas into the classroom.</h2><p>Short reading guides, observation sheets and specimen-comparison material can support teachers without turning the platform into a shop.</p><Link className="button button-dark" href="/research">Explore learning resources <span aria-hidden="true">↗</span></Link></div><div className="learning-cards"><article><span>Guide 01</span><h3>How to read an outcrop</h3><p>Observation prompts, scale and field vocabulary.</p></article><article><span>Field sheet</span><h3>Documenting a locality</h3><p>A structured record for place, material and evidence.</p></article></div></div></section>
+
+    <section id="search" className={`atlas-search ${styles.search}`}><div className="shell search-layout"><div><p className="eyebrow light">Search the atlas</p><h2>Start with a place, formation, material or question.</h2></div><form className="search-form" action="/explore/formations"><label className="sr-only" htmlFor="atlas-query">Search the geological atlas</label><input id="atlas-query" name="q" placeholder="Try “Rawandiz”, “fold”, or “Cretaceous”…" /><button type="submit" aria-label="Submit search">↗</button></form></div></section>
+  </main>;
 }

@@ -1,0 +1,360 @@
+@media (min-width: 981px) {
+  .desktopSection.desktopSection {
+    position: relative;
+    padding-block: clamp(62px, 5vw, 78px);
+    overflow: hidden;
+  }
+
+  .desktopSection :global(.section-heading) {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 18px;
+    align-items: end;
+    margin-bottom: 32px;
+  }
+
+  .desktopSection :global(.section-heading) > div {
+    grid-column: 1 / 11;
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 18px;
+    align-items: end;
+  }
+
+  .desktopSection :global(.section-heading .eyebrow) {
+    grid-column: 1 / 3;
+    align-self: start;
+    margin: 0;
+    padding-top: 7px;
+    line-height: 1.55;
+  }
+
+  .desktopSection :global(.section-heading h2) {
+    grid-column: 3 / 8;
+    max-width: 780px;
+    font-size: clamp(40px, 3.5vw, 56px);
+    line-height: .92;
+    text-wrap: balance;
+  }
+
+  .desktopSection :global(.section-heading > div > p:last-child) {
+    grid-column: 8 / 11;
+    align-self: end;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .desktopSection :global(.section-heading > .text-link) {
+    grid-column: 11 / 13;
+    justify-self: stretch;
+    justify-content: space-between;
+    align-self: end;
+  }
+
+  .feature :global(.feature-layout) {
+    grid-template-columns: minmax(0, 1.7fr) minmax(310px, .72fr);
+    gap: 22px;
+  }
+
+  .feature :global(.feature-image) {
+    min-height: 450px;
+    box-shadow: 5px 5px 0 rgba(26, 26, 26, .14);
+  }
+
+  .feature :global(.feature-copy) {
+    min-height: 450px;
+    align-content: start;
+    gap: 16px;
+    padding: 22px;
+  }
+
+  .feature :global(.pull-quote) {
+    padding-bottom: 18px;
+    font-size: clamp(22px, 1.8vw, 28px);
+    line-height: 1.18;
+  }
+
+  .feature :global(.feature-copy > p:not(.pull-quote)) {
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .feature :global(.data-list div) {
+    grid-template-columns: 92px 1fr;
+    padding: 10px 0;
+  }
+
+  .feature :global(.process-strip) {
+    margin-top: 22px;
+  }
+
+  .feature :global(.process-strip > div) {
+    min-height: 104px;
+    padding: 14px 16px;
+  }
+
+  .feature :global(.process-strip i) {
+    left: 18px;
+    right: 18px;
+    bottom: 12px;
+    height: 30px;
+  }
+
+  .categories :global(.category-grid) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .categories :global(.category-card) {
+    min-height: 430px;
+    grid-template-rows: 225px 1fr;
+    border-width: 2px;
+  }
+
+  .categories :global(.category-copy) {
+    display: block;
+    padding: 17px;
+  }
+
+  .categories :global(.category-index) {
+    float: right;
+    margin: 2px 0 8px 12px;
+  }
+
+  .categories :global(.category-copy h3) {
+    margin: 8px 0;
+    font-size: clamp(27px, 2vw, 32px);
+  }
+
+  .categories :global(.category-copy p) {
+    min-height: 55px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .categories :global(.card-meta) {
+    margin-top: 13px;
+    padding-top: 11px;
+    font-size: 7px;
+  }
+
+  .map :global(.map-experience) {
+    grid-template-columns: minmax(0, 1.8fr) 350px;
+    min-height: 520px;
+    box-shadow: 5px 5px 0 rgba(26, 26, 26, .18);
+  }
+
+  .map :global(.map-stage),
+  .map :global(.map-stage iframe) {
+    min-height: 520px;
+  }
+
+  .map :global(.selected-location) {
+    padding: 17px;
+  }
+
+  .map :global(.location-image) {
+    height: 130px;
+    margin-bottom: 15px;
+  }
+
+  .map :global(.selected-location h3) {
+    margin: 7px 0 9px;
+    font-size: 28px;
+  }
+
+  .map :global(.selected-location > p) {
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  .map :global(.map-compact .selected-location > p),
+  .map :global(.map-compact .selected-location dl div:nth-child(n+3)),
+  .map :global(.map-compact .location-list button:nth-child(n+4)) {
+    display: none;
+  }
+
+  .map :global(.selected-location dl) {
+    margin-top: 13px;
+  }
+
+  .map :global(.selected-location dl div) {
+    padding: 7px 0;
+  }
+
+  .map :global(.location-list button) {
+    padding: 9px 17px;
+  }
+
+  .time :global(.time-layout) {
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 22px;
+  }
+
+  .time :global(.time-block) {
+    grid-template-columns: 104px 185px 1fr;
+    min-height: 118px;
+    padding: 15px 20px;
+  }
+
+  .time :global(.time-block strong) {
+    font-size: 28px;
+  }
+
+  .time :global(.time-block p) {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .time :global(.time-note) {
+    display: grid;
+    grid-template-columns: 1fr 128px;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 8px 18px;
+    padding: 19px;
+  }
+
+  .time :global(.time-note .micro-label),
+  .time :global(.time-note h3),
+  .time :global(.time-note > p) {
+    grid-column: 1;
+  }
+
+  .time :global(.time-note h3) {
+    margin: 3px 0;
+    font-size: 25px;
+  }
+
+  .time :global(.time-note > p) {
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  .time :global(.time-specimen) {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    height: auto;
+    min-height: 166px;
+    margin: 0;
+  }
+
+  .time :global(.figure-caption) {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding-top: 9px;
+    border-top: 1px solid var(--line);
+  }
+
+  .research :global(.research-row) {
+    grid-template-columns: 42px minmax(0, 1fr) 30px;
+    gap: 20px;
+    padding: 19px 22px;
+  }
+
+  .research {
+    background: #f3ead3;
+  }
+
+  .research :global(.research-row h3) {
+    max-width: 1080px;
+    margin: 8px 0 7px;
+    font-size: clamp(24px, 2.2vw, 33px);
+    line-height: 1;
+  }
+
+  .research :global(.research-row p) {
+    max-width: 900px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .research :global(.byline) {
+    margin-top: 9px;
+  }
+
+  .field :global(.field-grid) {
+    grid-template-columns: 1.65fr 1fr;
+    gap: 14px;
+  }
+
+  .field :global(.field-stack) {
+    gap: 14px;
+  }
+
+  .field :global(.field-card) {
+    min-height: 248px;
+  }
+
+  .field :global(.field-card-large) {
+    min-height: 510px;
+  }
+
+  .field :global(.field-caption) {
+    padding: 18px;
+  }
+
+  .field :global(.field-caption h3) {
+    margin: 6px 0 5px;
+    font-size: clamp(24px, 2.2vw, 32px);
+  }
+
+  .learning :global(.learning-layout) {
+    grid-template-columns: minmax(0, 1.15fr) minmax(520px, .85fr);
+    gap: 52px;
+  }
+
+  .learning :global(.learning-layout h2) {
+    max-width: 720px;
+    font-size: clamp(40px, 3.5vw, 54px);
+  }
+
+  .learning :global(.learning-layout > div:first-child > p:not(.eyebrow)) {
+    margin: 16px 0 20px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .learning :global(.learning-cards article) {
+    min-height: 190px;
+    padding: 18px;
+  }
+
+  .learning :global(.learning-cards h3) {
+    font-size: 21px;
+  }
+
+  .search.search {
+    padding-block: 58px;
+  }
+
+  .search :global(.search-layout) {
+    grid-template-columns: 1.05fr .95fr;
+    gap: 66px;
+  }
+
+  .search :global(.atlas-search h2),
+  .search :global(h2) {
+    max-width: 760px;
+    font-size: clamp(38px, 3.7vw, 56px);
+  }
+}
+
+@media (min-width: 981px) and (max-width: 1180px) {
+  .desktopSection :global(.section-heading h2) {
+    grid-column: 3 / 8;
+    font-size: 40px;
+  }
+
+  .categories :global(.category-card) {
+    grid-template-rows: 190px 1fr;
+  }
+
+  .categories :global(.category-copy p) {
+    min-height: 72px;
+  }
+
+  .feature :global(.feature-layout) {
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, .75fr);
+  }
+}

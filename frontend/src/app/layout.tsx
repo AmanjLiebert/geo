@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SiteFooter, SiteHeader } from "@/components/site-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,13 +8,13 @@ export const metadata: Metadata = {
     template: "%s | Geo-Kurdistan",
   },
   description:
-    "A geological knowledge platform for the Kurdistan Region. Visitor showcase in development.",
+    "Explore the rocks, formations, fossils, landscapes and geological research of the Kurdistan Region.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><SiteHeader />{children}<SiteFooter /></body>
     </html>
   );
 }
