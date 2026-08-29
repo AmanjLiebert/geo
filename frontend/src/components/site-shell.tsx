@@ -1,54 +1,51 @@
+import Image from "next/image";
 import Link from "next/link";
+import { Menu, Search } from "lucide-react";
 import type { ReactNode } from "react";
+import { PrimaryNavigation } from "./primary-navigation";
+
+function BrutalBrand({ light = false }: { light?: boolean }) {
+  return (
+    <Link className={`brutal-brand${light ? " brutal-brand-light" : ""}`} href="/" aria-label="Geo-Kurdistan home">
+      <Image className="brutal-brand-image" src="/brand/geo-kurdistan-mark-v2.png" alt="" width={190} height={109} priority={!light} />
+    </Link>
+  );
+}
 
 export function SiteHeader() {
   return (
-    <header className="site-header">
-      <div className="shell nav-shell">
-        <Link className="brand" href="/" aria-label="Geo-Kurdistan home">
-          <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>
-          <span>Geo—Kurdistan</span>
-        </Link>
-        <nav className="desktop-nav" aria-label="Primary navigation">
-          <Link href="/explore/formations">Explore</Link>
-          <Link href="/maps">Maps</Link>
-          <Link href="/research">Research</Link>
-          <Link href="/field">Field</Link>
-          <Link href="/#learning">Learning</Link>
-        </nav>
-        <div className="nav-tools">
-          <Link className="search-link" href="/#search" aria-label="Open geological search">Search <span aria-hidden="true">⌕</span></Link>
-          <span className="language">EN</span>
+    <header className="brutal-header">
+      <div className="brutal-nav">
+        <BrutalBrand />
+        <PrimaryNavigation className="brutal-links" label="Primary navigation" />
+        <div className="brutal-tools"><Link href="/#search" aria-label="Search"><Search aria-hidden="true" /></Link><span>EN</span></div>
+        <div className="brutal-mobile">
           <details className="mobile-menu">
-            <summary aria-label="Open navigation menu"><span /><span /></summary>
-            <nav aria-label="Mobile navigation">
-              <Link href="/explore/formations">Explore formations</Link>
-              <Link href="/maps">Geological map</Link>
-              <Link href="/research">Research</Link>
-              <Link href="/field">Field gallery</Link>
-              <Link href="/#learning">Learning</Link>
-            </nav>
+            <summary aria-label="Open navigation"><Menu aria-hidden="true" /></summary>
+            <PrimaryNavigation className="mobile-navigation" label="Mobile navigation" />
           </details>
         </div>
       </div>
+      <div className="brutal-strata-rail" aria-hidden="true"><i /><i /><i /><i /><i /></div>
     </header>
   );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="site-footer">
-      <div className="shell footer-grid">
-        <div className="footer-intro">
-          <Link className="brand brand-light" href="/"><span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>Geo—Kurdistan</Link>
-          <p>A public field atlas for exploring the geology and geological heritage of the Kurdistan Region.</p>
-          <span className="review-note">Scientific descriptions remain subject to teacher review.</span>
-        </div>
-        <div><h2>Explore</h2><Link href="/explore/formations">Formations</Link><Link href="/maps">Places & map</Link><Link href="/field">Field records</Link></div>
-        <div><h2>Knowledge</h2><Link href="/research">Research</Link><Link href="/#geologic-time">Geological time</Link><Link href="/#learning">Learning material</Link></div>
-        <div><h2>Project</h2><Link href="/#about">About the atlas</Link><Link href="/#sources">Sources</Link><a href="mailto:hello@geo-kurdistan.example">Contact</a></div>
+    <footer id="about" className="brutal-footer">
+      <div className="brutal-footer-statement">
+        <span>About the archive</span>
+        <h2>The ground holds the story. This website makes it visible.</h2>
+        <p>A public website for exploring the geology and geological heritage of the Kurdistan Region. Scientific descriptions remain subject to teacher review.</p>
       </div>
-      <div className="shell footer-bottom"><span>© 2026 Geo-Kurdistan</span><span>Visitor showcase · English</span></div>
+      <div className="brutal-footer-links">
+        <BrutalBrand light />
+        <div><h3>Collections</h3><Link href="/explore/geological-items">Geological items</Link><Link href="/explore/rocks">Rocks</Link><Link href="/explore/minerals">Minerals</Link><Link href="/explore/fossils">Fossils</Link><Link href="/explore/formations">Formations</Link></div>
+        <div><h3>Explore</h3><Link href="/maps">Map</Link><Link href="/research">Research</Link><Link href="/#shop">Shop</Link><Link href="/#search">Search</Link></div>
+        <div><h3>Contact</h3><a href="mailto:hello@geo-kurdistan.example">Email us</a><span>English</span><span>Kurdish / planned</span></div>
+      </div>
+      <div className="brutal-footer-end"><Image src="/brand/geo-kurdistan-mark-v2.png" alt="" width={260} height={149} /><span>© 2026 Geo-Kurdistan</span></div>
     </footer>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { GeologicalLocation } from "@/content/types";
 
@@ -11,13 +12,29 @@ function mapUrl(location: GeologicalLocation) {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${lon-dLon}%2C${lat-dLat}%2C${lon+dLon}%2C${lat+dLat}&layer=mapnik&marker=${lat}%2C${lon}`;
 }
 
-export function InteractiveMap({ locations, compact = false }: { locations: GeologicalLocation[]; compact?: boolean }) {
+export function InteractiveMap({ locations, compact = false, variant = "default" }: { locations: GeologicalLocation[]; compact?: boolean; variant?: "default" | "observatory" }) {
   const categories = useMemo(() => ["All", ...Array.from(new Set(locations.map((item) => item.category)))], [locations]);
   const [filter, setFilter] = useState("All");
   const filtered = filter === "All" ? locations : locations.filter((item) => item.category === filter);
   const [selectedSlug, setSelectedSlug] = useState(locations[0]?.slug);
   const selected = locations.find((item) => item.slug === selectedSlug) ?? filtered[0] ?? locations[0];
   if (!selected) return null;
+
+  if (variant === "observatory") return <div className="geo-map-board">
+    <aside className="geo-map-index" aria-label="Select a mapped locality">
+      <header><span><MapPin aria-hidden="true" /> Mapped places</span><b>{locations.length}</b></header>
+      {locations.map((item) => <button className={item.slug === selected.slug ? "active" : ""} type="button" key={item.slug} onClick={() => setSelectedSlug(item.slug)}><strong>{item.name}</strong><small>{item.category}</small></button>)}
+    </aside>
+    <div className="geo-map-canvas">
+      <iframe key={selected.slug} title={`Map centered on ${selected.name}`} src={mapUrl(selected)} loading="lazy" />
+      <div className="geo-map-ticket">
+        <span>{selected.category}</span>
+        <h3>{selected.name}</h3>
+        <p>{selected.region} · {selected.coordinates[0].toFixed(3)}° N, {selected.coordinates[1].toFixed(3)}° E</p>
+      </div>
+      <div className="geo-map-key"><span><i className="map-dot" /> Selected coordinate</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a></div>
+    </div>
+  </div>;
 
   return <div className={`map-experience${compact ? " map-compact" : ""}`}>
     <div className="map-stage"><iframe key={selected.slug} title={`Map centered on ${selected.name}`} src={mapUrl(selected)} loading="lazy" /><div className="map-key"><span><i className="map-dot" /> Selected locality</span><span>OpenStreetMap base</span></div></div>

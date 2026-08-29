@@ -3,10 +3,12 @@ import type { FieldObservation, GeologicalCategory, GeologicalLocation, Geologic
 const commonsCredit = "Open-license image · source details in attribution file";
 
 export const categories: GeologicalCategory[] = [
+  { slug: "geological-items", name: "Geological Items", eyebrow: "Collection overview", description: "Enter the wider geological record through documented objects, localities and evidence from across the region.", recordCount: 5, image: { src: "/images/atlas/rawandiz-ridge.jpg", alt: "Layered ridges across the Rawandiz landscape", caption: "Regional geological collection · showcase overview", credit: commonsCredit } },
   { slug: "formations", name: "Formations", eyebrow: "Regional framework", description: "Trace named rock units, their ages, environments and relationships across the region.", recordCount: 8, image: { src: "/images/atlas/rawandiz-canyon.jpg", alt: "Steeply layered rock walls in Rawandiz Canyon", caption: "Rawandiz Canyon, Erbil Governorate", credit: commonsCredit } },
   { slug: "rocks", name: "Rocks", eyebrow: "Material archive", description: "Read the textures, structures and field settings recorded in regional rock samples.", recordCount: 14, image: { src: "/images/atlas/bradost-mountain.jpg", alt: "Exposed rocky slopes of Bradost Mountain in Erbil", caption: "Bradost Mountain · Erbil Governorate", credit: commonsCredit } },
   { slug: "minerals", name: "Minerals", eyebrow: "Specimen collection", description: "Compare crystal form, physical properties and geological occurrence through specimen records.", recordCount: 11, image: { src: "/images/catalog/calcite.jpg", alt: "A translucent calcite crystal specimen", caption: "Calcite crystal study", credit: commonsCredit } },
   { slug: "fossils", name: "Fossils", eyebrow: "Evidence of life", description: "Explore preserved organisms and the geological intervals they help researchers interpret.", recordCount: 9, image: { src: "/images/catalog/ammonite.jpg", alt: "A polished ammonite fossil showing internal chambers", caption: "Ammonite specimen", credit: commonsCredit } },
+  { slug: "other", name: "Other", eyebrow: "Flexible collection", description: "A provisional home for geological records that require a different structure while the catalogue is reviewed.", recordCount: 3, image: { src: "/images/atlas/gali-ali-beg.jpg", alt: "Water flowing through the rocky gorge at Gali Ali Beg", caption: "Additional geological contexts · showcase category", credit: commonsCredit } },
 ];
 
 export const locations: GeologicalLocation[] = [
