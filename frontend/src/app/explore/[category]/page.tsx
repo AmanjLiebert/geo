@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { notFound } from "next/navigation";
-import { RecordCard } from "@/components/content-cards";
-import { PageIntro, SectionHeading } from "@/components/site-shell";
+import { CategoryCard, RecordCard } from "@/components/content-cards";
+import { SectionHeading } from "@/components/site-shell";
 import { categories, records } from "@/content/mock-data";
 
 export function generateStaticParams() { return categories.map((category) => ({ category: category.slug })); }
@@ -9,7 +12,8 @@ export function generateStaticParams() { return categories.map((category) => ({ 
 export async function generateMetadata({ params }: PageProps<"/explore/[category]">): Promise<Metadata> {
   const { category: slug } = await params;
   const category = categories.find((item) => item.slug === slug);
-  return { title: category?.name ?? "Explore", description: category?.description };
+  if (!category) return { title: "Explore" };
+  return { title: category.name, description: category.description, openGraph: { title: `${category.name} | Geo-Kurdistan`, description: category.description, images: [category.image.src] }, twitter: { card: "summary_large_image", title: `${category.name} | Geo-Kurdistan`, description: category.description, images: [category.image.src] } };
 }
 
 export default async function CategoryPage({ params }: PageProps<"/explore/[category]">) {
@@ -17,10 +21,15 @@ export default async function CategoryPage({ params }: PageProps<"/explore/[cate
   const category = categories.find((item) => item.slug === slug);
   if (!category) notFound();
   const categoryRecords = records.filter((record) => record.category === slug);
-  const displayRecords = categoryRecords.length ? categoryRecords : records.slice(0, 3);
+  const relatedCategories = category.relatedCategorySlugs.flatMap((relatedSlug) => {
+    const related = categories.find((item) => item.slug === relatedSlug);
+    return related ? [related] : [];
+  });
+
   return <main>
-    <PageIntro eyebrow={`Collection atlas · ${category.eyebrow}`} title={category.name} description={category.description}><div className="intro-actions"><span className="record-status">{category.recordCount} showcase records</span><span className="record-status">Classification pending teacher review</span></div></PageIntro>
-    <section className="subpage-section"><div className="shell"><SectionHeading eyebrow="Browse records" title={`Explore ${category.name.toLowerCase()}`} text="Filters are intentionally specific to this collection and remain flexible until the final catalogue is confirmed." /><div className="filter-bar" aria-label="Showcase category filters"><button type="button">All records</button><button type="button">Geological age</button><button type="button">Region</button><button type="button">Record type</button><button type="button">Formation</button></div><div className="record-grid">{displayRecords.map((record) => <RecordCard record={record} key={record.slug} />)}</div></div></section>
-    <section className="subpage-section"><div className="shell"><SectionHeading eyebrow="How this collection works" title="A formation is more than a name" /><div className="process-strip"><div><b>01</b><span>Identity</span><i className="strata-icon" /></div><div><b>02</b><span>Age & context</span><i className="fold-icon" /></div><div><b>03</b><span>Field evidence</span><i className="uplift-icon" /></div><div><b>04</b><span>Relationships</span><i className="erosion-icon" /></div></div></div></section>
+    <section className="collection-header"><div className="shell collection-header-grid"><div><Link className="eyebrow" href="/explore">← All collections</Link><h1>{category.name}</h1><p>{category.description}</p></div><figure><Image src={category.image.src} alt={category.image.alt} fill priority sizes="220px" /><figcaption>{category.image.caption}</figcaption></figure></div></section>
+    <section className="subpage-section" id="records"><div className="shell"><SectionHeading eyebrow="Collection records" title={`Explore ${category.name.toLowerCase()}`} text="Each card gives the essential context first. Open any record for its full description, evidence, location and related material." />{categoryRecords.length > 0 ? <div className="record-grid comfortable-record-grid">{categoryRecords.map((record) => <RecordCard record={record} key={record.slug} />)}</div> : <div className="empty-collection"><h3>No published records yet</h3><p>This collection is ready for new records when the catalogue expands.</p></div>}</div></section>
+    <section className="category-overview"><div className="shell category-overview-grid"><div><p className="eyebrow">Collection summary</p><h2>What this collection reveals</h2><p className="category-overview-text">{category.overview}</p><ul className="category-theme-list">{category.themes.map((theme, index) => <li key={theme}><span>0{index + 1}</span>{theme}</li>)}</ul></div><dl className="category-facts">{category.facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}<div><dt>Current catalogue</dt><dd>{categoryRecords.length} showcase records</dd></div></dl></div></section>
+    <section className="related-section"><div className="shell"><SectionHeading eyebrow="Continue exploring" title="Related collections" text="Geological evidence becomes more useful when specimens, formations, fossils and places can be read together." /><div className="related-category-grid">{relatedCategories.map((related, index) => <CategoryCard category={related} index={index} key={related.slug} />)}</div><Link className="all-collections-link" href="/#collections">View all collections <ArrowUpRight aria-hidden="true" /></Link></div></section>
   </main>;
 }

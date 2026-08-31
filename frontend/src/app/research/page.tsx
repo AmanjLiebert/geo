@@ -1,7 +1,35 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { ArrowUpRight, BookOpen, MapPinned } from "lucide-react";
 import { PageIntro } from "@/components/site-shell";
 import { research } from "@/content/mock-data";
 
-export const metadata: Metadata = { title: "Research", description: "Explore geological studies, methods and public-science reading from Geo-Kurdistan." };
-export default function ResearchPage() { return <main><PageIntro eyebrow="Research library" title="Evidence, interpretation and public reading" description="A focused research environment connects publications to geological topics, field localities and catalogue records." /><section className="subpage-section"><div className="shell"><div className="filter-bar"><button type="button">All publications</button><button type="button">Scientific studies</button><button type="button">Methods</button><button type="button">Public geoscience</button></div><div className="research-cards">{research.map((item) => <article className="research-card" key={item.slug}><div className="research-card-image"><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 720px) 100vw, 33vw" /></div><div className="research-card-copy"><span className="micro-label">{item.type} · {item.year}</span><h2>{item.title}</h2><p>{item.abstract}</p><small>{item.authors}<br />{item.location}</small><span className="record-status">{item.status}</span></div></article>)}</div></div></section></main>; }
+export const metadata: Metadata = {
+  title: "Research",
+  description: "Explore geological studies, methods and public-science reading from Geo-Kurdistan.",
+};
+
+export default function ResearchPage() {
+  return (
+    <main>
+      <PageIntro eyebrow="Research library" title="Evidence, interpretation and public reading" description="A focused research environment connects publications to geological topics, field localities and catalogue records." />
+      <section id="publications" className="subpage-section">
+        <div className="shell">
+          <div className="filter-bar"><button type="button">All publications</button><button type="button">Scientific studies</button><button type="button">Methods</button><button type="button">Public geoscience</button></div>
+          <div className="research-cards">
+            {research.map((item, index) => (
+              <article className="research-card" key={item.slug}>
+                <div className="research-card-image"><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 720px) 100vw, 33vw" /><span>{String(index + 1).padStart(2, "0")}</span><b>{item.topic}</b></div>
+                <div className="research-card-copy">
+                  <div className="research-card-meta"><span><BookOpen aria-hidden="true" />{item.type}</span><span>{item.year}</span></div>
+                  <h2>{item.title}</h2><p>{item.abstract}</p><small>{item.authors}</small>
+                  <div className="research-card-foot"><span><MapPinned aria-hidden="true" />{item.location}</span><b aria-label="Open publication"><ArrowUpRight aria-hidden="true" /></b></div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

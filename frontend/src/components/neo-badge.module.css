@@ -1,0 +1,23 @@
+.badge {
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 2px solid var(--carbon);
+  box-shadow: 3px 3px 0 var(--carbon);
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .045em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge svg { width: 13px; height: 13px; stroke-width: 2.4; }
+.default { color: var(--carbon); background: var(--ochre); }
+.dark { color: var(--limestone); background: var(--carbon); border-color: var(--limestone); box-shadow: 3px 3px 0 var(--iron); }
+.clay { color: var(--limestone); background: var(--iron); }
+.outline { color: inherit; background: var(--limestone); }
+

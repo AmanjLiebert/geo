@@ -14,6 +14,10 @@ export interface GeologicalCategory {
   description: string;
   recordCount: number;
   image: MediaAsset;
+  overview: string;
+  facts: Array<{ label: string; value: string }>;
+  themes: string[];
+  relatedCategorySlugs: string[];
 }
 
 export interface GeologicalLocation {
@@ -43,6 +47,7 @@ export interface GeologicalRecord {
   classification?: string[];
   status: RecordStatus;
   image: MediaAsset;
+  mediaStatus?: "record" | "reference";
   gallery?: MediaAsset[];
   sourceNote: string;
 }

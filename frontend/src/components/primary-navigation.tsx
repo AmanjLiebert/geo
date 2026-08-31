@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Landmark, MapPinned, Microscope, Pickaxe, ShoppingBag } from "lucide-react";
 
 const items = [
-  { href: "/explore/formations", label: "Explore", match: "/explore", icon: Pickaxe },
+  { href: "/explore", label: "Explore", match: "/explore", icon: Pickaxe },
   { href: "/maps", label: "Map", match: "/maps", icon: MapPinned },
   { href: "/research", label: "Research", match: "/research", icon: Microscope },
   { href: "/#shop", label: "Shop", icon: ShoppingBag },

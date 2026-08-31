@@ -1,18 +1,30 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Archive, Boxes, Gem, Layers3, Mountain, Shell, type LucideIcon } from "lucide-react";
+import { getCategoryRecordCount } from "@/content/mock-data";
 import type { FieldObservation, GeologicalCategory, GeologicalRecord, ResearchPublication } from "@/content/types";
+
+const recordIcons: Record<string, LucideIcon> = {
+  "geological-items": Boxes,
+  formations: Layers3,
+  rocks: Mountain,
+  minerals: Gem,
+  fossils: Shell,
+  other: Archive,
+};
 
 export function CategoryCard({ category, index }: { category: GeologicalCategory; index: number }) {
   return <Link className="category-card" href={`/explore/${category.slug}`}>
     <div className="card-image"><Image src={category.image.src} alt={category.image.alt} fill sizes="(max-width: 700px) 100vw, 50vw" /></div>
-    <div className="category-copy"><div className="category-index">0{index + 1}</div><div><span className="micro-label">{category.eyebrow}</span><h3>{category.name}</h3><p>{category.description}</p><span className="card-meta">{category.recordCount} showcase records <b aria-hidden="true">↗</b></span></div></div>
+    <div className="category-copy"><div className="category-index">0{index + 1}</div><div><span className="micro-label">{category.eyebrow}</span><h3>{category.name}</h3><p>{category.description}</p><span className="card-meta">{getCategoryRecordCount(category.slug)} showcase records <b aria-hidden="true">↗</b></span></div></div>
   </Link>;
 }
 
 export function RecordCard({ record }: { record: GeologicalRecord }) {
+  const RecordIcon = recordIcons[record.category] ?? Archive;
   return <Link className="record-card" href={`/explore/${record.category}/${record.slug}`}>
-    <div className="card-image"><Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 700px) 100vw, 33vw" /></div>
-    <div className="record-copy"><span className="micro-label">{record.recordType}</span><h3>{record.name}</h3><dl className="inline-data"><div><dt>Locality</dt><dd>{record.locality}</dd></div><div><dt>Record</dt><dd>{record.recordId}</dd></div>{record.geologicalAge && <div><dt>Age</dt><dd>{record.geologicalAge}</dd></div>}</dl><p>{record.summary}</p><span className="card-action">Open record <span aria-hidden="true">↗</span></span></div>
+    {record.mediaStatus === "reference" ? <div className="record-identity" aria-label="Record image pending"><RecordIcon aria-hidden="true" /><span>{record.recordId}</span><b>{record.classification?.[0] ?? record.recordType}</b><small>Image pending review</small></div> : <div className="card-image"><Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 700px) 100vw, 33vw" /><span>{record.recordId}</span></div>}
+    <div className="record-copy"><span className="micro-label">{record.recordType}</span><h3>{record.name}</h3><dl className="inline-data"><div><dt>Locality</dt><dd>{record.locality}</dd></div>{record.geologicalAge && <div><dt>Age</dt><dd>{record.geologicalAge}</dd></div>}</dl><p>{record.summary}</p><span className="card-action">Open record <span aria-hidden="true">↗</span></span></div>
   </Link>;
 }
 
