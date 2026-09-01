@@ -74,7 +74,7 @@ export default function Home() {
           {fieldObservations.slice(0, 4).map((item, index) => (
             <Link href="/field" key={item.slug}>
               <div><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 100vw, 25vw" /><b>{String(index + 1).padStart(2, "0")}</b></div>
-              <article><NeoBadge variant="clay" className={styles.cardBadge}>{item.type}</NeoBadge><h3>{item.title}</h3><span><MapPinned aria-hidden="true" />{item.location}</span></article>
+              <article><NeoBadge className={styles.cardBadge}>{item.type}</NeoBadge><h3>{item.title}</h3><span className={styles.locationMeta}><MapPinned aria-hidden="true" />{item.location}</span></article>
             </Link>
           ))}
         </div>

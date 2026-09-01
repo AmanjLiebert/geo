@@ -96,11 +96,11 @@
 .fieldJournal img { object-fit:cover; filter:saturate(.72) contrast(1.06); transition:transform 300ms ease,filter 180ms linear; }
 .fieldJournal b { position:absolute; top:10px; left:10px; width:34px; height:34px; display:grid; place-items:center; color:var(--carbon); background:var(--ochre); border:2px solid var(--carbon); box-shadow:3px 3px 0 var(--carbon); font-family:var(--mono); font-size:10px; }
 .fieldJournal article { display:flex; flex-direction:column; padding:15px; }
-.fieldJournal small,.fieldJournal article > span { font-family:var(--mono); font-size:9px; text-transform:uppercase; }
+.fieldJournal small,.locationMeta { font-family:var(--mono); font-size:9px; text-transform:uppercase; }
 .fieldJournal small { color:var(--iron); }
 .fieldJournal h3 { margin-top:8px; font-family:var(--sans); font-size:20px; font-weight:750; letter-spacing:-.015em; line-height:1.05; }
-.fieldJournal article > span { display:flex; align-items:center; gap:6px; margin-top:auto; color:var(--ink-soft); }
-.fieldJournal article > span svg { width:12px; height:12px; }
+.locationMeta { display:flex; align-items:center; gap:6px; margin-top:auto; color:var(--ink-soft); }
+.locationMeta svg { width:12px; height:12px; }
 .fieldJournal > a:hover { background:var(--fossil); }
 .fieldJournal > a:hover img { transform:scale(1.04); filter:saturate(.95); }
 
