@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Languages, MapPinned, Menu, Search } from "lucide-react";
+import { Archive, ArrowRight, BookOpenText, Languages, Mail, MapPinned, Menu, Search } from "lucide-react";
 import type { ReactNode } from "react";
 import { NeoBadge } from "./neo-badge";
 import { PrimaryNavigation } from "./primary-navigation";
@@ -46,18 +46,58 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer id="about" className="brutal-footer">
-      <div className="brutal-footer-statement">
-        <span>About the archive</span>
-        <h2>A public geological archive for Kurdistan.</h2>
-        <p>A public website for exploring the geology and geological heritage of the Kurdistan Region. Scientific descriptions remain subject to teacher review.</p>
+      <div className="brutal-footer-rail" aria-hidden="true" />
+      <div className="brutal-footer-shell">
+        <div className="brutal-footer-grid">
+          <section className="brutal-footer-brand-panel" aria-label="About Geo-Kurdistan">
+            <BrutalBrand light />
+            <p>A public place to explore the geology and geological heritage of the Kurdistan Region. Scientific descriptions remain subject to teacher review.</p>
+            <NeoBadge className="brutal-footer-badge" variant="clay">Visitor showcase</NeoBadge>
+            <div className="brutal-footer-shortcuts" aria-label="Archive shortcuts">
+              <Link href="/explore" aria-label="Browse all geological collections"><Archive aria-hidden="true" /></Link>
+              <Link href="/maps" aria-label="Open the geological map"><MapPinned aria-hidden="true" /></Link>
+              <Link href="/research" aria-label="Open the research library"><BookOpenText aria-hidden="true" /></Link>
+              <a href="mailto:hello@geo-kurdistan.example" aria-label="Email Geo-Kurdistan"><Mail aria-hidden="true" /></a>
+            </div>
+          </section>
+
+          <nav className="brutal-footer-directory" aria-label="Footer navigation">
+            <section>
+              <h3>Collections</h3>
+              <Link href="/explore/geological-items">Geological items</Link>
+              <Link href="/explore/formations">Formations</Link>
+              <Link href="/explore/rocks">Rocks</Link>
+              <Link href="/explore/minerals">Minerals</Link>
+              <Link href="/explore/fossils">Fossils</Link>
+            </section>
+            <section>
+              <h3>Explore</h3>
+              <Link href="/explore">All collections</Link>
+              <Link href="/maps">Interactive map</Link>
+              <Link href="/field">Field notes</Link>
+              <Link href="/#search">Search archive</Link>
+            </section>
+            <section>
+              <h3>Resources</h3>
+              <Link href="/research">Research library</Link>
+              <Link href="/#shop">Study objects</Link>
+              <Link href="/explore/formations">Regional formations</Link>
+              <Link href="/explore/geological-items">Archive records</Link>
+            </section>
+            <section>
+              <h3>Project</h3>
+              <a href="mailto:hello@geo-kurdistan.example">Email the project</a>
+              <span>English interface</span>
+              <span>Kurdish / planned</span>
+              <span>Teacher review in progress</span>
+            </section>
+          </nav>
+        </div>
       </div>
-      <div className="brutal-footer-links">
-        <BrutalBrand light />
-        <div><h3>Collections</h3><Link href="/explore/geological-items">Geological items</Link><Link href="/explore/rocks">Rocks</Link><Link href="/explore/minerals">Minerals</Link><Link href="/explore/fossils">Fossils</Link><Link href="/explore/formations">Formations</Link></div>
-        <div><h3>Explore</h3><Link href="/maps">Map</Link><Link href="/research">Research</Link><Link href="/#shop">Shop</Link><Link href="/#search">Search</Link></div>
-        <div><h3>Contact</h3><a href="mailto:hello@geo-kurdistan.example">Email us</a><span>English</span><span>Kurdish / planned</span></div>
+      <div className="brutal-footer-end">
+        <span><i aria-hidden="true" />© 2026 Geo-Kurdistan</span>
+        <div><span>Visitor showcase</span><span>Scientific copy pending teacher review</span></div>
       </div>
-      <div className="brutal-footer-end"><span>© 2026 Geo-Kurdistan · Geological archive</span></div>
     </footer>
   );
 }

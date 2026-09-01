@@ -1,0 +1,28 @@
+.action {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  box-shadow: var(--neo-shadow);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .035em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.action svg { width: 16px; height: 16px; stroke-width: 2.4; }
+.action:hover,.action:focus-visible { box-shadow: var(--neo-shadow-raised); transform: translate(-2px,-2px); }
+.action:active { box-shadow: none; transform: translate(4px,4px); }
+.default { color: var(--carbon); background: var(--ochre); }
+.dark { color: var(--limestone); background: var(--carbon); }
+.clay { color: var(--limestone); background: var(--iron); }
+.light { color: var(--carbon); background: var(--limestone); }
+
+@media (prefers-reduced-motion: reduce) { .action { transition: none; } }

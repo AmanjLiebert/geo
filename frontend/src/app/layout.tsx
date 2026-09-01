@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Archivo, IBM_Plex_Mono } from "next/font/google";
+import { Atkinson_Hyperlegible_Next, IBM_Plex_Mono } from "next/font/google";
 import { SiteFooter, SiteHeader } from "@/components/site-shell";
 import "./globals.css";
 
-const archivo = Archivo({
+const readableSans = Atkinson_Hyperlegible_Next({
   subsets: ["latin"],
-  variable: "--font-archivo",
+  variable: "--font-readable-sans",
   display: "swap",
+  adjustFontFallback: false,
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${archivo.variable} ${plexMono.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${readableSans.variable} ${plexMono.variable}`}>
       <body><SiteHeader />{children}<SiteFooter /></body>
     </html>
   );

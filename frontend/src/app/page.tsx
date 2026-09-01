@@ -4,15 +4,17 @@ import { Archive, ArrowUpRight, Compass, FileText, MapPinned, Search, ShoppingBa
 import { BrutalHomeHero } from "@/components/brutal-home-hero";
 import { CategoryMarquee } from "@/components/category-marquee";
 import { InteractiveMap } from "@/components/interactive-map";
-import { homeUpdates, shopProducts } from "@/content/home-data";
+import { NeoAction } from "@/components/neo-action";
+import { NeoBadge } from "@/components/neo-badge";
+import { collectionHighlights, homeUpdates, shopProducts } from "@/content/home-data";
 import { categories, fieldObservations, getCategoryRecordCount, locations, research } from "@/content/mock-data";
 import styles from "./home.module.css";
 
 function ModuleBar({ icon: Icon, title, titleId, note, link }: { icon: LucideIcon; title: string; titleId: string; note?: string; link?: { href: string; label: string } }) {
   return (
     <header className={styles.moduleBar}>
-      <div><span><Icon aria-hidden="true" /></span><h2 id={titleId}>{title}</h2>{note && <small>{note}</small>}</div>
-      {link && <Link href={link.href}>{link.label}<ArrowUpRight aria-hidden="true" /></Link>}
+      <div><span><Icon aria-hidden="true" /></span><h2 id={titleId}>{title}</h2>{note && <NeoBadge variant="outline" className={styles.moduleBadge}>{note}</NeoBadge>}</div>
+      {link && <NeoAction href={link.href} variant="dark" className={styles.moduleAction}>{link.label}<ArrowUpRight aria-hidden="true" /></NeoAction>}
     </header>
   );
 }
@@ -26,8 +28,8 @@ export default function Home() {
       <BrutalHomeHero />
 
       <section id="collections" className={styles.archiveIndex} aria-labelledby="archive-index-title">
-        <ModuleBar icon={Archive} title="Collections" titleId="archive-index-title" note={`${categories.length} geological subjects`} />
-        <CategoryMarquee categories={categories} counts={categoryCounts} />
+        <ModuleBar icon={Archive} title="Collections" titleId="archive-index-title" note={`${categories.length + collectionHighlights.length} exploration collections`} />
+        <CategoryMarquee categories={categories} counts={categoryCounts} highlights={[...collectionHighlights]} />
       </section>
 
       <section id="discoveries" className={styles.updates} aria-labelledby="updates-title">
@@ -35,7 +37,7 @@ export default function Home() {
         <div className={styles.updateBoard}>
           <Link className={styles.leadUpdate} href={leadUpdate.href}>
             <Image src={leadUpdate.image.src} alt={leadUpdate.image.alt} fill sizes="(max-width: 900px) 100vw, 62vw" />
-            <div><small>{leadUpdate.type} · {leadUpdate.id}</small><h3>{leadUpdate.title}</h3><p>{leadUpdate.summary}</p><span>{leadUpdate.place}<ArrowUpRight aria-hidden="true" /></span></div>
+            <div><NeoBadge className={styles.leadBadge}>{leadUpdate.type} · {leadUpdate.id}</NeoBadge><h3>{leadUpdate.title}</h3><p>{leadUpdate.summary}</p><span>{leadUpdate.place}<ArrowUpRight aria-hidden="true" /></span></div>
           </Link>
           <div className={styles.updateFeed}>
             {updateFeed.slice(0, 6).map((item) => (
@@ -59,7 +61,7 @@ export default function Home() {
         <div className={styles.researchGrid}>
           {research.map((item) => (
             <Link className={styles.researchCard} href="/research" key={item.slug}>
-              <div className={styles.researchImage}><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 100vw, 34vw" /><span>{item.topic}</span></div>
+              <div className={styles.researchImage}><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 100vw, 34vw" /><NeoBadge variant="dark" className={styles.imageBadge}>{item.topic}</NeoBadge></div>
               <div><small>{item.type} · {item.year}</small><h3>{item.title}</h3><p>{item.abstract}</p><footer><span>{item.authors}</span><ArrowUpRight aria-hidden="true" /></footer></div>
             </Link>
           ))}
@@ -72,7 +74,7 @@ export default function Home() {
           {fieldObservations.slice(0, 4).map((item, index) => (
             <Link href="/field" key={item.slug}>
               <div><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 100vw, 25vw" /><b>{String(index + 1).padStart(2, "0")}</b></div>
-              <article><small>{item.type}</small><h3>{item.title}</h3><span><MapPinned aria-hidden="true" />{item.location}</span></article>
+              <article><NeoBadge variant="clay" className={styles.cardBadge}>{item.type}</NeoBadge><h3>{item.title}</h3><span><MapPinned aria-hidden="true" />{item.location}</span></article>
             </Link>
           ))}
         </div>
@@ -84,7 +86,7 @@ export default function Home() {
           {shopProducts.map((product) => (
             <article key={product.name}>
               <div><Image src={product.image} alt={product.alt} fill sizes="(max-width: 700px) 50vw, 17vw" /></div>
-              <small>{product.type}</small>
+              <NeoBadge variant="outline" className={styles.productBadge}>{product.type}</NeoBadge>
               <h3>{product.name}</h3>
               <footer><span>{product.price}</span><ArrowUpRight aria-hidden="true" /></footer>
             </article>
