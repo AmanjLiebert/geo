@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Archive, ArrowRight, BookOpenText, Compass, Languages, Mail, MapPinned, Menu, Search, type LucideIcon } from "lucide-react";
+import { Archive, ArrowRight, BookOpenText, Compass, Mail, MapPinned, Menu, Search, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { NeoBadge } from "./neo-badge";
+import { HomePreviewNotice } from "./home-preview-notice";
 import { PrimaryNavigation } from "./primary-navigation";
 
 function BrutalBrand({ light = false }: { light?: boolean }) {
@@ -16,20 +17,15 @@ function BrutalBrand({ light = false }: { light?: boolean }) {
 
 export function SiteHeader() {
   return (
-    <header className="brutal-header">
-      <Link className="brutal-announcement" href="/explore">
-        <NeoBadge variant="clay">Teacher preview</NeoBadge>
-        <span>Explore the visitor showcase and help shape the geological archive</span>
-        <ArrowRight aria-hidden="true" />
-      </Link>
+    <>
+      <HomePreviewNotice />
+      <header className="brutal-header">
       <div className="brutal-nav-wrap">
         <div className="brutal-nav">
           <BrutalBrand />
           <PrimaryNavigation className="brutal-links" label="Primary navigation" />
           <div className="brutal-tools">
-            <Link className="brutal-search" href="/search" aria-label="Search the archive"><Search aria-hidden="true" /><span>Search</span><kbd>/</kbd></Link>
-            <span className="brutal-language" aria-label="Current language: English"><Languages aria-hidden="true" /><b>EN</b></span>
-            <Link className="brutal-map-action" href="/maps" aria-label="Open geological map"><MapPinned aria-hidden="true" /></Link>
+            <Link className="brutal-search" href="/search" aria-label="Search the archive"><Search aria-hidden="true" /></Link>
           </div>
           <div className="brutal-mobile">
             <details className="mobile-menu">
@@ -39,7 +35,8 @@ export function SiteHeader() {
           </div>
         </div>
       </div>
-    </header>
+      </header>
+    </>
   );
 }
 

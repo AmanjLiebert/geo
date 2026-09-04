@@ -4,6 +4,7 @@ import {
   EXPLORE_PAGE_SIZE,
   buildExploreHref,
   clampPage,
+  filterExploreRecords,
   getRecordNavigation,
   paginateRecords,
   parseExploreQuery,
@@ -24,13 +25,13 @@ describe("explore view utilities", () => {
       .toBe("/explore/formations?q=fold&type=Formation+reference");
   });
 
-  it("paginates ten records and clamps impossible pages", () => {
+  it("paginates a compact record grid and clamps impossible pages", () => {
     const records = listRecords({ category: "formations" });
     const firstPage = paginateRecords(records, 1);
-    const secondPage = paginateRecords(records, 99);
+    const lastPage = paginateRecords(records, 99);
     expect(firstPage.items).toHaveLength(EXPLORE_PAGE_SIZE);
-    expect(secondPage.page).toBe(2);
-    expect(secondPage.items.length).toBe(records.length - EXPLORE_PAGE_SIZE);
+    expect(lastPage.page).toBe(Math.ceil(records.length / EXPLORE_PAGE_SIZE));
+    expect(lastPage.items.length).toBe(records.length - EXPLORE_PAGE_SIZE * (lastPage.page - 1));
     expect(clampPage(4, 0)).toBe(1);
   });
 
@@ -40,5 +41,13 @@ describe("explore view utilities", () => {
     const navigation = getRecordNavigation(records, lastOnFirstPage.slug);
     expect(navigation.next?.slug).toBe(records[EXPLORE_PAGE_SIZE].slug);
     expect(navigation.position).toBe(EXPLORE_PAGE_SIZE);
+  });
+
+  it("filters an in-memory collection without a route render", () => {
+    const records = listRecords();
+    const query = parseExploreQuery({ q: "Cretaceous", region: "Erbil" });
+    const results = filterExploreRecords(records, "formations", query);
+    expect(results.map((record) => record.slug)).toContain("carbonate-cliff-section");
+    expect(results.every((record) => record.category === "formations")).toBe(true);
   });
 });

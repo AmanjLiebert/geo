@@ -1,6 +1,6 @@
 import type { GeologicalRecord } from "@/content/types";
 
-export const EXPLORE_PAGE_SIZE = 10;
+export const EXPLORE_PAGE_SIZE = 6;
 export const exploreFilterKeys = ["type", "region", "age", "formation"] as const;
 
 export type ExploreFilterKey = (typeof exploreFilterKeys)[number];
@@ -86,6 +86,37 @@ export function getRecordNavigation(records: GeologicalRecord[], slug: string) {
     next: index < records.length - 1 ? records[index + 1] : undefined,
     position: index + 1,
   };
+}
+
+function normalize(value?: string) {
+  return value?.trim().toLocaleLowerCase() ?? "";
+}
+
+function includes(value: string | undefined, query: string) {
+  return !query || normalize(value).includes(query);
+}
+
+export function filterExploreRecords(records: GeologicalRecord[], categorySlug: string, query: ExploreQueryState) {
+  const search = normalize(query.q);
+  return records.filter((record) => {
+    const haystack = normalize([
+      record.name,
+      record.recordType,
+      record.summary,
+      record.locality,
+      record.region,
+      record.geologicalAge,
+      record.formation,
+      ...(record.classification ?? []),
+    ].filter(Boolean).join(" "));
+
+    return record.category === categorySlug
+      && (!search || haystack.includes(search))
+      && includes(record.recordType, normalize(query.type))
+      && includes(record.region, normalize(query.region))
+      && includes(record.geologicalAge, normalize(query.age))
+      && includes(record.formation, normalize(query.formation));
+  });
 }
 
 export interface ExplorePreviewFact {
