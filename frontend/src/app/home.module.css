@@ -54,22 +54,25 @@
 .mapSection { background: var(--fossil); }
 .mapSection .moduleBar { background: var(--limestone); }
 .mapSection :global(.geo-map-board) { min-height: 500px; display: grid; grid-template-columns: 250px minmax(0,1fr); border: 2px solid var(--carbon); border-top: 0; }
-.mapSection :global(.geo-map-index) { display: grid; grid-template-rows: 52px repeat(7,1fr); color: var(--limestone); background: var(--shale); border-right: 2px solid var(--carbon); }
+.mapSection :global(.geo-map-index) { display:grid; grid-template-rows:52px; grid-auto-rows:minmax(54px,1fr); color:var(--limestone); background:var(--shale); border-right:2px solid var(--carbon); }
 .mapSection :global(.geo-map-index > header) { display:flex; justify-content:space-between; align-items:center; padding:0 16px; color:var(--carbon); background:var(--fossil); border-bottom:2px solid var(--carbon); font-family:var(--mono); font-size:10px; text-transform:uppercase; }
 .mapSection :global(.geo-map-index > header span) { display:flex; align-items:center; gap:7px; }
 .mapSection :global(.geo-map-index > header svg) { width:14px; height:14px; }
-.mapSection :global(.geo-map-index button) { min-width:0; display:grid; gap:4px; align-content:center; padding:9px 16px; border:0; border-bottom:1px solid rgba(242,235,221,.35); color:inherit; background:transparent; text-align:left; cursor:pointer; }
+.mapSection :global(.geo-map-index button) { min-width:0; display:grid; grid-template-columns:28px minmax(0,1fr); gap:9px; align-items:center; align-content:center; padding:9px 13px; border:0; border-bottom:1px solid rgba(242,235,221,.35); color:inherit; background:transparent; text-align:left; cursor:pointer; }
 .mapSection :global(.geo-map-index button:hover),.mapSection :global(.geo-map-index button.active) { color:var(--limestone); background:var(--iron); }
+.mapSection :global(.geo-map-index button > i) { width:28px; height:28px; display:grid; place-items:center; border:1px solid currentColor; border-radius:3px; font-family:var(--mono); font-size:9px; font-style:normal; }
+.mapSection :global(.geo-map-index button > span) { min-width:0; display:grid; gap:3px; }
 .mapSection :global(.geo-map-index button strong) { overflow:hidden; font-family:var(--sans); font-size:14px; font-weight:750; text-overflow:ellipsis; white-space:nowrap; }
 .mapSection :global(.geo-map-index button small) { overflow:hidden; font-family:var(--mono); font-size:9px; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; }
 .mapSection :global(.geo-map-canvas) { position:relative; min-width:0; min-height:500px; overflow:hidden; background:var(--shale); }
-.mapSection :global(.geo-map-canvas iframe) { width:100%; height:100%; min-height:500px; border:0; filter:grayscale(.18) saturate(.65) contrast(1.02); }
-.mapSection :global(.geo-map-ticket) { position:absolute; right:20px; bottom:20px; width:min(340px,calc(100% - 40px)); padding:17px; color:var(--carbon); background:var(--limestone); border:2px solid var(--carbon); box-shadow:5px 5px 0 var(--iron); }
+.mapSection :global(.geo-map-canvas iframe) { width:100%; height:100%; min-height:500px; border:0; filter:grayscale(.18) saturate(.65) contrast(1.02); pointer-events:none; }
+.mapSection :global(.geo-map-canvas.map-is-active iframe) { pointer-events:auto; }
+.mapSection :global(.geo-map-ticket) { position:absolute; z-index:5; right:20px; bottom:20px; width:min(340px,calc(100% - 40px)); padding:17px; color:var(--carbon); background:var(--limestone); border:2px solid var(--carbon); box-shadow:5px 5px 0 var(--iron); }
 .mapSection :global(.geo-map-ticket > span),.mapSection :global(.geo-map-ticket p),.mapSection :global(.geo-map-key) { font-family:var(--mono); font-size:9px; text-transform:uppercase; }
 .mapSection :global(.geo-map-ticket > span) { color:var(--iron); }
 .mapSection :global(.geo-map-ticket h3) { margin-top:7px; font-family:var(--sans); font-size:32px; font-weight:800; letter-spacing:-.025em; line-height:1; }
 .mapSection :global(.geo-map-ticket p) { margin-top:10px; line-height:1.5; }
-.mapSection :global(.geo-map-key) { position:absolute; top:14px; left:14px; display:flex; gap:16px; padding:8px 10px; color:var(--limestone); background:var(--carbon); }
+.mapSection :global(.geo-map-key) { position:absolute; z-index:5; top:14px; left:14px; display:flex; gap:16px; padding:8px 10px; color:var(--limestone); background:var(--carbon); }
 .mapSection :global(.geo-map-key a) { text-decoration:underline; text-underline-offset:3px; }
 
 .researchSection { background: var(--fossil); }
@@ -106,15 +109,15 @@
 
 .shopSection { background:var(--fossil); }
 .productShelf { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:2px; padding:2px; background:var(--carbon); }
-.productShelf article { min-width:0; min-height:290px; display:flex; flex-direction:column; padding:11px; background:var(--limestone); }
-.productShelf article > div { position:relative; height:158px; overflow:hidden; background:var(--shale); }
+.productShelf > a { min-width:0; min-height:290px; display:flex; flex-direction:column; padding:11px; background:var(--limestone); }
+.productShelf > a > div { position:relative; height:158px; overflow:hidden; background:var(--shale); }
 .productShelf img { object-fit:cover; filter:saturate(.72) contrast(1.06); transition:transform 260ms ease; }
 .productShelf small { margin-top:11px; color:var(--iron); font-family:var(--mono); font-size:9px; font-weight:600; text-transform:uppercase; }
 .productShelf h3 { margin-top:7px; font-family:var(--sans); font-size:18px; font-weight:750; letter-spacing:-.015em; line-height:1.05; }
 .productShelf footer { display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:11px; border-top:1px solid var(--carbon); font-family:var(--mono); font-size:9px; font-weight:600; text-transform:uppercase; }
 .productShelf footer svg { width:15px; height:15px; }
-.productShelf article:hover { background:var(--fossil); }
-.productShelf article:hover img { transform:scale(1.04); }
+.productShelf > a:hover { background:var(--fossil); }
+.productShelf > a:hover img { transform:scale(1.04); }
 
 .searchStrip { min-height:104px; display:grid; grid-template-columns:minmax(0,1fr) minmax(420px,.75fr); margin-top:32px; color:var(--carbon); background:var(--limestone); border-block:2px solid var(--carbon); }
 .searchStrip > div { display:flex; align-items:center; gap:14px; padding:18px clamp(22px,4vw,48px); border-right:2px solid var(--carbon); }
@@ -134,34 +137,34 @@
 .moduleBar > .moduleAction { min-width: auto; align-self: center; margin: 8px 0 8px auto; padding: 0 13px; border: 2px solid var(--carbon); }
 
 .updateBoard { gap: 16px; padding: 16px 20px 20px 16px; background: var(--fossil); }
-.leadUpdate { border: 2px solid var(--carbon); border-radius: var(--neo-radius); box-shadow: var(--neo-shadow); }
+.leadUpdate { border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
 .leadBadge { color: var(--carbon); }
 .updateFeed { gap: 10px; padding: 0 4px 4px 0; background: transparent; }
-.updateFeed > a { border: 2px solid var(--carbon); border-radius: var(--neo-radius); box-shadow: var(--neo-shadow); transition: transform 150ms ease,box-shadow 150ms ease,background-color 150ms ease; }
-.updateFeed > a:hover { box-shadow: 2px 2px 0 var(--carbon); transform: translate(2px,2px); }
+.updateFeed > a { border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); transition: transform 150ms ease,box-shadow 150ms ease,background-color 150ms ease; }
+.updateFeed > a:hover { box-shadow: var(--card-shadow-hover); transform: translate(2px,2px); }
 
-.mapSection :global(.geo-map-board) { margin: 16px 20px 20px 16px; overflow: hidden; border-radius: var(--neo-radius); box-shadow: var(--neo-shadow); }
-.mapSection :global(.geo-map-ticket) { border-radius: var(--neo-radius); box-shadow: var(--neo-shadow); }
+.mapSection :global(.geo-map-board) { margin: 16px 20px 20px 16px; overflow: hidden; border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
+.mapSection :global(.geo-map-ticket) { background: var(--card-surface); border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
 
 .researchGrid { gap: 18px; padding: 18px 22px 22px 18px; background: var(--fossil); }
-.researchCard,.researchCard:nth-child(2),.researchCard:nth-child(3) { overflow: hidden; border: 2px solid var(--carbon); border-radius: var(--neo-radius); box-shadow: var(--neo-shadow); transition: transform 160ms ease,box-shadow 160ms ease,background-color 160ms ease; }
-.researchCard:hover { box-shadow: 2px 2px 0 var(--iron); transform: translate(2px,2px); }
+.researchCard,.researchCard:nth-child(2),.researchCard:nth-child(3) { overflow: hidden; background: var(--card-surface); border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); transition: transform 160ms ease,box-shadow 160ms ease,background-color 160ms ease; }
+.researchCard:hover { box-shadow: var(--card-shadow-hover); transform: translate(2px,2px); }
 .imageBadge { position: absolute; top: 11px; left: 11px; }
 
 .fieldJournal { gap: 16px; padding: 18px 22px 22px 18px; background: var(--fossil); }
-.fieldJournal > a { overflow: hidden; border: 2px solid var(--carbon); border-radius: var(--neo-radius); box-shadow: var(--neo-shadow); transition: transform 150ms ease,box-shadow 150ms ease,background-color 150ms ease; }
-.fieldJournal > a:nth-child(even) { box-shadow: var(--neo-shadow); }
-.fieldJournal > a:hover { box-shadow: 2px 2px 0 var(--carbon); transform: translate(2px,2px); }
+.fieldJournal > a { overflow: hidden; background: var(--card-surface); border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); transition: transform 150ms ease,box-shadow 150ms ease,background-color 150ms ease; }
+.fieldJournal > a:nth-child(even) { box-shadow: var(--card-shadow); }
+.fieldJournal > a:hover { box-shadow: var(--card-shadow-hover); transform: translate(2px,2px); }
 .cardBadge { margin-bottom: 4px; padding: 5px 7px; font-size: 9px; box-shadow: 2px 2px 0 var(--carbon); }
 
 .productShelf { gap: 14px; padding: 18px 22px 22px 18px; background: var(--fossil); }
-.productShelf article { overflow: hidden; border: 2px solid var(--carbon); border-radius: var(--neo-radius); box-shadow: var(--neo-shadow); transition: transform 150ms ease,box-shadow 150ms ease,background-color 150ms ease; }
-.productShelf article:nth-child(3n + 2),.productShelf article:nth-child(3n + 3) { box-shadow: var(--neo-shadow); }
-.productShelf article:hover { box-shadow: 2px 2px 0 var(--carbon); transform: translate(2px,2px); }
-.productShelf article > div { border: 2px solid var(--carbon); border-radius: 3px; }
+.productShelf > a { overflow: hidden; background: var(--card-surface); border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); transition: transform 150ms ease,box-shadow 150ms ease,background-color 150ms ease; }
+.productShelf > a:nth-child(3n + 2),.productShelf > a:nth-child(3n + 3) { box-shadow: var(--card-shadow); }
+.productShelf > a:hover { box-shadow: var(--card-shadow-hover); transform: translate(2px,2px); }
+.productShelf > a > div { border: 2px solid var(--carbon); border-radius: 3px; }
 .productBadge { margin-top: 11px; padding: 5px 7px; font-size: 9px; box-shadow: none; }
 
-.searchStrip { margin: 32px 20px 0 16px; overflow: hidden; border: 2px solid var(--carbon); border-radius: var(--neo-radius); box-shadow: var(--neo-shadow); }
+.searchStrip { margin: 32px 20px 0 16px; overflow: hidden; background: var(--card-surface); border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
 .searchStrip form > div { border-radius: var(--neo-radius); box-shadow: 3px 3px 0 var(--carbon); }
 .searchStrip button { min-width: 84px; transition: background-color 150ms ease,color 150ms ease; }
 
@@ -214,8 +217,8 @@
   .fieldJournal { grid-template-columns:1fr; }
   .fieldJournal > a { grid-template-columns:42% 1fr; grid-template-rows:155px; }
   .productShelf { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .productShelf article { min-height:276px; }
-  .productShelf article > div { height:140px; }
+  .productShelf > a { min-height:276px; }
+  .productShelf > a > div { height:140px; }
   .searchStrip { min-height:190px; }
   .mapSection :global(.geo-map-board),.searchStrip { margin-right: 14px; margin-left: 10px; }
 }

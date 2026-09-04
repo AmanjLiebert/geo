@@ -84,19 +84,19 @@ export default function Home() {
         <ModuleBar icon={ShoppingBag} title="Shop" titleId="shop-title" note={`${shopProducts.length} study objects`} />
         <div className={styles.productShelf}>
           {shopProducts.map((product) => (
-            <article key={product.name}>
-              <div><Image src={product.image} alt={product.alt} fill sizes="(max-width: 700px) 50vw, 17vw" /></div>
-              <NeoBadge variant="outline" className={styles.productBadge}>{product.type}</NeoBadge>
-              <h3>{product.name}</h3>
-              <footer><span>{product.price}</span><ArrowUpRight aria-hidden="true" /></footer>
-            </article>
+              <Link href={`/shop/${product.slug}`} key={product.name}>
+                <div><Image src={product.image} alt={product.alt} fill sizes="(max-width: 700px) 50vw, 17vw" /></div>
+                <NeoBadge variant="outline" className={styles.productBadge}>{product.type}</NeoBadge>
+                <h3>{product.name}</h3>
+                <footer><span>{product.price}</span><ArrowUpRight aria-hidden="true" /></footer>
+              </Link>
           ))}
         </div>
       </section>
 
       <section id="search" className={styles.searchStrip} aria-labelledby="search-title">
         <div><Search aria-hidden="true" /><h2 id="search-title">Search the archive</h2></div>
-        <form action="/explore/formations"><label htmlFor="site-search">Name, place, age or formation</label><div><input id="site-search" name="q" placeholder="Rawandiz, calcite, fold…" /><button type="submit">Search</button></div></form>
+        <form action="/search"><label htmlFor="site-search">Name, place, age or formation</label><div><input id="site-search" name="q" placeholder="Rawandiz, calcite, fold…" /><button type="submit">Search</button></div></form>
       </section>
     </main>
   );

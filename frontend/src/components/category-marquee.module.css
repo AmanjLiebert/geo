@@ -29,17 +29,18 @@
   grid-template-rows: 192px 176px;
   overflow: hidden;
   color: var(--carbon);
-  background: var(--limestone);
-  border: 2px solid var(--shale);
-  border-radius: var(--neo-radius);
-  box-shadow: var(--neo-shadow);
+  background: var(--card-surface);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
   cursor: inherit;
   user-select: none;
   -webkit-user-drag: none;
   transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
-.tile:hover,.tile:focus-visible { background: var(--limestone); box-shadow: 1px 1px 0 var(--carbon); transform: translate(3px,3px); }
+.tile:hover,.tile:focus-visible { background: var(--fossil); box-shadow: var(--card-shadow-hover); transform: translate(2px,2px); }
+.tile:focus-visible { outline-color: var(--carbon); }
 
 .visual { position: relative; margin: 10px 10px 0; overflow: hidden; background: var(--fossil); border: 2px solid var(--carbon); border-radius: 2px; }
 .visual img { object-fit: cover; filter: saturate(.76) contrast(1.06); transition: transform 300ms ease, filter 180ms ease; }
@@ -52,7 +53,7 @@
 .copy h3 { font-family: var(--sans); font-size: 23px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
 .copy > p { display: -webkit-box; margin-top: 7px; overflow: hidden; color: var(--ink-soft); font-size: 12px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .cardFooter { min-height: 43px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: auto -15px 0; padding: 8px 10px 8px 15px; border-top: 2px solid var(--carbon); font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .035em; text-transform: uppercase; }
-.cardFooter svg { width: 30px; height: 30px; padding: 6px; color: var(--carbon); background: var(--ochre); border: 2px solid var(--carbon); border-radius: 2px; box-shadow: 2px 2px 0 var(--iron); transition: transform 180ms ease,box-shadow 180ms ease; }
+.cardFooter svg { width: 30px; height: 30px; padding: 6px; color: var(--carbon); background: var(--ochre); border: 2px solid var(--carbon); border-radius: 2px; box-shadow: 2px 2px 0 var(--carbon); transition: transform 180ms ease,box-shadow 180ms ease; }
 .tile:hover .cardFooter svg,.tile:focus-visible .cardFooter svg { box-shadow: none; transform: translate(2px,2px); }
 
 @media (max-width: 680px) {

@@ -21,5 +21,7 @@ The showcase stores these images locally so catalogue cards remain stable during
 | `rawandiz-valley.jpg` | [Rawandiz Canyon (Kharand) 05.jpg](https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_05.jpg) | Khoshhat | CC BY 4.0 |
 | `bekhal-waterfall.jpg` | [Bekhal Waterfall 02.jpg](https://commons.wikimedia.org/wiki/File:.Bekhal_Waterfall_02.jpg) | Khoshhat | CC BY 4.0 |
 | `dukan-dam.jpg` | [Dukan Dam.jpg](https://commons.wikimedia.org/wiki/File:Dukan_Dam.jpg) | U.S. Army Corps of Engineers | Public domain |
+| `halgurd-mountain.jpg` | [Halgurd Mountain Halgurd national park highest pick of mountain 3607 meter Kurdistan region government Iraq.jpg](https://commons.wikimedia.org/wiki/File:Halgurd_Mountain_Halgurd_national_park_highest_pick_of_mountain_3607_meter_Kurdistan_region_government_Iraq.jpg) | Kawasuurdawoody | CC BY-SA 4.0 |
+| `shanidar-cave.jpg` | [Shanidar Cave - overview.jpg](https://commons.wikimedia.org/wiki/File:Shanidar_Cave_-_overview.jpg) | Hardscarf | CC BY-SA 4.0 |
 
 The live regional map uses [OpenStreetMap](https://www.openstreetmap.org/copyright) data and displays its attribution beside the map.

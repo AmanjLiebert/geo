@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, MapPinned, Microscope, Pickaxe, ShoppingBag } from "lucide-react";
+import { Landmark, MapPinned, Microscope, Pickaxe, ShoppingBag, TentTree } from "lucide-react";
 
 const items = [
   { href: "/explore", label: "Explore", match: "/explore", icon: Pickaxe },
   { href: "/maps", label: "Map", match: "/maps", icon: MapPinned },
   { href: "/research", label: "Research", match: "/research", icon: Microscope },
-  { href: "/#shop", label: "Shop", icon: ShoppingBag },
-  { href: "/#about", label: "About", icon: Landmark },
+  { href: "/field", label: "Field", match: "/field", icon: TentTree },
+  { href: "/shop", label: "Shop", match: "/shop", icon: ShoppingBag },
+  { href: "/about", label: "About", match: "/about", icon: Landmark },
 ];
 
 export function PrimaryNavigation({ className, label }: { className: string; label: string }) {

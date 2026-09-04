@@ -25,6 +25,7 @@ export const metadata: Metadata = {
   },
   description:
     "Explore the rocks, formations, fossils, landscapes and geological research of the Kurdistan Region.",
+  robots: { index: false, follow: false },
   icons: {
     icon: "/brand/geo-kurdistan-mark-v2.png",
     apple: "/brand/geo-kurdistan-mark-v2.png",

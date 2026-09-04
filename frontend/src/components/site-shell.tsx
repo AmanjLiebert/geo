@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Archive, ArrowRight, BookOpenText, Languages, Mail, MapPinned, Menu, Search } from "lucide-react";
+import { Archive, ArrowRight, BookOpenText, Compass, Languages, Mail, MapPinned, Menu, Search, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { NeoBadge } from "./neo-badge";
 import { PrimaryNavigation } from "./primary-navigation";
@@ -27,7 +27,7 @@ export function SiteHeader() {
           <BrutalBrand />
           <PrimaryNavigation className="brutal-links" label="Primary navigation" />
           <div className="brutal-tools">
-            <Link className="brutal-search" href="/#search" aria-label="Search the archive"><Search aria-hidden="true" /><span>Search</span><kbd>/</kbd></Link>
+            <Link className="brutal-search" href="/search" aria-label="Search the archive"><Search aria-hidden="true" /><span>Search</span><kbd>/</kbd></Link>
             <span className="brutal-language" aria-label="Current language: English"><Languages aria-hidden="true" /><b>EN</b></span>
             <Link className="brutal-map-action" href="/maps" aria-label="Open geological map"><MapPinned aria-hidden="true" /></Link>
           </div>
@@ -75,17 +75,18 @@ export function SiteFooter() {
               <Link href="/explore">All collections</Link>
               <Link href="/maps">Interactive map</Link>
               <Link href="/field">Field notes</Link>
-              <Link href="/#search">Search archive</Link>
+              <Link href="/search">Search archive</Link>
             </section>
             <section>
               <h3>Resources</h3>
               <Link href="/research">Research library</Link>
-              <Link href="/#shop">Study objects</Link>
+              <Link href="/shop">Study objects</Link>
               <Link href="/explore/formations">Regional formations</Link>
               <Link href="/explore/geological-items">Archive records</Link>
             </section>
             <section>
               <h3>Project</h3>
+              <Link href="/about">About the project</Link>
               <a href="mailto:hello@geo-kurdistan.example">Email the project</a>
               <span>English interface</span>
               <span>Kurdish / planned</span>
@@ -102,8 +103,49 @@ export function SiteFooter() {
   );
 }
 
-export function PageIntro({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: ReactNode }) {
-  return <section className="page-intro"><div className="shell"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p className="page-lead">{description}</p>{children}</div></section>;
+type PageIntroProps = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  icon?: LucideIcon;
+  code?: string;
+  tone?: "map" | "research" | "field" | "shop" | "about";
+  steps?: readonly [string, string];
+  children?: ReactNode;
+};
+
+export function PageIntro({
+  eyebrow,
+  title,
+  description,
+  icon: Icon = Compass,
+  code = "GK",
+  tone,
+  steps,
+  children,
+}: PageIntroProps) {
+  return (
+    <section className={`page-intro${tone ? ` page-intro-${tone}` : ""}`}>
+      <div className="shell">
+        <div className="page-intro-mark" aria-hidden="true">
+          <Icon />
+          <span>{code}</span>
+        </div>
+        <div className="page-intro-copy">
+          <p className="page-intro-path"><span>Geo—Kurdistan</span><ArrowRight aria-hidden="true" />{eyebrow}</p>
+          <h1>{title}</h1>
+        </div>
+        <div className="page-intro-summary">
+          <span className="page-intro-summary-label">This page</span>
+          <p className="page-lead">{description}</p>
+        </div>
+        {steps && <ol className="page-intro-steps" aria-label="Suggested path through this page">
+          {steps.map((step, index) => <li key={step}><span>{String(index + 1).padStart(2, "0")}</span>{step}</li>)}
+        </ol>}
+        {children}
+      </div>
+    </section>
+  );
 }
 
 export function SectionHeading({ eyebrow, title, text, link }: { eyebrow: string; title: string; text?: string; link?: { href: string; label: string } }) {

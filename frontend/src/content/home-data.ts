@@ -1,4 +1,5 @@
 import { fieldObservations, locations, records, research } from "./mock-data";
+import { products } from "./showcase-data";
 
 export const homeUpdates = [
   ...records.map((record) => ({
@@ -57,11 +58,11 @@ export const collectionHighlights = [
   },
 ] as const;
 
-export const shopProducts = [
-  { name: "Ammonite study cast", type: "Fossil object", price: "18,000 IQD", image: "/images/catalog/ammonite.jpg", alt: "Ammonite fossil study object" },
-  { name: "Zagros fold map", type: "Map print", price: "12,000 IQD", image: "/images/atlas/zagros-satellite.jpg", alt: "Satellite view of the folded Zagros mountain belt" },
-  { name: "Calcite specimen", type: "Mineral object", price: "22,000 IQD", image: "/images/catalog/calcite.jpg", alt: "Translucent calcite crystal specimen" },
-  { name: "Field notebook", type: "Field tool", price: "9,000 IQD", image: "/images/catalog/fieldwork.jpg", alt: "Geologist recording observations beside an outcrop" },
-  { name: "Fold structure print", type: "Learning print", price: "14,000 IQD", image: "/images/catalog/folded-strata.jpg", alt: "Folded bands visible in a rock specimen" },
-  { name: "Rawandiz field poster", type: "Landscape print", price: "16,000 IQD", image: "/images/atlas/rawandiz-canyon.jpg", alt: "Layered cliffs at Rawandiz Canyon" },
-];
+export const shopProducts = products.map((product) => ({
+  slug: product.slug,
+  name: product.name,
+  type: product.category,
+  price: product.price,
+  image: product.image.src,
+  alt: product.image.alt,
+}));
