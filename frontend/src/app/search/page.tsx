@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/safe-link";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { EmptyState, FilterChips, ResultsHeader, SearchResultCard } from "@/components/content-interface";
 import { PageIntro } from "@/components/site-shell";

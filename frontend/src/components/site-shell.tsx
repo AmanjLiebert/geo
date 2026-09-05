@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/safe-link";
 import { Archive, ArrowRight, BookOpenText, Compass, Mail, MapPinned, Menu, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { NeoBadge } from "./neo-badge";

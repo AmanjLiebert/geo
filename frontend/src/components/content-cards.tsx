@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/safe-link";
 import { Archive, ArrowUpRight, Boxes, Gem, Layers3, MapPin, Mountain, Shell, type LucideIcon } from "lucide-react";
 import { getCategoryRecordCount } from "@/content/mock-data";
 import type { FieldObservation, GeologicalCategory, GeologicalRecord, ResearchPublication } from "@/content/types";

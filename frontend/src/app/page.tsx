@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/safe-link";
 import { Archive, ArrowUpRight, Compass, FileText, MapPinned, Search, ShoppingBag, Telescope, type LucideIcon } from "lucide-react";
 import { BrutalHomeHero } from "@/components/brutal-home-hero";
 import { CategoryMarquee } from "@/components/category-marquee";

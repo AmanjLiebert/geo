@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/safe-link";
 import { ArrowUpRight, RotateCcw, Search } from "lucide-react";
 import type { ReactNode } from "react";
 import type { ContentReference, SearchResult } from "@/content/types";

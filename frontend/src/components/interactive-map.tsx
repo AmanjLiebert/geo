@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/safe-link";
 import { ExternalLink, MapPin, MousePointer2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import type { GeologicalLocation } from "@/content/types";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/safe-link";
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, House } from "lucide-react";
 import { GeologicalSurveyScene } from "./geological-survey-scene";
@@ -52,5 +52,4 @@ export function UnderDevelopment({ code, eyebrow, title, message, icon: Icon }: 
     </main>
   );
 }
-
 

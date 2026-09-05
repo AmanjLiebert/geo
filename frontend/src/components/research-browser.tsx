@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/safe-link";
 import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, BookOpenText, ChevronDown, ChevronLeft, ChevronRight, FileText, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
