@@ -1382,7 +1382,7 @@ img { display: block; }
 }
 
 /* Explore v2 — progressive disclosure, local transitions, and a shared action language. */
-.catalog-explorer-page { min-height: calc(100vh - var(--header-height)); background: var(--fossil); }
+.catalog-explorer-page { --catalog-cover-ratio: 3 / 2; min-height: calc(100vh - var(--header-height)); background: var(--fossil); }
 .catalog-explorer-header { background: var(--limestone); border-bottom: 2px solid var(--carbon); }
 .catalog-explorer-header > .shell { min-height: 104px; display: grid; grid-template-columns: minmax(250px,.72fr) minmax(360px,1fr) auto; gap: 30px; align-items: center; }
 .catalog-explorer-header > .shell > div:first-child { min-width: 0; display: flex; align-items: center; gap: 15px; }
@@ -2168,8 +2168,8 @@ img { display: block; }
 /* Collection cards: compact specimen plate with an editorial title block. */
 .catalog-chooser-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
 .catalog-collection-button { container-type: inline-size; grid-template-rows: auto minmax(220px,1fr); padding: 14px 14px 0; background: var(--limestone); }
-.catalog-collection-image { width: 100%; height: auto; min-height: 0; aspect-ratio: 16 / 9.4; margin: 0; overflow: hidden; background: #10110f; border: 2px solid var(--carbon); border-radius: 3px; }
-.catalog-collection-image img { object-fit: contain; filter: saturate(.82) contrast(1.04); transform: none !important; transition: filter 150ms ease; }
+.catalog-collection-image { width: 100%; height: auto; min-height: 0; aspect-ratio: var(--catalog-cover-ratio); margin: 0; overflow: hidden; background: var(--fossil); border: 2px solid var(--carbon); border-radius: 3px; }
+.catalog-collection-image img { object-fit: cover; object-position: center; filter: saturate(.82) contrast(1.04); transform: none !important; transition: filter 150ms ease; }
 .catalog-collection-button:hover .catalog-collection-image img,.catalog-collection-button:focus-visible .catalog-collection-image img { filter: saturate(1) contrast(1.04); transform: none; }
 .catalog-collection-body { min-height: 220px; padding: 17px 2px 0; }
 .catalog-collection-meta { align-items: center; }
@@ -2212,14 +2212,15 @@ img { display: block; }
 .catalog-record-card .catalog-record-image {
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 8.4;
+  aspect-ratio: var(--catalog-cover-ratio);
   overflow: hidden;
-  background: #10110f;
+  background: var(--fossil);
   border: 2px solid var(--carbon);
   border-radius: 3px;
 }
 .catalog-record-card .catalog-record-image img {
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center;
   filter: saturate(.82) contrast(1.04);
   transform: none !important;
 }
@@ -2957,6 +2958,64 @@ img { display: block; }
     height: 38px;
   }
 }
+
+/* Record controls share one interaction treatment, including image and related controls. */
+.catalog-explorer-page .catalog-record-page button {
+  color: var(--carbon);
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  box-shadow: 3px 3px 0 var(--carbon);
+  transition: color 140ms ease, background-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+.catalog-explorer-page .catalog-record-page button:hover:not(:disabled),
+.catalog-explorer-page .catalog-record-page button:focus-visible:not(:disabled) {
+  color: var(--limestone);
+  background: var(--iron);
+  border-color: var(--carbon);
+  box-shadow: 1px 1px 0 var(--carbon);
+  outline: none;
+  transform: translate(2px,2px);
+}
+.catalog-explorer-page .catalog-record-page button:active:not(:disabled) {
+  box-shadow: inset 2px 2px 0 rgb(18 22 24 / .28);
+  transform: translate(3px,3px);
+}
+.catalog-explorer-page .catalog-record-page button:focus-visible {
+  outline: 3px solid var(--ochre);
+  outline-offset: 3px;
+}
+.catalog-explorer-page .catalog-record-page button:disabled {
+  color: var(--ink-soft);
+  background: var(--fossil);
+  opacity: .38;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+.catalog-explorer-page .catalog-record-page .catalog-record-gallery-arrow {
+  transform: translateY(-50%);
+}
+.catalog-explorer-page .catalog-record-page .catalog-record-gallery-arrow:hover,
+.catalog-explorer-page .catalog-record-page .catalog-record-gallery-arrow:focus-visible {
+  transform: translate(2px,calc(-50% + 2px));
+}
+.catalog-explorer-page .catalog-record-page .catalog-record-gallery-arrow:active {
+  transform: translate(3px,calc(-50% + 3px));
+}
+.catalog-record-page .catalog-record-related button small { color: inherit; }
+.catalog-record-page .catalog-record-gallery-thumbnails { padding: 10px; gap: 10px; }
+.catalog-record-page .catalog-record-gallery-thumbnails button img {
+  padding: 3px;
+  object-fit: contain;
+}
+.catalog-explorer-page .catalog-record-page .catalog-record-gallery-thumbnails button.active {
+  background: var(--ochre);
+}
+.catalog-explorer-page .catalog-record-page .catalog-record-gallery-thumbnails button.active:hover {
+  background: var(--iron);
+}
+.catalog-record-page .catalog-action:hover:not(:disabled) svg:last-child { transform: none; }
 
 /* Collection tools live in the sticky collection bar. */
 .catalog-collection-commandbar {

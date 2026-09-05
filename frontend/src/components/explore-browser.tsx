@@ -104,7 +104,7 @@ function CollectionChooser({
     {collections.length > COLLECTIONS_PER_PAGE && <label className="catalog-chooser-search"><Search aria-hidden="true" /><span className="sr-only">Find a collection</span><input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Find a collection" /></label>}
     <div className="catalog-chooser-grid">
       {visible.map(({ category, count }) => <button type="button" className="catalog-collection-button" onClick={() => onSelect(category.slug)} key={category.slug}>
-        <span className="catalog-collection-image"><Image src={category.image.src} alt="" fill sizes="(max-width: 640px) 120px, 190px" /></span>
+        <span className="catalog-collection-image"><Image src={category.image.src} alt="" fill sizes="(max-width: 620px) 100vw, (max-width: 1120px) 50vw, (max-width: 1504px) 33vw, 480px" /></span>
         <span className="catalog-collection-body">
           <span className="catalog-collection-meta"><NeoBadge className="catalog-collection-count-badge">{count} records</NeoBadge><small>Collection</small></span>
           <strong className="catalog-collection-title">{category.name}</strong>
@@ -369,7 +369,7 @@ export function ExploreBrowser({
         {pagination.items.length ? <div className="catalog-record-grid">{pagination.items.map((record) => {
           const facts = getRecordPreviewFacts(record);
           return <article className="catalog-record-card" key={record.slug}>
-            <div className="catalog-record-image"><Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 620px) 100vw, (max-width: 900px) 50vw, 25vw" />{record.mediaStatus === "reference" && <NeoBadge className="catalog-record-ref-badge">Reference image</NeoBadge>}<NeoBadge variant="dark" className="catalog-record-id-badge">{record.recordId}</NeoBadge></div>
+            <div className="catalog-record-image"><Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 460px) 100vw, (max-width: 820px) 50vw, (max-width: 1944px) 33vw, 640px" />{record.mediaStatus === "reference" && <NeoBadge className="catalog-record-ref-badge">Reference image</NeoBadge>}<NeoBadge variant="dark" className="catalog-record-id-badge">{record.recordId}</NeoBadge></div>
             <div className="catalog-record-card-copy"><p className="catalog-record-type">{record.recordType}</p><h3>{record.name}</h3><p>{record.summary}</p><dl>{facts.slice(0, 3).map((fact) => <div key={`${fact.label}-${fact.value}`}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>
             <button type="button" className="catalog-record-open" onClick={() => openRecord(record)}><span>Open record</span><em><ArrowRight aria-hidden="true" /></em></button>
           </article>;
