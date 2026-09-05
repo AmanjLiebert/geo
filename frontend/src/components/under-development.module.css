@@ -1,0 +1,339 @@
+.page {
+  height: calc(100svh - var(--header-height));
+  min-height: 0;
+  display: grid;
+  padding: clamp(12px, 1.6vw, 22px);
+  background: var(--fossil);
+  overflow: hidden;
+}
+
+/* Main Exploration Panel */
+.panel {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(380px, 1fr);
+  border: 2px solid var(--carbon);
+  border-radius: 6px;
+  box-shadow: 5px 5px 0 var(--carbon);
+  background: var(--limestone);
+  overflow: hidden;
+}
+
+/* Copy Column */
+.copy {
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(28px, 4vw, 56px);
+  overflow-y: auto;
+}
+
+.status {
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: clamp(20px, 3.2vh, 34px);
+  padding: 7px 13px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: var(--ochre);
+  box-shadow: 2.5px 2.5px 0 var(--carbon);
+  font: 700 11.5px/1.2 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+}
+
+.status > span:last-child {
+  padding-left: 9px;
+  border-left: 1px solid rgba(32, 35, 31, 0.35);
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--iron);
+  flex-shrink: 0;
+  animation: indicator_pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes indicator_pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.55;
+  }
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--iron);
+  font: 700 12px/1.3 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.copy h1 {
+  max-width: 640px;
+  margin: 0;
+  font-size: clamp(30px, 3.8vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+  color: var(--carbon);
+}
+
+.message {
+  max-width: 540px;
+  margin: 18px 0 0;
+  color: var(--ink-soft);
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.5;
+}
+
+.note {
+  max-width: 520px;
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--moss);
+}
+
+/* 4. Navigation Buttons */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: clamp(22px, 3.5vh, 34px);
+}
+
+.actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 var(--carbon);
+  font: 700 11px/1.3 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: background 0.15s, color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.actions a:hover,
+.actions a:focus-visible {
+  box-shadow: 1px 1px 0 var(--carbon);
+  transform: translate(2px, 2px);
+  outline: 0;
+}
+
+.actions a:focus-visible {
+  outline: 3px solid var(--ochre);
+  outline-offset: 4px;
+}
+
+.actionHome {
+  color: var(--limestone);
+  background: var(--iron);
+}
+
+.actionHome:hover {
+  background: var(--carbon);
+  color: var(--limestone);
+}
+
+.actionExplore {
+  color: var(--carbon);
+  background: var(--ochre);
+}
+
+.actionExplore:hover {
+  background: var(--limestone);
+  color: var(--carbon);
+}
+
+.actionResearch {
+  color: var(--carbon);
+  background: var(--limestone);
+}
+
+.actionResearch:hover {
+  background: var(--fossil);
+  color: var(--carbon);
+}
+
+/* 5. Visual Column */
+.visual {
+  position: relative;
+  min-height: 380px;
+  background: #ecdcc8;
+  border-left: 2px solid var(--carbon);
+  overflow: hidden;
+  display: flex;
+}
+
+.marker {
+  position: absolute;
+  z-index: 4;
+  left: 20px;
+  bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: var(--carbon);
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 var(--carbon);
+  font: 700 11px/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+}
+
+.marker svg {
+  width: 15px;
+  height: 15px;
+  color: var(--iron);
+  flex-shrink: 0;
+}
+
+/* Responsive Rules */
+@media (max-width: 960px) {
+  .page {
+    height: auto;
+    min-height: calc(100svh - var(--header-height));
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  .panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .copy {
+    padding: 28px 20px;
+  }
+
+  .visual {
+    min-height: 300px;
+    aspect-ratio: 16 / 10;
+    border-left: 0;
+    border-top: 2px solid var(--carbon);
+  }
+
+  .marker {
+    left: 14px;
+    bottom: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 8px;
+  }
+
+  .copy {
+
+    padding: 20px 14px;
+  }
+
+  .status {
+    margin-bottom: 14px;
+    padding: 5px 9px;
+    font-size: 10px;
+  }
+
+  .eyebrow {
+    margin-bottom: 6px;
+    font-size: 10.5px;
+  }
+
+  .copy h1 {
+    font-size: clamp(26px, 8vw, 36px);
+    line-height: 1.05;
+  }
+
+  .message {
+    margin-top: 12px;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .note {
+    margin-top: 10px;
+    font-size: 12.5px;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .actions a {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 10.5px;
+  }
+
+  .visual {
+    min-height: 220px;
+    aspect-ratio: 16 / 11;
+  }
+
+  .marker {
+    font-size: 9.5px;
+    padding: 6px 9px;
+    gap: 5px;
+  }
+}
+
+@media (max-height: 740px) and (min-width: 961px) {
+  .copy {
+    padding: 18px 30px;
+  }
+
+  .status {
+    margin-bottom: 12px;
+  }
+
+  .copy h1 {
+    font-size: clamp(28px, 3.2vw, 44px);
+  }
+
+  .message {
+    margin-top: 10px;
+    font-size: 15px;
+  }
+
+  .note {
+    margin-top: 8px;
+  }
+
+  .actions {
+    margin-top: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    animation: none !important;
+  }
+}
+
+

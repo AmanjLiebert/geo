@@ -132,6 +132,72 @@ export const researchDocuments: ResearchDocument[] = [
     ],
     references: [{ label: "Editorial note", detail: "Accessible field-writing example created for the Geo-Kurdistan showcase." }],
   },
+  {
+    publicationSlug: "rawandiz-canyon-field-notes",
+    readingTime: "7 minute read",
+    relatedRecordSlugs: ["rawandiz-folded-landscape", "carbonate-cliff-section", "rawandiz-carbonate-rock"],
+    sections: [
+      { id: "setting", title: "Begin with the canyon setting", paragraphs: ["The canyon walls expose laterally persistent beds at a scale that helps visitors see continuity, interruption and weathering. A useful field note records viewing position and direction before naming individual units."], figure: images.canyon },
+      { id: "boundaries", title: "Visible contacts and provisional boundaries", paragraphs: ["Changes in colour, resistance or bed thickness may guide closer inspection, but they do not independently establish a formal formation boundary. Measured sections and reviewed mapping remain necessary."], figure: images.road },
+      { id: "return", title: "Questions for a return visit", paragraphs: ["Future field checks should prioritize safe measurement sites, traceable contacts and photographs with consistent scale. Uncertain observations remain useful when their limits are recorded clearly."] },
+    ],
+    references: [{ label: "Showcase field synthesis", detail: "Mock field report assembled to test locality-based research reading and teacher review." }],
+  },
+  {
+    publicationSlug: "dukan-basin-landform-review",
+    readingTime: "10 minute read",
+    relatedRecordSlugs: ["drainage-terrain-model", "regional-cross-section", "korek-ridge-observation"],
+    sections: [
+      { id: "basin-view", title: "What a basin-scale view can show", paragraphs: ["Wide views connect shoreline geometry, valley position and surrounding relief. They provide orientation for later mapping but do not reveal the full geometry beneath the reservoir."], figure: images.dukan },
+      { id: "water-level", title: "Separate water level from geological form", paragraphs: ["Reservoir level changes can alter the visible shoreline over short periods. Geological interpretation should distinguish these changes from more persistent landforms and rock boundaries."] },
+      { id: "evidence", title: "Link the view to stronger evidence", paragraphs: ["Topographic models, verified maps and field sections can test relationships suggested by the landscape. Each source should retain its date, scale and uncertainty."] },
+    ],
+    references: [{ label: "Landscape review note", detail: "Showcase interpretation for interface testing; not a hydrological or engineering assessment." }],
+  },
+  {
+    publicationSlug: "mountain-springs-observation-guide",
+    readingTime: "8 minute read",
+    relatedRecordSlugs: ["mountain-spring-record", "karst-cavity-observation", "gali-ali-beg-erosion"],
+    sections: [
+      { id: "observe-water", title: "Record the emergence point", paragraphs: ["A spring observation begins with the position of visible discharge, nearby rock surfaces and the relationship to fractures or bedding. Photographs should include orientation and scale."], figure: images.water },
+      { id: "season", title: "Add seasonal context", paragraphs: ["A single visit cannot establish a seasonal pattern. Local accounts, repeated discharge observations and rainfall records can help separate persistent flow from short-lived response."] },
+      { id: "interpretation", title: "Keep flow-path claims provisional", paragraphs: ["The place where water appears is not necessarily where recharge occurred. Subsurface connections require evidence beyond surface appearance, especially in fractured or karstic terrain."] },
+    ],
+    references: [{ label: "Observation protocol", detail: "Mock hydrogeology method prepared for teacher feedback on required public fields." }],
+  },
+  {
+    publicationSlug: "zagros-patterns-from-orbit",
+    readingTime: "12 minute read",
+    relatedRecordSlugs: ["zagros-fold-pattern", "rawandiz-folded-landscape", "regional-cross-section"],
+    sections: [
+      { id: "regional-pattern", title: "Recognize the regional structural grain", paragraphs: ["Satellite imagery makes repeated elongated ridges visible across a large area. These patterns can guide questions about fold orientation and continuity, but resolution and surface cover limit interpretation."], figure: images.satellite },
+      { id: "field-scale", title: "Move from orbit to field scale", paragraphs: ["Field observations test whether apparent lines correspond to beds, contacts, faults or landform edges. Scale changes should be explicit whenever two images are compared."], figure: images.ridge },
+      { id: "limits", title: "State image limits beside conclusions", paragraphs: ["Cloud, shadow, seasonal vegetation and image processing can change what appears prominent. A public interpretation should identify these limits instead of presenting the image as self-explanatory."] },
+    ],
+    references: [{ label: "Imagery interpretation note", detail: "Showcase remote-sensing article using openly attributed project imagery." }],
+  },
+  {
+    publicationSlug: "fossil-photography-comparison",
+    readingTime: "6 minute read",
+    relatedRecordSlugs: ["ammonite-reference", "rudist-shell-fragment", "fossiliferous-limestone"],
+    sections: [
+      { id: "identity", title: "Keep identity inside every image set", paragraphs: ["The specimen identifier should remain connected to the image sequence rather than relying on filenames alone. A scale, orientation note and view label make later comparison more reliable."], figure: images.ammonite },
+      { id: "lighting", title: "Use light to reveal, not exaggerate", paragraphs: ["Raking light can clarify surface relief, while diffuse light supports colour comparison. Recording the setup helps viewers understand why the same specimen may look different across images."] },
+      { id: "sequence", title: "Build a repeatable view sequence", paragraphs: ["A consistent sequence of overall, side and detail views makes collection browsing faster and reveals when an important surface has not been documented."] },
+    ],
+    references: [{ label: "Collection imaging method", detail: "Mock technical note for evaluating future fossil media requirements." }],
+  },
+  {
+    publicationSlug: "teaching-with-provisional-records",
+    readingTime: "9 minute read",
+    relatedRecordSlugs: ["field-sample-documentation", "thin-bedded-chert", "dark-laminated-shale"],
+    sections: [
+      { id: "status", title: "Make review status visible", paragraphs: ["A provisional label tells learners which statement still needs verification. It should sit beside the claim it qualifies and explain what kind of evidence or review is missing."] },
+      { id: "compare", title: "Compare observation with interpretation", paragraphs: ["Students can separate visible properties from proposed origin, age or classification. Comparing those layers makes uncertainty concrete rather than treating it as a warning to ignore the record."], figure: images.fold },
+      { id: "revision", title: "Use revision as part of the lesson", paragraphs: ["When a teacher corrects a record, the change can demonstrate how geological knowledge improves through evidence, citation and peer discussion."] },
+    ],
+    references: [{ label: "Education showcase note", detail: "Mock teaching article intended for feedback from regional geology educators." }],
+  },
 ];
 
 export const fieldStories: FieldStory[] = [

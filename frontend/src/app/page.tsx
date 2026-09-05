@@ -61,7 +61,7 @@ export default function Home() {
         <div className={styles.researchGrid}>
           {research.map((item) => (
             <Link className={styles.researchCard} href="/research" key={item.slug}>
-              <div className={styles.researchImage}><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 100vw, 34vw" /><NeoBadge variant="dark" className={styles.imageBadge}>{item.topic}</NeoBadge></div>
+              <div className={styles.researchImage}><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 100vw, 34vw" /><b className={styles.researchTopic}>{item.topic}</b></div>
               <div><small>{item.type} · {item.year}</small><h3>{item.title}</h3><p>{item.abstract}</p><footer><span>{item.authors}</span><ArrowUpRight aria-hidden="true" /></footer></div>
             </Link>
           ))}

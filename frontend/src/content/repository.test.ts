@@ -5,6 +5,7 @@ import {
   getProduct,
   getRecordBySlug,
   getResearch,
+  getResearchDocument,
   listProducts,
   listRecords,
   listResearch,
@@ -31,13 +32,18 @@ describe("showcase content repository", () => {
   });
 
   it("filters publications and study objects by their local display categories", () => {
-    expect(listResearch({ type: "Methods paper" }).map((item) => item.slug)).toEqual(["cataloguing-regional-formations"]);
+    expect(listResearch({ type: "Methods paper" }).map((item) => item.slug)).toEqual(["cataloguing-regional-formations", "mountain-springs-observation-guide"]);
     expect(listProducts({ category: "Map print" }).map((item) => item.slug)).toEqual(["zagros-fold-map"]);
+  });
+
+  it("keeps every showcase publication connected to readable content", () => {
+    expect(listResearch()).toHaveLength(9);
+    expect(listResearch().every((publication) => getResearchDocument(publication.slug)?.sections.length)).toBe(true);
   });
 
   it("groups global search results by discriminated content kind", () => {
     const results = searchContent({ q: "Rawandiz" });
-    expect(new Set(results.map((result) => result.kind))).toEqual(new Set(["record", "location", "field"]));
+    expect(new Set(results.map((result) => result.kind))).toEqual(new Set(["record", "research", "location", "field"]));
     expect(searchContent({ q: "field", type: "research" }).every((result) => result.kind === "research")).toBe(true);
   });
 

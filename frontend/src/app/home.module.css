@@ -80,7 +80,7 @@
 .researchCard { min-width:0; display:grid; grid-template-rows:210px minmax(215px,auto); background:var(--limestone); }
 .researchImage { position:relative; overflow:hidden; background:var(--shale); }
 .researchImage img { object-fit:cover; filter:saturate(.7) contrast(1.06); transition:transform 300ms ease,filter 180ms linear; }
-.researchImage > span { position:absolute; left:10px; top:10px; padding:7px 9px; color:var(--limestone); background:var(--carbon); border:1px solid var(--limestone); box-shadow:3px 3px 0 var(--iron); font-family:var(--mono); font-size:9px; text-transform:uppercase; }
+.researchImage > span { position:absolute; }
 .researchCard > div:last-child { display:flex; flex-direction:column; padding:18px; }
 .researchCard small,.researchCard footer { font-family:var(--mono); font-size:9px; text-transform:uppercase; }
 .researchCard small { color:var(--iron); }
@@ -149,7 +149,7 @@
 .researchGrid { gap: 18px; padding: 18px 22px 22px 18px; background: var(--fossil); }
 .researchCard,.researchCard:nth-child(2),.researchCard:nth-child(3) { overflow: hidden; background: var(--card-surface); border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); transition: transform 160ms ease,box-shadow 160ms ease,background-color 160ms ease; }
 .researchCard:hover { box-shadow: var(--card-shadow-hover); transform: translate(2px,2px); }
-.imageBadge { position: absolute; top: 11px; left: 11px; }
+.researchImage > b.researchTopic { position: absolute; top: 12px; right: auto; bottom: auto; left: 12px; display: inline-flex; align-items: center; padding: 6px 9px; color: var(--carbon); background: var(--ochre); border: 2px solid var(--carbon); border-radius: var(--neo-radius); box-shadow: 3px 3px 0 var(--carbon); font: 600 10px/1 var(--mono); letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
 
 .fieldJournal { gap: 16px; padding: 18px 22px 22px 18px; background: var(--fossil); }
 .fieldJournal > a { overflow: hidden; background: var(--card-surface); border: var(--card-border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); transition: transform 150ms ease,box-shadow 150ms ease,background-color 150ms ease; }

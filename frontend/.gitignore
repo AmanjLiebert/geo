@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated sample-publication working files (served PDFs live in public/)
+/output/pdf/
+/tmp/pdfs/

@@ -1,0 +1,215 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: stretch;
+  background: #ecdcc8;
+  overflow: hidden;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Animations */
+@keyframes cloud_slow {
+  0% {
+    transform: translateX(-350px);
+  }
+  100% {
+    transform: translateX(1050px);
+  }
+}
+
+@keyframes cloud_mid {
+  0% {
+    transform: translateX(-200px);
+  }
+  100% {
+    transform: translateX(1100px);
+  }
+}
+
+@keyframes mountain_drift {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-400px);
+  }
+}
+
+@keyframes terrain_scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-400px);
+  }
+}
+
+@keyframes tracks_scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-120px);
+  }
+}
+
+@keyframes strata_scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-240px);
+  }
+}
+
+@keyframes rover_jig {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+
+@keyframes wheel_spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes radar_scan {
+  0% {
+    transform: rotate(-25deg);
+  }
+  50% {
+    transform: rotate(35deg);
+  }
+  100% {
+    transform: rotate(-25deg);
+  }
+}
+
+@keyframes hazard_flash {
+  0%, 100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes beam_pulse {
+  0%, 100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+/* Scoped classes */
+.cloudSlow {
+  animation: cloud_slow 38s linear infinite;
+}
+
+.cloudMid {
+  animation: cloud_mid 24s linear infinite;
+}
+
+.mountainLayer {
+  animation: mountain_drift 40s linear infinite;
+}
+
+.terrainLayer {
+  animation: terrain_scroll 12s linear infinite;
+}
+
+.tracksLayer {
+  animation: tracks_scroll 1.2s linear infinite;
+}
+
+.strataLayer {
+  animation: strata_scroll 8s linear infinite;
+}
+
+.roverBody {
+  animation: rover_jig 0.45s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.wheel {
+  animation: wheel_spin 1.2s linear infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.radarDish {
+  animation: radar_scan 3.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.hazardLight {
+  animation: hazard_flash 1.2s ease-in-out infinite;
+}
+
+.lightBeam {
+  animation: beam_pulse 2.8s ease-in-out infinite;
+}
+
+.roverText {
+  font-family: var(--mono, monospace);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  fill: #20231f;
+  text-anchor: middle;
+}
+
+.roverSubtext {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  fill: #9e4d37;
+  text-anchor: middle;
+}
+
+
+.fossilSymbol {
+  opacity: 0.35;
+}
+
+.depthRuler text {
+  font-family: var(--mono, monospace);
+  font-size: 8px;
+  font-weight: 600;
+  fill: rgba(251, 248, 241, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloudSlow,
+  .cloudMid,
+  .mountainLayer,
+  .terrainLayer,
+  .tracksLayer,
+  .strataLayer,
+  .roverBody,
+  .wheel,
+  .radarDish,
+  .hazardLight,
+  .lightBeam {
+    animation: none !important;
+  }
+}

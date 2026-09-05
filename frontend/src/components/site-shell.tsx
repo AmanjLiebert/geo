@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Archive, ArrowRight, BookOpenText, Compass, Mail, MapPinned, Menu, Search, type LucideIcon } from "lucide-react";
+import { Archive, ArrowRight, BookOpenText, Compass, Mail, MapPinned, Menu, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { NeoBadge } from "./neo-badge";
 import { HomePreviewNotice } from "./home-preview-notice";
 import { PrimaryNavigation } from "./primary-navigation";
+import { NavbarSearch } from "./navbar-search";
 
 function BrutalBrand({ light = false }: { light?: boolean }) {
   return (
@@ -25,7 +26,7 @@ export function SiteHeader() {
           <BrutalBrand />
           <PrimaryNavigation className="brutal-links" label="Primary navigation" />
           <div className="brutal-tools">
-            <Link className="brutal-search" href="/search" aria-label="Search the archive"><Search aria-hidden="true" /></Link>
+            <NavbarSearch />
           </div>
           <div className="brutal-mobile">
             <details className="mobile-menu">

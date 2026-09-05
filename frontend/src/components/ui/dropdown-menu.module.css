@@ -1,0 +1,192 @@
+.positioner {
+  position: relative;
+  z-index: 100;
+  outline: none;
+}
+
+.content {
+  min-width: 220px;
+  max-width: calc(100vw - 32px);
+  max-height: var(--available-height, 420px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px;
+  background: var(--limestone, #fbf8f1);
+  color: var(--carbon, #20231f);
+  border: 2px solid var(--carbon, #20231f);
+  border-radius: var(--neo-radius, 4px);
+  box-shadow: 4px 4px 0 var(--carbon, #20231f);
+  outline: none;
+  font-family: var(--sans);
+  animation: enter 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.content[data-closed] {
+  animation: exit 100ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  display: block;
+  padding: 6px 10px 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--iron, #9e4d37);
+  user-select: none;
+}
+
+.label[data-inset="true"],
+.item[data-inset="true"],
+.subTrigger[data-inset="true"] {
+  padding-left: 28px;
+}
+
+.item,
+.subTrigger,
+.checkboxItem,
+.radioItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--carbon, #20231f);
+  text-decoration: none;
+  border-radius: 3px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: background-color 100ms ease, color 100ms ease;
+  border: 1px solid transparent;
+}
+
+.item svg,
+.subTrigger svg,
+.checkboxItem svg,
+.radioItem svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.item:hover,
+.item:focus-visible,
+.item[data-highlighted],
+.subTrigger:hover,
+.subTrigger:focus-visible,
+.subTrigger[data-highlighted],
+.subTrigger[data-popup-open],
+.checkboxItem:hover,
+.checkboxItem:focus-visible,
+.checkboxItem[data-highlighted],
+.radioItem:hover,
+.radioItem:focus-visible,
+.radioItem[data-highlighted] {
+  background: var(--ochre, #d8c6a3);
+  color: var(--carbon, #20231f);
+  border-color: var(--carbon, #20231f);
+}
+
+.item[data-variant="destructive"] {
+  color: var(--iron, #9e4d37);
+}
+
+.item[data-variant="destructive"]:hover,
+.item[data-variant="destructive"]:focus-visible,
+.item[data-variant="destructive"][data-highlighted] {
+  background: #faeae6;
+  color: var(--iron, #9e4d37);
+  border-color: var(--iron, #9e4d37);
+}
+
+.item[data-disabled],
+.subTrigger[data-disabled],
+.checkboxItem[data-disabled],
+.radioItem[data-disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.checkboxItem,
+.radioItem {
+  padding-right: 32px;
+}
+
+.checkboxItem[data-checked],
+.radioItem[data-checked] {
+  font-weight: 800;
+  background: rgba(216, 198, 163, 0.4);
+}
+
+.indicator {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--carbon, #20231f);
+}
+
+.indicator svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.8;
+}
+
+.separator {
+  height: 2px;
+  margin: 5px 0;
+  background: var(--carbon, #20231f);
+  border: none;
+}
+
+.shortcut {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft, #51554f);
+}
+
+.subTriggerIcon {
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+}
