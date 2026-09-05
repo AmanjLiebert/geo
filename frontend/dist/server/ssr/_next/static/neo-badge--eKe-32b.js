@@ -1,0 +1,1 @@
+import{dt as e}from"../../index.js";var t={badge:`_badge_jg4v8_1`,default:`_default_jg4v8_20`,dark:`_dark_jg4v8_21`,clay:`_clay_jg4v8_22`,outline:`_outline_jg4v8_23`},n=e();function r({children:e,variant:r=`default`,className:i=``}){return(0,n.jsx)(`span`,{className:`${t.badge} ${t[r]} ${i}`.trim(),children:e})}export{r as t};

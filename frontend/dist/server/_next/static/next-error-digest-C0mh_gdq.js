@@ -1,0 +1,1 @@
+import{t as e}from"./redirect-digest-DP4qOLVK.js";function t(e){return!e||typeof e!=`object`||!(`digest`in e)?null:String(e.digest)}function n(t){return e(t)}function r(e){return e===`NEXT_NOT_FOUND`?{status:404}:e.startsWith(`NEXT_HTTP_ERROR_FALLBACK;`)?{status:parseInt(e.split(`;`)[1],10)}:null}export{r as n,n as r,t};
