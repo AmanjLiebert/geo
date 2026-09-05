@@ -15,6 +15,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { ReferenceList } from "@/components/content-interface";
+import { NeoBadge } from "@/components/neo-badge";
 import type {
   CategoryFilterDefinition,
   GeologicalCategory,
@@ -98,14 +99,14 @@ function CollectionChooser({
   return <section className={`catalog-chooser${compact ? " catalog-chooser--compact" : ""}`} aria-labelledby={compact ? "collection-dialog-title" : "collection-chooser-title"}>
     <header>
       <div><p className="eyebrow">Geological catalogue</p><h2 id={compact ? "collection-dialog-title" : "collection-chooser-title"}>Choose a collection</h2></div>
-      <p>{collections.length} subjects · {collections.reduce((total, item) => total + item.count, 0)} records</p>
+      <NeoBadge className="catalog-chooser-summary-badge">{collections.length} subjects · {collections.reduce((total, item) => total + item.count, 0)} records</NeoBadge>
     </header>
     {collections.length > COLLECTIONS_PER_PAGE && <label className="catalog-chooser-search"><Search aria-hidden="true" /><span className="sr-only">Find a collection</span><input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Find a collection" /></label>}
     <div className="catalog-chooser-grid">
       {visible.map(({ category, count }) => <button type="button" className="catalog-collection-button" onClick={() => onSelect(category.slug)} key={category.slug}>
         <span className="catalog-collection-image"><Image src={category.image.src} alt="" fill sizes="(max-width: 640px) 120px, 190px" /></span>
         <span className="catalog-collection-body">
-          <span className="catalog-collection-meta"><strong>{count} records</strong><small>Collection</small></span>
+          <span className="catalog-collection-meta"><NeoBadge className="catalog-collection-count-badge">{count} records</NeoBadge><small>Collection</small></span>
           <strong className="catalog-collection-title">{category.name}</strong>
           <span className="catalog-collection-caption">{category.image.caption}</span>
           <i><span>Open collection</span><em><ArrowRight aria-hidden="true" /></em></i>
@@ -190,7 +191,7 @@ function RecordReader({
     </nav>
 
     <header className="catalog-record-page-header">
-      <div className="catalog-record-kicker"><span>{record.recordType}</span><span>{record.recordId}</span><span>{record.status}</span></div>
+      <div className="catalog-record-kicker"><NeoBadge>{record.recordType}</NeoBadge><NeoBadge variant="dark">{record.recordId}</NeoBadge><NeoBadge variant="clay">{record.status}</NeoBadge></div>
       <h2 id="catalog-reader-title">{record.name}</h2>
       <p>{record.summary}</p>
       <dl>
@@ -347,7 +348,11 @@ export function ExploreBrowser({
         <header className="catalog-collection-commandbar">
           <button type="button" className="catalog-action catalog-action--primary" onClick={closeCollection}><ArrowLeft aria-hidden="true" /> Back to collections</button>
           <div><p>{category.eyebrow}</p><h2 id="catalog-collection-title">{category.name}</h2></div>
-          <span><strong>{categoryRecords.length}</strong> records</span>
+          <div className="catalog-record-controls">
+            <details className="catalog-search-menu"><summary className="catalog-action catalog-action--secondary"><Search aria-hidden="true" /> Search{query.q ? " · 1" : ""}</summary><form onSubmit={onSearch}><label htmlFor="catalog-search">Search this collection</label><div><Search aria-hidden="true" /><input id="catalog-search" value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder={`Name, place or type`} /><button type="submit" className="catalog-action catalog-action--primary">Apply</button></div></form></details>
+            {filterDefinitions.length > 0 && <details className="catalog-filter-menu"><summary className="catalog-action catalog-action--secondary"><Filter aria-hidden="true" /> Filter{exploreFilterKeys.filter((key) => query[key]).length ? ` · ${exploreFilterKeys.filter((key) => query[key]).length}` : ""}</summary><div><header><strong>{category.name} filters</strong><button type="button" className="catalog-text-action" onClick={() => updateQuery({ ...emptyQuery })}>Reset</button></header>{filterDefinitions.map((definition) => <fieldset key={definition.key}><legend>{definition.label}</legend><div><button type="button" className={!query[definition.key] ? "active" : ""} onClick={() => updateQuery({ [definition.key]: "", page: 1 })}>All</button>{definition.values.map((value) => <button type="button" className={query[definition.key] === value ? "active" : ""} onClick={() => updateQuery({ [definition.key]: value, page: 1 })} key={value}>{value}</button>)}</div></fieldset>)}</div></details>}
+          </div>
+          <NeoBadge className="catalog-collection-badge">{categoryRecords.length} records</NeoBadge>
         </header>
 
         <section className="catalog-collection-introduction" aria-labelledby="catalog-collection-about-title">
@@ -358,17 +363,13 @@ export function ExploreBrowser({
 
         <div className="catalog-results-heading">
           <div><p className="eyebrow">Browse the collection</p><h3><strong>{filteredRecords.length}</strong> {filteredRecords.length === 1 ? "record" : "records"}</h3><span>{filteredRecords.length ? `Showing ${pagination.startIndex + 1}–${Math.min(pagination.startIndex + pagination.items.length, filteredRecords.length)}` : "No matching records"}</span></div>
-          <div className="catalog-record-controls">
-            <details className="catalog-search-menu"><summary className="catalog-action catalog-action--secondary"><Search aria-hidden="true" /> Search{query.q ? " · 1" : ""}</summary><form onSubmit={onSearch}><label htmlFor="catalog-search">Search this collection</label><div><Search aria-hidden="true" /><input id="catalog-search" value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder={`Name, place or type`} /><button type="submit" className="catalog-action catalog-action--primary">Apply</button></div></form></details>
-            {filterDefinitions.length > 0 && <details className="catalog-filter-menu"><summary className="catalog-action catalog-action--secondary"><Filter aria-hidden="true" /> Filter{exploreFilterKeys.filter((key) => query[key]).length ? ` · ${exploreFilterKeys.filter((key) => query[key]).length}` : ""}</summary><div><header><strong>{category.name} filters</strong><button type="button" className="catalog-text-action" onClick={() => updateQuery({ ...emptyQuery })}>Reset</button></header>{filterDefinitions.map((definition) => <fieldset key={definition.key}><legend>{definition.label}</legend><div><button type="button" className={!query[definition.key] ? "active" : ""} onClick={() => updateQuery({ [definition.key]: "", page: 1 })}>All</button>{definition.values.map((value) => <button type="button" className={query[definition.key] === value ? "active" : ""} onClick={() => updateQuery({ [definition.key]: value, page: 1 })} key={value}>{value}</button>)}</div></fieldset>)}</div></details>}
-          </div>
         </div>
 
         {hasRefinements && <div className="catalog-active-filters"><span>Showing</span>{query.q && <button type="button" onClick={() => updateQuery({ q: "", page: 1 })}>“{query.q}” <X aria-hidden="true" /></button>}{exploreFilterKeys.map((key) => query[key] ? <button type="button" onClick={() => updateQuery({ [key]: "", page: 1 })} key={key}>{query[key]} <X aria-hidden="true" /></button> : null)}<button type="button" className="catalog-text-action" onClick={() => updateQuery({ ...emptyQuery })}>Clear all</button></div>}
         {pagination.items.length ? <div className="catalog-record-grid">{pagination.items.map((record) => {
           const facts = getRecordPreviewFacts(record);
           return <article className="catalog-record-card" key={record.slug}>
-            <div className="catalog-record-image"><Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 620px) 100vw, (max-width: 900px) 50vw, 25vw" />{record.mediaStatus === "reference" && <small>Reference image</small>}<span>{record.recordId}</span></div>
+            <div className="catalog-record-image"><Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 620px) 100vw, (max-width: 900px) 50vw, 25vw" />{record.mediaStatus === "reference" && <NeoBadge className="catalog-record-ref-badge">Reference image</NeoBadge>}<NeoBadge variant="dark" className="catalog-record-id-badge">{record.recordId}</NeoBadge></div>
             <div className="catalog-record-card-copy"><p className="catalog-record-type">{record.recordType}</p><h3>{record.name}</h3><p>{record.summary}</p><dl>{facts.slice(0, 3).map((fact) => <div key={`${fact.label}-${fact.value}`}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>
             <button type="button" className="catalog-record-open" onClick={() => openRecord(record)}><span>Open record</span><em><ArrowRight aria-hidden="true" /></em></button>
           </article>;
