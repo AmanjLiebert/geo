@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: "Browse every geological collection and record in the Geo-Kurdistan showcase.",
 };
 
-export default async function ExplorePage({ searchParams }: PageProps<"/explore">) {
-  return <ExploreRoute searchParams={await searchParams} />;
+export default function ExplorePage() {
+  return <ExploreRoute searchParams={{}} />;
 }

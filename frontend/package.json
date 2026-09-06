@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:sites": "vinext build",
+    "build:sites": "next build",
     "start": "next start",
-    "start:sites": "wrangler dev --config dist/server/wrangler.json",
+    "start:sites": "wrangler dev",
     "lint": "eslint",
     "test": "vitest run"
   },

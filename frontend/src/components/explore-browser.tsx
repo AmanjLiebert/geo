@@ -280,15 +280,16 @@ export function ExploreBrowser({
   }, []);
 
   useEffect(() => {
-    const onPopState = () => {
+    const syncLocation = () => {
       const state = readLocationState();
       setCategorySlug(state.categorySlug);
       setRecordSlug(state.recordSlug);
       setQuery(state.query);
       setSearchDraft(state.query.q);
     };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    syncLocation();
+    window.addEventListener("popstate", syncLocation);
+    return () => window.removeEventListener("popstate", syncLocation);
   }, []);
 
   const openCollection = (slug: string) => {

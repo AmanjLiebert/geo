@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ResearchBrowser } from "@/components/research-browser";
 import { getResearchLibrary } from "@/content/research-library";
 import { getResearch, listResearch } from "@/content/repository";
-import { parseResearchView, researchSearchParams } from "@/lib/research-view";
+import { parseResearchView } from "@/lib/research-view";
 
 export function generateStaticParams() { return listResearch().map((item) => ({ slug: item.slug })); }
 
@@ -13,9 +13,9 @@ export async function generateMetadata({ params }: PageProps<"/research/[slug]/r
   return publication ? { title: `Read: ${publication.title}`, description: publication.abstract, alternates: { canonical: `/research/${slug}/read` } } : { title: "Research reader" };
 }
 
-export default async function ResearchReaderPage({ params, searchParams }: PageProps<"/research/[slug]/read">) {
+export default async function ResearchReaderPage({ params }: PageProps<"/research/[slug]/read">) {
   const { slug } = await params;
   const entries = getResearchLibrary();
   if (!entries.some(({ publication }) => publication.slug === slug)) notFound();
-  return <ResearchBrowser entries={entries} initialView={parseResearchView(`/research/${slug}/read`, researchSearchParams(await searchParams))} />;
+  return <ResearchBrowser entries={entries} initialView={parseResearchView(`/research/${slug}/read`, new URLSearchParams())} />;
 }

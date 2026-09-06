@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: PageProps<"/explore/[category
   };
 }
 
-export default async function RecordPage({ params, searchParams }: PageProps<"/explore/[category]/[slug]">) {
+export default async function RecordPage({ params }: PageProps<"/explore/[category]/[slug]">) {
   const { category, slug } = await params;
-  return <ExploreRoute selectedCategorySlug={category} selectedRecordSlug={slug} searchParams={await searchParams} />;
+  return <ExploreRoute selectedCategorySlug={category} selectedRecordSlug={slug} searchParams={{}} />;
 }

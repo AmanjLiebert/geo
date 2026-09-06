@@ -192,6 +192,9 @@ export function ResearchBrowser({ entries, initialView }: { entries: ResearchEnt
     else navigate(next, true);
   }, [navigate]);
   useEffect(() => {
+    const initial = parseResearchView(window.location.pathname, new URLSearchParams(window.location.search));
+    viewRef.current = initial;
+    setView(initial);
     const pop = () => {
       const previous = viewRef.current;
       scrollPositions.current.set(researchHref(previous), window.scrollY);
