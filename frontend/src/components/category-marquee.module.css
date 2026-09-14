@@ -5,15 +5,14 @@
   background: var(--fossil);
   border-bottom: 2px solid var(--carbon);
   cursor: grab;
-  scrollbar-width: thin;
-  scrollbar-color: var(--iron) transparent;
+  scrollbar-width: none;
   -ms-overflow-style: none;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-x pan-y pinch-zoom;
   overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
-.viewport::-webkit-scrollbar { height: 5px; }
-.viewport::-webkit-scrollbar-thumb { background: var(--iron); }
+.viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .viewport.dragging { cursor: grabbing; scroll-behavior: auto; }
 .viewport:focus-visible { outline-offset: -5px; }
 

@@ -44,12 +44,9 @@ function CategoryGroup({ items, duplicate = false }: { items: CollectionRailItem
 export function CategoryMarquee({ categories, counts, highlights = [] }: { categories: GeologicalCategory[]; counts: Record<string, number>; highlights?: CollectionHighlight[] }) {
   const viewportRef = useRef<HTMLElement>(null);
   const dragRef = useRef<{ pointerId: number; startX: number; startScroll: number; moved: boolean } | null>(null);
-  const touchDragRef = useRef<{ identifier: number; startX: number; startY: number; startScroll: number; axis: "pending" | "horizontal" | "vertical"; moved: boolean } | null>(null);
   const suppressClickRef = useRef(false);
   const touchRef = useRef(false);
   const resumeTimerRef = useRef<number | null>(null);
-  const hoverRef = useRef(false);
-  const focusRef = useRef(false);
   const items: CollectionRailItem[] = [
     ...categories.map((category) => ({ slug: category.slug, name: category.name, href: `/explore/${category.slug}`, recordCount: counts[category.slug] ?? category.recordCount, image: category.image })),
     ...highlights,
@@ -59,7 +56,6 @@ export function CategoryMarquee({ categories, counts, highlights = [] }: { categ
     const viewport = viewportRef.current;
     if (!viewport) return;
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
     let lastTime = performance.now();
     let initialized = false;
@@ -73,11 +69,9 @@ export function CategoryMarquee({ categories, counts, highlights = [] }: { categ
       } else if (viewport.scrollLeft >= groupWidth * 2) {
         viewport.scrollLeft -= groupWidth;
         if (dragRef.current) dragRef.current.startScroll -= groupWidth;
-        if (touchDragRef.current) touchDragRef.current.startScroll -= groupWidth;
       } else if (viewport.scrollLeft <= groupWidth * 0.15) {
         viewport.scrollLeft += groupWidth;
         if (dragRef.current) dragRef.current.startScroll += groupWidth;
-        if (touchDragRef.current) touchDragRef.current.startScroll += groupWidth;
       }
     };
 
@@ -88,60 +82,23 @@ export function CategoryMarquee({ categories, counts, highlights = [] }: { categ
     };
 
     const resumeAfterTouch = () => {
+      if (resumeTimerRef.current !== null) window.clearTimeout(resumeTimerRef.current);
       resumeTimerRef.current = window.setTimeout(() => {
         touchRef.current = false;
         resumeTimerRef.current = null;
-      }, 700);
+      }, 900);
     };
 
-    const onTouchStart = (event: TouchEvent) => {
-      if (event.touches.length !== 1) return;
-      const touch = event.touches[0];
-      pauseTouch();
-      touchDragRef.current = {
-        identifier: touch.identifier,
-        startX: touch.clientX,
-        startY: touch.clientY,
-        startScroll: viewport.scrollLeft,
-        axis: "pending",
-        moved: false,
-      };
-      viewport.classList.add(styles.dragging);
+    const onTouchStart = () => pauseTouch();
+    const finishTouch = () => resumeAfterTouch();
+    const onNativeScroll = () => {
+      if (touchRef.current) resumeAfterTouch();
     };
-
-    const onTouchMove = (event: TouchEvent) => {
-      const drag = touchDragRef.current;
-      if (!drag) return;
-      const touch = Array.from(event.touches).find((item) => item.identifier === drag.identifier);
-      if (!touch) return;
-      const distanceX = touch.clientX - drag.startX;
-      const distanceY = touch.clientY - drag.startY;
-
-      if (drag.axis === "pending" && (Math.abs(distanceX) > 4 || Math.abs(distanceY) > 4)) {
-        drag.axis = Math.abs(distanceX) > Math.abs(distanceY) ? "horizontal" : "vertical";
-      }
-      if (drag.axis !== "horizontal") return;
-
-      drag.moved = true;
-      if (event.cancelable) event.preventDefault();
-      viewport.scrollLeft = drag.startScroll - distanceX;
-    };
-
-    const finishTouch = (event: TouchEvent, cancelled = false) => {
-      const drag = touchDragRef.current;
-      if (!drag || !Array.from(event.changedTouches).some((item) => item.identifier === drag.identifier)) return;
-      suppressClickRef.current = drag.moved && !cancelled;
-      window.setTimeout(() => { suppressClickRef.current = false; }, 500);
-      touchDragRef.current = null;
-      viewport.classList.remove(styles.dragging);
-      resumeAfterTouch();
-    };
-    const cancelTouch = (event: TouchEvent) => { finishTouch(event, true); };
 
     const animate = (time: number) => {
       normalizePosition();
       const elapsed = Math.min(time - lastTime, 32);
-      if (!reducedMotion && !dragRef.current && !touchRef.current && !hoverRef.current && !focusRef.current) {
+      if (!dragRef.current && !touchRef.current) {
         viewport.scrollLeft += elapsed * AUTO_SCROLL_SPEED;
       }
       lastTime = time;
@@ -149,17 +106,17 @@ export function CategoryMarquee({ categories, counts, highlights = [] }: { categ
     };
 
     viewport.addEventListener("touchstart", onTouchStart, { passive: true });
-    viewport.addEventListener("touchmove", onTouchMove, { passive: false });
     viewport.addEventListener("touchend", finishTouch, { passive: true });
-    viewport.addEventListener("touchcancel", cancelTouch, { passive: true });
+    viewport.addEventListener("touchcancel", finishTouch, { passive: true });
+    viewport.addEventListener("scroll", onNativeScroll, { passive: true });
     frame = requestAnimationFrame(animate);
     return () => {
       cancelAnimationFrame(frame);
       if (resumeTimerRef.current !== null) window.clearTimeout(resumeTimerRef.current);
       viewport.removeEventListener("touchstart", onTouchStart);
-      viewport.removeEventListener("touchmove", onTouchMove);
       viewport.removeEventListener("touchend", finishTouch);
-      viewport.removeEventListener("touchcancel", cancelTouch);
+      viewport.removeEventListener("touchcancel", finishTouch);
+      viewport.removeEventListener("scroll", onNativeScroll);
     };
   }, []);
 
@@ -232,13 +189,9 @@ export function CategoryMarquee({ categories, counts, highlights = [] }: { categ
       tabIndex={0}
       onClickCapture={handleClickCapture}
       onDragStart={(event) => { event.preventDefault(); }}
-      onFocus={() => { focusRef.current = true; }}
-      onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) focusRef.current = false; }}
       onKeyDown={handleKeyDown}
       onPointerCancel={(event) => { finishDrag(event, true); }}
       onPointerDown={handlePointerDown}
-      onPointerEnter={(event) => { if (event.pointerType === "mouse") hoverRef.current = true; }}
-      onPointerLeave={(event) => { if (event.pointerType === "mouse") hoverRef.current = false; }}
       onPointerMove={handlePointerMove}
       onPointerUp={finishDrag}
     >

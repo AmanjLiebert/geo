@@ -1,4 +1,5 @@
 .root { position: relative; display: flex; align-items: center; }
+.root :global(.brutal-search[aria-expanded="true"]) { opacity: 0; pointer-events: none; }
 .overlay { position: fixed; z-index: 100; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: clamp(92px,18vh,180px) 20px 20px; background: rgba(32,35,31,.24); backdrop-filter: blur(6px); }
 .dialog { width: min(980px,100%); color: var(--carbon); filter: drop-shadow(12px 12px 0 var(--carbon)); }
 .overlayOpen { animation: searchOverlayIn 240ms ease-out both; }

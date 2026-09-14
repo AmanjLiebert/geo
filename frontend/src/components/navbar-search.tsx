@@ -3,6 +3,7 @@
 import Link from "@/components/safe-link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
+import { createPortal } from "react-dom";
 import { GeoCloseIcon, GeoSearchIcon } from "@/components/geo-icons";
 import { searchContent } from "@/content/repository";
 import styles from "./navbar-search.module.css";
@@ -62,7 +63,7 @@ export function NavbarSearch() {
     <button ref={triggerRef} className="brutal-search" type="button" aria-label="Search the archive" aria-expanded={open} aria-controls="navbar-search-panel" onClick={open ? closeSearch : openSearch}>
       {open ? <GeoCloseIcon className="navigation-search-icon" aria-hidden="true" /> : <GeoSearchIcon className="navigation-search-icon" aria-hidden="true" />}
     </button>
-    {rendered && <div className={`${styles.overlay} ${open ? styles.overlayOpen : styles.overlayClosing}`} onPointerDown={(event) => { if (event.target === event.currentTarget) closeSearch(); }}>
+    {rendered && createPortal(<div className={`${styles.overlay} ${open ? styles.overlayOpen : styles.overlayClosing}`} onPointerDown={(event) => { if (event.target === event.currentTarget) closeSearch(); }}>
       <div ref={dialogRef} className={`${styles.dialog} ${open ? styles.dialogOpen : styles.dialogClosing}`} id="navbar-search-panel" role="dialog" aria-modal="true" aria-label="Search the geological archive">
         <form className={styles.form} action="/search" onSubmit={closeSearch}>
           <GeoSearchIcon aria-hidden="true" />
@@ -74,6 +75,6 @@ export function NavbarSearch() {
           {results.length ? results.map((result) => <Link href={result.href} key={`${result.kind}-${result.slug}`} onClick={closeSearch}><span>{result.title}</span><ArrowUpRight aria-hidden="true" /></Link>) : <p>No matches found</p>}
         </div>}
       </div>
-    </div>}
+    </div>, document.body)}
   </div>;
 }
