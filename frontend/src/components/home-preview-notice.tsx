@@ -10,8 +10,9 @@ export function HomePreviewNotice() {
   if (pathname !== "/") return null;
 
   return <Link className="brutal-announcement" href="/explore">
-    <NeoBadge variant="clay">Teacher preview</NeoBadge>
-    <span>Explore the visitor showcase and help shape the geological archive</span>
+    <NeoBadge className="brutal-announcement-badge" variant="clay">Teacher preview</NeoBadge>
+    <span className="brutal-announcement-full">Explore the visitor showcase and help shape the geological archive</span>
+    <span className="brutal-announcement-short">Review the archive</span>
     <ArrowRight aria-hidden="true" />
   </Link>;
 }

@@ -17,7 +17,7 @@ export function PrototypeNotice({ title, children }: { title: string; children: 
 export function QueryForm({ action, value, placeholder, hidden = {} }: { action: string; value?: string; placeholder: string; hidden?: Record<string, string> }) {
   return <form className="query-form" action={action}>
     {Object.entries(hidden).filter(([, item]) => item).map(([name, item]) => <input type="hidden" name={name} value={item} key={name} />)}
-    <label><span>Search</span><div><Search aria-hidden="true" /><input name="q" defaultValue={value} placeholder={placeholder} /><button type="submit">Search</button></div></label>
+    <label><span>Search</span><div><Search aria-hidden="true" /><input name="q" defaultValue={value} placeholder={placeholder} /><button type="submit" data-ui-action="primary">Search</button></div></label>
   </form>;
 }
 
@@ -28,15 +28,15 @@ export function FilterChips({ label, basePath, values, active, params, paramKey 
     const query = next.toString();
     return `${basePath}${query ? `?${query}` : ""}`;
   };
-  return <div className="filter-group"><span>{label}</span><div><Link className={!active ? "active" : ""} href={buildHref()}>All</Link>{values.map((value) => <Link className={active === value ? "active" : ""} href={buildHref(value)} key={value}>{value}</Link>)}</div></div>;
+  return <div className="filter-group"><span>{label}</span><div><Link data-ui-action="filter" className={!active ? "active" : ""} href={buildHref()}>All</Link>{values.map((value) => <Link data-ui-action="filter" className={active === value ? "active" : ""} href={buildHref(value)} key={value}>{value}</Link>)}</div></div>;
 }
 
 export function ResultsHeader({ count, label, resetHref, filtered }: { count: number; label: string; resetHref: string; filtered: boolean }) {
-  return <div className="results-header"><p><strong>{count}</strong> {label}</p>{filtered && <Link href={resetHref}><RotateCcw aria-hidden="true" /> Reset filters</Link>}</div>;
+  return <div className="results-header"><p><strong>{count}</strong> {label}</p>{filtered && <Link data-ui-action="secondary" href={resetHref}><RotateCcw aria-hidden="true" /> Reset filters</Link>}</div>;
 }
 
 export function EmptyState({ title, text, resetHref }: { title: string; text: string; resetHref: string }) {
-  return <div className="empty-state"><span>0 results</span><h2>{title}</h2><p>{text}</p><Link href={resetHref}>Clear filters</Link></div>;
+  return <div className="empty-state"><span>0 results</span><h2>{title}</h2><p>{text}</p><Link data-ui-action="primary" href={resetHref}>Clear filters</Link></div>;
 }
 
 export function ReferenceList({ items }: { items: ContentReference[] }) {

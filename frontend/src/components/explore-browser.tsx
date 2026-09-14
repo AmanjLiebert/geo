@@ -3,17 +3,20 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type SyntheticEvent } from "react";
 import {
-  Archive,
-  ArrowLeft,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-  Filter,
-  Search,
-  X,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import {
+  GeoArchiveIcon,
+  GeoBackIcon,
+  GeoChevronIcon,
+  GeoCloseIcon,
+  GeoFilterIcon,
+  GeoSearchIcon,
+} from "@/components/geo-icons";
 import { ReferenceList } from "@/components/content-interface";
 import { NeoBadge } from "@/components/neo-badge";
 import type {
@@ -99,9 +102,9 @@ function CollectionChooser({
   return <section className={`catalog-chooser${compact ? " catalog-chooser--compact" : ""}`} aria-labelledby={compact ? "collection-dialog-title" : "collection-chooser-title"}>
     <header>
       <div><p className="eyebrow">Geological catalogue</p><h2 id={compact ? "collection-dialog-title" : "collection-chooser-title"}>Choose a collection</h2></div>
-      <NeoBadge className="catalog-chooser-summary-badge">{collections.length} subjects · {collections.reduce((total, item) => total + item.count, 0)} records</NeoBadge>
+      <NeoBadge className="catalog-chooser-summary-badge">{collections.length} collections · {collections.reduce((total, item) => total + item.count, 0)} records</NeoBadge>
     </header>
-    {collections.length > COLLECTIONS_PER_PAGE && <label className="catalog-chooser-search"><Search aria-hidden="true" /><span className="sr-only">Find a collection</span><input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Find a collection" /></label>}
+    {collections.length > COLLECTIONS_PER_PAGE && <label className="catalog-chooser-search"><GeoSearchIcon aria-hidden="true" /><span className="sr-only">Find a collection</span><input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Find a collection" /></label>}
     <div className="catalog-chooser-grid">
       {visible.map(({ category, count }) => <button type="button" className="catalog-collection-button" onClick={() => onSelect(category.slug)} key={category.slug}>
         <span className="catalog-collection-image"><Image src={category.image.src} alt="" fill sizes="(max-width: 620px) 100vw, (max-width: 1120px) 50vw, (max-width: 1504px) 33vw, 480px" /></span>
@@ -113,12 +116,39 @@ function CollectionChooser({
         </span>
       </button>)}
     </div>
-    {!visible.length && <div className="catalog-chooser-empty"><Archive aria-hidden="true" /><strong>No collection matches “{search}”.</strong><button type="button" className="catalog-action catalog-action--secondary" onClick={() => updateSearch("")}>Clear search</button></div>}
+    {!visible.length && <div className="catalog-chooser-empty"><GeoArchiveIcon aria-hidden="true" /><strong>No collection matches “{search}”.</strong><button type="button" data-ui-action="secondary" className="catalog-action catalog-action--secondary" onClick={() => updateSearch("")}>Clear search</button></div>}
     {totalPages > 1 && <nav className="catalog-chooser-pagination" aria-label="Collection pages">
-      <button type="button" className="catalog-action catalog-action--secondary catalog-action--icon" onClick={() => setPage(Math.max(1, safePage - 1))} disabled={safePage === 1} aria-label="Previous collection page"><ChevronLeft aria-hidden="true" /></button>
+      <button type="button" data-ui-action="pagination" data-ui-size="icon" className="catalog-action catalog-action--secondary catalog-action--icon" onClick={() => setPage(Math.max(1, safePage - 1))} disabled={safePage === 1} aria-label="Previous collection page"><ChevronLeft aria-hidden="true" /></button>
       <span>Page {safePage} of {totalPages}</span>
-      <button type="button" className="catalog-action catalog-action--secondary catalog-action--icon" onClick={() => setPage(Math.min(totalPages, safePage + 1))} disabled={safePage === totalPages} aria-label="Next collection page"><ChevronRight aria-hidden="true" /></button>
+      <button type="button" data-ui-action="pagination" data-ui-size="icon" className="catalog-action catalog-action--secondary catalog-action--icon" onClick={() => setPage(Math.min(totalPages, safePage + 1))} disabled={safePage === totalPages} aria-label="Next collection page"><ChevronRight aria-hidden="true" /></button>
     </nav>}
+  </section>;
+}
+
+function CollectionGuide({ category }: { category: GeologicalCategory }) {
+  const [open, setOpen] = useState(false);
+  const panelId = `collection-guide-${category.slug}`;
+
+  return <section className={`catalog-collection-introduction${open ? " is-open" : ""}`} aria-labelledby="catalog-collection-about-title">
+    <button
+      type="button"
+      data-ui-action="disclosure"
+      className="catalog-collection-guide-trigger"
+      aria-expanded={open}
+      aria-controls={panelId}
+      onClick={() => setOpen((value) => !value)}
+    >
+      <span>Collection guide</span>
+      <strong>About {category.name}</strong>
+      <GeoChevronIcon aria-hidden="true" />
+    </button>
+    <div className="catalog-collection-guide-panel" id={panelId}>
+      <div className="catalog-collection-guide-panel-inner">
+        <div className="catalog-collection-introduction-image"><Image src={category.image.src} alt={category.image.alt} fill sizes="(max-width: 760px) 100vw, 300px" /></div>
+        <div className="catalog-collection-introduction-copy"><p className="eyebrow">Collection guide</p><h3 id="catalog-collection-about-title">About {category.name}</h3><p>{category.overview}</p><ul>{category.themes.map((theme) => <li key={theme}>{theme}</li>)}</ul></div>
+        <dl>{category.facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
+      </div>
+    </div>
   </section>;
 }
 
@@ -131,10 +161,10 @@ function FullscreenImage({ image, recordName, onClose }: { image: MediaAsset; re
     <header>
       <div><span>Image viewer</span><strong>{recordName}</strong></div>
       <div className="catalog-image-dialog-tools">
-        <button type="button" className="catalog-action catalog-action--light catalog-action--icon" onClick={() => setZoom(Math.max(1, zoom - .5))} disabled={zoom === 1} aria-label="Zoom out"><ZoomOut aria-hidden="true" /></button>
+        <button type="button" data-ui-action="utility" data-ui-size="icon" className="catalog-action catalog-action--light catalog-action--icon" onClick={() => setZoom(Math.max(1, zoom - .5))} disabled={zoom === 1} aria-label="Zoom out"><ZoomOut aria-hidden="true" /></button>
         <span>{Math.round(zoom * 100)}%</span>
-        <button type="button" className="catalog-action catalog-action--light catalog-action--icon" onClick={() => setZoom(Math.min(2.5, zoom + .5))} disabled={zoom === 2.5} aria-label="Zoom in"><ZoomIn aria-hidden="true" /></button>
-        <button type="button" className="catalog-action catalog-action--light" onClick={onClose} autoFocus><X aria-hidden="true" /> Close</button>
+        <button type="button" data-ui-action="utility" data-ui-size="icon" className="catalog-action catalog-action--light catalog-action--icon" onClick={() => setZoom(Math.min(2.5, zoom + .5))} disabled={zoom === 2.5} aria-label="Zoom in"><ZoomIn aria-hidden="true" /></button>
+        <button type="button" data-ui-action="close" className="catalog-action catalog-action--light" onClick={onClose} autoFocus><GeoCloseIcon aria-hidden="true" /> Close</button>
       </div>
     </header>
     <figure><div className="catalog-image-dialog-canvas"><span style={{ width: `${zoom * 100}%`, height: `${zoom * 100}%` }}><Image src={image.src} alt={image.alt} fill priority sizes="100vw" /></span></div><figcaption><span>{image.caption}</span>{image.credit && <small>{image.credit}</small>}</figcaption></figure>
@@ -182,11 +212,11 @@ function RecordReader({
 
   return <section className="catalog-reader catalog-record-page" aria-labelledby="catalog-reader-title">
     <nav className="catalog-record-toolbar" aria-label="Record navigation">
-      <button type="button" className="catalog-record-nav-button" onClick={onBack} aria-label="Back to collection"><ArrowLeft aria-hidden="true" /><span>Collection</span></button>
+      <button type="button" data-ui-action="back" className="catalog-record-nav-button" onClick={onBack} aria-label="Back to collection"><GeoBackIcon aria-hidden="true" /><span>Collection</span></button>
       <span className="catalog-record-position"><strong>{position}</strong> of {total}</span>
       <div>
-        <button type="button" className="catalog-record-nav-button" onClick={() => previous && onRecord(previous)} disabled={!previous}><ChevronLeft aria-hidden="true" /><span>Previous</span></button>
-        <button type="button" className="catalog-record-nav-button" onClick={() => next && onRecord(next)} disabled={!next}><span>Next</span><ChevronRight aria-hidden="true" /></button>
+        <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => previous && onRecord(previous)} disabled={!previous}><ChevronLeft aria-hidden="true" /><span>Previous</span></button>
+        <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => next && onRecord(next)} disabled={!next}><span>Next</span><ChevronRight aria-hidden="true" /></button>
       </div>
     </nav>
 
@@ -208,10 +238,10 @@ function RecordReader({
         <div className="catalog-record-gallery-stage">
           <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 820px) 100vw, 420px" />
           {gallery.length > 1 && <>
-            <button type="button" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--previous" onClick={() => onImage(previousImage)} aria-label="Previous image"><ChevronLeft aria-hidden="true" /></button>
-            <button type="button" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--next" onClick={() => onImage(nextImage)} aria-label="Next image"><ChevronRight aria-hidden="true" /></button>
+            <button type="button" data-ui-action="pagination" data-ui-size="icon" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--previous" onClick={() => onImage(previousImage)} aria-label="Previous image"><ChevronLeft aria-hidden="true" /></button>
+            <button type="button" data-ui-action="pagination" data-ui-size="icon" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--next" onClick={() => onImage(nextImage)} aria-label="Next image"><ChevronRight aria-hidden="true" /></button>
           </>}
-          <button type="button" className="catalog-record-gallery-zoom" onClick={() => setFullscreen(true)}><ZoomIn aria-hidden="true" /> Open image</button>
+          <button type="button" data-ui-action="secondary" className="catalog-record-gallery-zoom" onClick={() => setFullscreen(true)}><ZoomIn aria-hidden="true" /> Open image</button>
         </div>
         <div className="catalog-record-gallery-thumbnails">
           {gallery.map((item, index) => <button type="button" className={index === activeImage ? "active" : ""} onClick={() => onImage(index)} aria-label={`Show image ${index + 1}: ${item.caption}`} aria-pressed={index === activeImage} key={`${item.src}-${index}`}><Image src={item.src} alt="" fill sizes="70px" /></button>)}
@@ -257,6 +287,8 @@ export function ExploreBrowser({
   const [query, setQuery] = useState(initialQuery);
   const [searchDraft, setSearchDraft] = useState(initialQuery.q);
   const collectionScrollRef = useRef(0);
+  const searchMenuRef = useRef<HTMLDetailsElement>(null);
+  const filterMenuRef = useRef<HTMLDetailsElement>(null);
 
   const category = collections.find((item) => item.category.slug === categorySlug)?.category;
   const selectedBundle = recordBundles.find((bundle) => bundle.record.category === categorySlug && bundle.record.slug === recordSlug);
@@ -314,6 +346,7 @@ export function ExploreBrowser({
   const onSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     updateQuery({ q: searchDraft.trim(), page: 1, image: undefined });
+    searchMenuRef.current?.removeAttribute("open");
   };
   const openRelated = (record: GeologicalRecord) => commitView(record.category, record.slug, { ...emptyQuery }, "replace");
   const relatedBundles = selectedBundle?.detail.related.flatMap((relation) => {
@@ -321,11 +354,12 @@ export function ExploreBrowser({
     return bundle ? [{ bundle, reason: relation.reason }] : [];
   }) ?? [];
   const hasRefinements = Boolean(query.q || exploreFilterKeys.some((key) => query[key]));
+  const activeFilterCount = exploreFilterKeys.filter((key) => query[key]).length;
 
   return <main className={`catalog-explorer-page${selectedBundle ? " catalog-explorer-page--reader" : category ? " catalog-explorer-page--collection" : ""}`}>
     {!category && <header className="catalog-explorer-header">
       <div className="shell">
-        <div><span><Archive aria-hidden="true" /></span><div><p>Geological catalogue</p><h1>Explore</h1></div></div>
+        <div><span><GeoArchiveIcon aria-hidden="true" /></span><div><p>Geological catalogue</p><h1>Explore</h1></div></div>
         <p>Choose a collection and move through its evidence without losing your place.</p>
         <dl><div><dt>Collections</dt><dd>{String(collections.length).padStart(2, "0")}</dd></div><div><dt>Records</dt><dd>{records.length}</dd></div></dl>
       </div>
@@ -347,26 +381,22 @@ export function ExploreBrowser({
         onRelated={openRelated}
       /> : <section className="catalog-collection-view" aria-labelledby="catalog-collection-title">
         <header className="catalog-collection-commandbar">
-          <button type="button" className="catalog-action catalog-action--primary" onClick={closeCollection}><ArrowLeft aria-hidden="true" /> Back to collections</button>
-          <div><p>{category.eyebrow}</p><h2 id="catalog-collection-title">{category.name}</h2></div>
+          <button type="button" data-ui-action="back" className="catalog-action catalog-action--primary" onClick={closeCollection}><GeoBackIcon aria-hidden="true" /><span>Back to collections</span></button>
+          <div className="catalog-collection-header-heading"><p>{category.eyebrow}</p><h2 id="catalog-collection-title">{category.name}</h2></div>
           <div className="catalog-record-controls">
-            <details className="catalog-search-menu"><summary className="catalog-action catalog-action--secondary"><Search aria-hidden="true" /> Search{query.q ? " · 1" : ""}</summary><form onSubmit={onSearch}><label htmlFor="catalog-search">Search this collection</label><div><Search aria-hidden="true" /><input id="catalog-search" value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder={`Name, place or type`} /><button type="submit" className="catalog-action catalog-action--primary">Apply</button></div></form></details>
-            {filterDefinitions.length > 0 && <details className="catalog-filter-menu"><summary className="catalog-action catalog-action--secondary"><Filter aria-hidden="true" /> Filter{exploreFilterKeys.filter((key) => query[key]).length ? ` · ${exploreFilterKeys.filter((key) => query[key]).length}` : ""}</summary><div><header><strong>{category.name} filters</strong><button type="button" className="catalog-text-action" onClick={() => updateQuery({ ...emptyQuery })}>Reset</button></header>{filterDefinitions.map((definition) => <fieldset key={definition.key}><legend>{definition.label}</legend><div><button type="button" className={!query[definition.key] ? "active" : ""} onClick={() => updateQuery({ [definition.key]: "", page: 1 })}>All</button>{definition.values.map((value) => <button type="button" className={query[definition.key] === value ? "active" : ""} onClick={() => updateQuery({ [definition.key]: value, page: 1 })} key={value}>{value}</button>)}</div></fieldset>)}</div></details>}
+            <details ref={searchMenuRef} className="catalog-search-menu" onToggle={(event) => { if (event.currentTarget.open) filterMenuRef.current?.removeAttribute("open"); }}><summary data-ui-action="filter" data-ui-size="icon" className="catalog-action catalog-action--secondary" aria-label={query.q ? "Search this collection, one search active" : "Search this collection"}><GeoSearchIcon aria-hidden="true" /><span className="sr-only">Search</span>{query.q && <b aria-hidden="true">1</b>}</summary><form onSubmit={onSearch}><header><label htmlFor="catalog-search">Search this collection</label><button type="button" data-ui-action="close" data-ui-size="icon" className="catalog-panel-close" aria-label="Close collection search" onClick={() => searchMenuRef.current?.removeAttribute("open")}><GeoCloseIcon aria-hidden="true" /></button></header><div><GeoSearchIcon aria-hidden="true" /><input id="catalog-search" value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder={`Name, place or type`} /><button type="submit" data-ui-action="primary" className="catalog-action catalog-action--primary">Apply</button></div></form></details>
+            {filterDefinitions.length > 0 && <details ref={filterMenuRef} className="catalog-filter-menu" onToggle={(event) => { if (event.currentTarget.open) searchMenuRef.current?.removeAttribute("open"); }}><summary data-ui-action="filter" data-ui-size="icon" className="catalog-action catalog-action--secondary" aria-label={activeFilterCount ? `Filter this collection, ${activeFilterCount} active` : "Filter this collection"}><GeoFilterIcon aria-hidden="true" /><span className="sr-only">Filter</span>{activeFilterCount > 0 && <b aria-hidden="true">{activeFilterCount}</b>}</summary><div><header><strong>{category.name} filters</strong><span><button type="button" data-ui-action="text" className="catalog-text-action" onClick={() => updateQuery({ ...emptyQuery })}>Reset</button><button type="button" data-ui-action="close" data-ui-size="icon" className="catalog-panel-close" aria-label="Close collection filters" onClick={() => filterMenuRef.current?.removeAttribute("open")}><GeoCloseIcon aria-hidden="true" /></button></span></header>{filterDefinitions.map((definition) => <fieldset key={definition.key}><legend>{definition.label}</legend><div><button type="button" data-ui-action="filter" className={!query[definition.key] ? "active" : ""} onClick={() => updateQuery({ [definition.key]: "", page: 1 })}>All</button>{definition.values.map((value) => <button type="button" data-ui-action="filter" className={query[definition.key] === value ? "active" : ""} onClick={() => updateQuery({ [definition.key]: value, page: 1 })} key={value}>{value}</button>)}</div></fieldset>)}</div></details>}
           </div>
           <NeoBadge className="catalog-collection-badge">{categoryRecords.length} records</NeoBadge>
         </header>
 
-        <section className="catalog-collection-introduction" aria-labelledby="catalog-collection-about-title">
-          <div className="catalog-collection-introduction-image"><Image src={category.image.src} alt={category.image.alt} fill sizes="(max-width: 760px) 100vw, 300px" /></div>
-          <div className="catalog-collection-introduction-copy"><p className="eyebrow">Collection guide</p><h3 id="catalog-collection-about-title">About {category.name}</h3><p>{category.overview}</p><ul>{category.themes.map((theme) => <li key={theme}>{theme}</li>)}</ul></div>
-          <dl>{category.facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
-        </section>
+        <CollectionGuide category={category} />
 
         <div className="catalog-results-heading">
           <div><p className="eyebrow">Browse the collection</p><h3><strong>{filteredRecords.length}</strong> {filteredRecords.length === 1 ? "record" : "records"}</h3><span>{filteredRecords.length ? `Showing ${pagination.startIndex + 1}–${Math.min(pagination.startIndex + pagination.items.length, filteredRecords.length)}` : "No matching records"}</span></div>
         </div>
 
-        {hasRefinements && <div className="catalog-active-filters"><span>Showing</span>{query.q && <button type="button" onClick={() => updateQuery({ q: "", page: 1 })}>“{query.q}” <X aria-hidden="true" /></button>}{exploreFilterKeys.map((key) => query[key] ? <button type="button" onClick={() => updateQuery({ [key]: "", page: 1 })} key={key}>{query[key]} <X aria-hidden="true" /></button> : null)}<button type="button" className="catalog-text-action" onClick={() => updateQuery({ ...emptyQuery })}>Clear all</button></div>}
+        {hasRefinements && <div className="catalog-active-filters"><span>Showing</span>{query.q && <button type="button" data-ui-action="filter" onClick={() => updateQuery({ q: "", page: 1 })}>“{query.q}” <GeoCloseIcon aria-hidden="true" /></button>}{exploreFilterKeys.map((key) => query[key] ? <button type="button" data-ui-action="filter" onClick={() => updateQuery({ [key]: "", page: 1 })} key={key}>{query[key]} <GeoCloseIcon aria-hidden="true" /></button> : null)}<button type="button" data-ui-action="text" className="catalog-text-action" onClick={() => updateQuery({ ...emptyQuery })}>Clear all</button></div>}
         {pagination.items.length ? <div className="catalog-record-grid">{pagination.items.map((record) => {
           const facts = getRecordPreviewFacts(record);
           return <article className="catalog-record-card" key={record.slug}>
@@ -374,9 +404,17 @@ export function ExploreBrowser({
             <div className="catalog-record-card-copy"><p className="catalog-record-type">{record.recordType}</p><h3>{record.name}</h3><p>{record.summary}</p><dl>{facts.slice(0, 3).map((fact) => <div key={`${fact.label}-${fact.value}`}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>
             <button type="button" className="catalog-record-open" onClick={() => openRecord(record)}><span>Open record</span><em><ArrowRight aria-hidden="true" /></em></button>
           </article>;
-        })}</div> : <div className="catalog-empty-results"><Archive aria-hidden="true" /><h3>No records match this view.</h3><p>Remove a refinement or use a broader term.</p>{hasRefinements && <button type="button" className="catalog-action catalog-action--primary" onClick={() => updateQuery({ ...emptyQuery })}>Clear refinements</button>}</div>}
+        })}</div> : <div className="catalog-empty-results"><GeoArchiveIcon aria-hidden="true" /><h3>No records match this view.</h3><p>Remove a refinement or use a broader term.</p>{hasRefinements && <button type="button" data-ui-action="primary" className="catalog-action catalog-action--primary" onClick={() => updateQuery({ ...emptyQuery })}>Clear refinements</button>}</div>}
 
-        {pagination.totalPages > 1 && <nav className="catalog-record-pagination" aria-label="Record pages"><button type="button" className="catalog-action catalog-action--secondary" onClick={() => updateQuery({ page: pagination.page - 1 })} disabled={pagination.page === 1}><ChevronLeft aria-hidden="true" /> Previous</button><div>{Array.from({ length: pagination.totalPages }, (_, index) => index + 1).map((number) => <button type="button" className={number === pagination.page ? "active" : ""} aria-current={number === pagination.page ? "page" : undefined} onClick={() => updateQuery({ page: number })} key={number}>{String(number).padStart(2, "0")}</button>)}</div><button type="button" className="catalog-action catalog-action--primary" onClick={() => updateQuery({ page: pagination.page + 1 })} disabled={pagination.page === pagination.totalPages}>Next <ChevronRight aria-hidden="true" /></button></nav>}
+        {pagination.totalPages > 1 && <footer className="catalog-pagination-footer">
+          <nav className="catalog-record-pagination" aria-label="Record pages">
+            <div className="catalog-pagination-controls">
+              <button type="button" data-ui-action="pagination" aria-label="Previous page" onClick={() => updateQuery({ page: pagination.page - 1 })} disabled={pagination.page === 1}><ChevronLeft aria-hidden="true" /><span>Previous</span></button>
+              <div className="catalog-pagination-pages">{Array.from({ length: pagination.totalPages }, (_, index) => index + 1).map((number) => <button type="button" data-ui-action="pagination" data-ui-size="icon" className={number === pagination.page ? "active" : ""} aria-label={`Page ${number}${number === pagination.page ? ", current page" : ""}`} aria-current={number === pagination.page ? "page" : undefined} onClick={() => updateQuery({ page: number })} key={number}>{String(number).padStart(2, "0")}</button>)}</div>
+              <button type="button" data-ui-action="pagination" aria-label="Next page" onClick={() => updateQuery({ page: pagination.page + 1 })} disabled={pagination.page === pagination.totalPages}><span>Next</span><ChevronRight aria-hidden="true" /></button>
+            </div>
+          </nav>
+        </footer>}
       </section>}
     </div>
 

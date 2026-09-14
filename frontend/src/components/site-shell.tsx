@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "@/components/safe-link";
-import { Archive, ArrowRight, BookOpenText, Compass, Mail, MapPinned, Menu, type LucideIcon } from "lucide-react";
+import { Archive, ArrowRight, BookOpenText, Compass, Mail, MapPinned, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { NeoBadge } from "./neo-badge";
 import { HomePreviewNotice } from "./home-preview-notice";
 import { PrimaryNavigation } from "./primary-navigation";
 import { NavbarSearch } from "./navbar-search";
+import { MobileNavigation } from "./mobile-navigation";
+import { ScrollAwareHeader } from "./scroll-aware-header";
 
 function BrutalBrand({ light = false }: { light?: boolean }) {
   return (
@@ -20,7 +22,7 @@ export function SiteHeader() {
   return (
     <>
       <HomePreviewNotice />
-      <header className="brutal-header">
+      <ScrollAwareHeader>
       <div className="brutal-nav-wrap">
         <div className="brutal-nav">
           <BrutalBrand />
@@ -29,14 +31,11 @@ export function SiteHeader() {
             <NavbarSearch />
           </div>
           <div className="brutal-mobile">
-            <details className="mobile-menu">
-              <summary aria-label="Open navigation"><Menu aria-hidden="true" /><span>Menu</span></summary>
-              <PrimaryNavigation className="mobile-navigation" label="Mobile navigation" />
-            </details>
+            <MobileNavigation />
           </div>
         </div>
       </div>
-      </header>
+      </ScrollAwareHeader>
     </>
   );
 }

@@ -32,9 +32,9 @@ function MapInteractionControls({
   exitButtonRef: RefObject<HTMLButtonElement | null>;
 }) {
   if (active) {
-    return <button ref={exitButtonRef} className="map-interaction-exit" type="button" onClick={onDeactivate}>
+    return <button ref={exitButtonRef} data-ui-action="close" data-ui-size="icon" className="map-interaction-exit" type="button" aria-label="Exit interactive map" onClick={onDeactivate}>
       <X aria-hidden="true" />
-      Exit map
+      <span>Exit map</span>
       <kbd>Esc</kbd>
     </button>;
   }
@@ -47,9 +47,9 @@ function MapInteractionControls({
         <p>Page scrolling is on. Activate the map when you want to pan or zoom.</p>
       </div>
       <div className="map-interaction-actions">
-        <button type="button" onClick={onActivate}>Activate map</button>
-        <a href={fullMapUrl(location)} target="_blank" rel="noreferrer">
-          Open full map <ExternalLink aria-hidden="true" />
+        <button type="button" data-ui-action="primary" aria-label="Activate interactive map" onClick={onActivate}><MousePointer2 aria-hidden="true" /><span>Activate map</span></button>
+        <a data-ui-action="secondary" href={fullMapUrl(location)} aria-label={`Open full map for ${location.name}`} target="_blank" rel="noreferrer">
+          <ExternalLink aria-hidden="true" /><span>Full map</span>
         </a>
       </div>
     </div>
@@ -96,6 +96,7 @@ export function InteractiveMap({ locations, compact = false, variant = "default"
     <aside className="geo-map-index" aria-label="Select a mapped locality">
       <header><span><MapPin aria-hidden="true" /> Mapped places</span><b>{locations.length}</b></header>
       {locations.map((item, index) => <button
+        data-ui-action="selection"
         className={item.slug === selected.slug ? "active" : ""}
         type="button"
         key={item.slug}
@@ -114,7 +115,7 @@ export function InteractiveMap({ locations, compact = false, variant = "default"
         <span>Selected locality · {selected.category}</span>
         <h3>{selected.name}</h3>
         <p>{selected.region} · {selected.coordinates[0].toFixed(3)}° N, {selected.coordinates[1].toFixed(3)}° E</p>
-        <Link className="map-ticket-link" href={`/search?q=${encodeURIComponent(selected.name)}`}>Explore connected evidence <ExternalLink aria-hidden="true" /></Link>
+        <Link data-ui-action="primary" className="map-ticket-link" href={`/search?q=${encodeURIComponent(selected.name)}`}>View evidence <ExternalLink aria-hidden="true" /></Link>
       </div>
       <div className="geo-map-key"><span><i className="map-dot" /> Selected coordinate</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a></div>
     </div>
@@ -127,9 +128,9 @@ export function InteractiveMap({ locations, compact = false, variant = "default"
       <div className="map-key"><span><i className="map-dot" /> Selected locality</span><span>OpenStreetMap base</span></div>
     </div>
     <div className="map-panel">
-      {!compact && <div className="map-filters" aria-label="Filter map locations">{categories.map((category) => <button className={filter === category ? "active" : ""} type="button" key={category} aria-pressed={filter === category} onClick={() => { setFilter(category); const first = category === "All" ? locations[0] : locations.find((item) => item.category === category); if (first) selectLocation(first.slug); }}>{category}</button>)}</div>}
-      <div className="selected-location"><div className="location-image"><Image src={selected.image.src} alt={selected.image.alt} fill sizes="380px" /></div><span className="micro-label">{selected.category}</span><h3>{selected.name}</h3><p>{selected.description}</p><dl><div><dt>Region</dt><dd>{selected.region}</dd></div><div><dt>Coordinates</dt><dd>{selected.coordinates[0].toFixed(3)}° N<br />{selected.coordinates[1].toFixed(3)}° E</dd></div>{selected.geologicalAge && <div><dt>Context</dt><dd>{selected.geologicalAge}</dd></div>}</dl><Link className="selected-location-link" href={`/search?q=${encodeURIComponent(selected.name)}`}>View connected evidence <ExternalLink aria-hidden="true" /></Link></div>
-      <div className="location-list">{filtered.map((item) => <button className={item.slug === selected.slug ? "active" : ""} type="button" key={item.slug} aria-pressed={item.slug === selected.slug} onClick={() => selectLocation(item.slug)}><span>{item.name}</span><small>{item.region}</small></button>)}</div>
+      {!compact && <div className="map-filters" aria-label="Filter map locations">{categories.map((category) => <button data-ui-action="filter" className={filter === category ? "active" : ""} type="button" key={category} aria-pressed={filter === category} onClick={() => { setFilter(category); const first = category === "All" ? locations[0] : locations.find((item) => item.category === category); if (first) selectLocation(first.slug); }}>{category}</button>)}</div>}
+      <div className="selected-location"><div className="location-image"><Image src={selected.image.src} alt={selected.image.alt} fill sizes="(max-width: 820px) calc(100vw - 24px), 380px" /></div><span className="micro-label">{selected.category}</span><h3>{selected.name}</h3><p>{selected.description}</p><dl><div><dt>Region</dt><dd>{selected.region}</dd></div><div><dt>Coordinates</dt><dd>{selected.coordinates[0].toFixed(3)}° N<br />{selected.coordinates[1].toFixed(3)}° E</dd></div>{selected.geologicalAge && <div><dt>Context</dt><dd>{selected.geologicalAge}</dd></div>}</dl><Link data-ui-action="primary" className="selected-location-link" href={`/search?q=${encodeURIComponent(selected.name)}`}>View connected evidence <ExternalLink aria-hidden="true" /></Link></div>
+      <div className="location-list">{filtered.map((item) => <button data-ui-action="selection" className={item.slug === selected.slug ? "active" : ""} type="button" key={item.slug} aria-pressed={item.slug === selected.slug} onClick={() => selectLocation(item.slug)}><span>{item.name}</span><small>{item.region}</small></button>)}</div>
       <a className="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
     </div>
   </div>;

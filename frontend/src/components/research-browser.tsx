@@ -23,13 +23,13 @@ import styles from "./research-browser.module.css";
 type Navigate = (view: ResearchView, replace?: boolean) => void;
 type EntryProps = { entry: ResearchEntry; view: ResearchView; navigate: Navigate };
 
-function Action({ children, view, navigate, className = "", id }: { children: ReactNode; view: ResearchView; navigate: Navigate; className?: string; id?: string }) {
+function Action({ children, view, navigate, className = "", id, action = "secondary" }: { children: ReactNode; view: ResearchView; navigate: Navigate; className?: string; id?: string; action?: "primary" | "secondary" | "back" | "pagination" | "selection" | "text" }) {
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     navigate(view);
   };
-  return <a id={id} aria-current={className === styles.selected ? "page" : undefined} className={`${styles.action} ${className}`} href={researchHref(view)} onClick={onClick}>{children}</a>;
+  return <a id={id} data-ui-action={action} aria-current={className === styles.selected ? "page" : undefined} className={`${styles.action} ${className}`} href={researchHref(view)} onClick={onClick}>{children}</a>;
 }
 
 function References({ entry }: { entry: ResearchEntry }) {
@@ -56,6 +56,7 @@ function Library({ entries, view, navigate }: { entries: ResearchEntry[]; view: 
             render={
               <Button
                 variant="outline"
+                data-ui-action="filter"
                 className={styles.typeFilterTrigger}
                 data-active={Boolean(view.q)}
                 aria-label="Search publications"
@@ -81,8 +82,8 @@ function Library({ entries, view, navigate }: { entries: ResearchEntry[]; view: 
                 />
               </label>
               <div className={styles.searchPopoverActions}>
-                <button className={styles.action} type="submit">Apply</button>
-                {view.q && <button className={styles.action} type="button" onClick={() => { setDraft(""); navigate({ ...view, q: "" }); setSearchOpen(false); }}>Clear</button>}
+                <button data-ui-action="primary" className={styles.action} type="submit">Apply</button>
+                {view.q && <button data-ui-action="secondary" className={styles.action} type="button" onClick={() => { setDraft(""); navigate({ ...view, q: "" }); setSearchOpen(false); }}>Clear</button>}
               </div>
             </form>
           </DropdownMenuContent>
@@ -92,6 +93,7 @@ function Library({ entries, view, navigate }: { entries: ResearchEntry[]; view: 
             render={
               <Button
                 variant="outline"
+                data-ui-action="filter"
                 className={styles.typeFilterTrigger}
                 data-active={Boolean(view.type)}
                 aria-label="Publication type filter"
@@ -99,7 +101,8 @@ function Library({ entries, view, navigate }: { entries: ResearchEntry[]; view: 
             }
           >
             <FileText aria-hidden="true" />
-            <span>{view.type || "All publication types"}</span>
+            <span className={styles.typeFilterLabelFull}>{view.type || "All publication types"}</span>
+            <span className={styles.typeFilterLabelCompact}>{view.type || "All types"}</span>
             <ChevronDown aria-hidden="true" className={styles.filterChevron} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -135,11 +138,11 @@ function Library({ entries, view, navigate }: { entries: ResearchEntry[]; view: 
         </DropdownMenu>
       </div>
     </section>
-    <div className={styles.resultLine} aria-live="polite"><p>{view.q ? `${filtered.length} matching “${view.q}”` : view.type ? `${filtered.length} ${view.type}` : "Browse the complete 2026 showcase edition"}</p>{(view.q || view.type) && <button className={styles.action} onClick={() => { setDraft(""); navigate({ ...view, q: "", type: "" }); }}><X aria-hidden="true" /> Reset</button>}<span>Teacher review edition</span></div>
+    <div className={styles.resultLine} aria-live="polite"><p>{view.q ? `${filtered.length} matching “${view.q}”` : view.type ? `${filtered.length} ${view.type}` : "Browse the complete 2026 showcase edition"}</p>{(view.q || view.type) && <button data-ui-action="secondary" className={styles.action} onClick={() => { setDraft(""); navigate({ ...view, q: "", type: "" }); }}><X aria-hidden="true" /> Reset</button>}<span>Teacher review edition</span></div>
     <div className={styles.publications}>{filtered.map(({ publication: p, document }, index) => <article className={styles.publication} key={p.slug}>
       <div className={styles.paperLabel}><FileText aria-hidden="true" /><span>{p.type}</span><strong>{p.year}</strong></div>
       <div className={styles.publicationBody}><p className={styles.topic}>{p.topic}</p><h2>{p.title}</h2><p className={styles.authors}>{p.authors}</p><div className={styles.abstract}><span className={styles.eyebrow}>Abstract</span><p>{p.abstract}</p></div><dl className={styles.cardFacts}><div><dt>Study area</dt><dd>{p.location}</dd></div><div><dt>Reading</dt><dd>{document.readingTime}</dd></div></dl></div>
-      <footer><span className={styles.edition}>Showcase / {String(index + 1).padStart(2, "0")}</span><Action id={`publication-${p.slug}`} view={{ ...view, slug: p.slug, mode: "detail", section: 0, pdf: false }} navigate={navigate}>Open publication <ArrowRight aria-hidden="true" /></Action></footer>
+      <footer><span className={styles.edition}>Showcase / {String(index + 1).padStart(2, "0")}</span><Action action="primary" id={`publication-${p.slug}`} view={{ ...view, slug: p.slug, mode: "detail", section: 0, pdf: false }} navigate={navigate}>Open publication <ArrowRight aria-hidden="true" /></Action></footer>
     </article>)}</div>
     {!filtered.length && <div className={styles.empty}><Search aria-hidden="true" /><h2>No publications found</h2><p>Try another title, author or topic, or clear the selected publication type.</p></div>}
     <p className={styles.disclosure}>These sample publications are editorial mock content for teacher feedback, not peer-reviewed research.</p>
@@ -149,7 +152,7 @@ function Library({ entries, view, navigate }: { entries: ResearchEntry[]; view: 
 function Publication({ entry, view, navigate }: EntryProps) {
   const { publication: p, document: doc } = entry;
   return <>
-    <header className={styles.publicationHeader}><div className={styles.publicationIdentity}><div className={styles.publicationMeta}><span>{p.type}</span><span>{p.year}</span><span>{p.status}</span></div><h1 id="research-heading" tabIndex={-1}>{p.title}</h1><div className={styles.byline}><strong>{p.authors}</strong><span>{p.topic}</span><span>{p.location}</span></div></div><div className={styles.readAccess}><div><BookOpenText aria-hidden="true" /><span><strong>Publication reader</strong><small>{doc.sections.length} sections · {doc.readingTime}</small></span></div><Action view={{ ...view, mode: "read", pdf: false }} navigate={navigate}>Read online <ArrowRight aria-hidden="true" /></Action>{entry.pdf && <Action view={{ ...view, mode: "read", pdf: true }} navigate={navigate}><FileText aria-hidden="true" /> Read PDF</Action>}</div></header>
+    <header className={styles.publicationHeader}><div className={styles.publicationIdentity}><div className={styles.publicationMeta}><span>{p.type}</span><span>{p.year}</span><span>{p.status}</span></div><h1 id="research-heading" tabIndex={-1}>{p.title}</h1><div className={styles.byline}><strong>{p.authors}</strong><span>{p.topic}</span><span>{p.location}</span></div></div><div className={styles.readAccess}><div><BookOpenText aria-hidden="true" /><span><strong>Publication reader</strong><small>{doc.sections.length} sections · {doc.readingTime}</small></span></div><Action action="primary" view={{ ...view, mode: "read", pdf: false }} navigate={navigate}>Read online <ArrowRight aria-hidden="true" /></Action>{entry.pdf && <Action action="secondary" view={{ ...view, mode: "read", pdf: true }} navigate={navigate}><FileText aria-hidden="true" /> Read PDF</Action>}</div></header>
     <div className={styles.detailGrid}><article><section className={styles.abstractSection}><p className={styles.eyebrow}>Publication summary</p><h2>Abstract</h2><p>{p.abstract}</p></section><section className={styles.contents}><h2>In this publication</h2><ol>{doc.sections.map((section, index) => <li key={section.id}><span>{String(index + 1).padStart(2, "0")}</span><Action view={{ ...view, mode: "read", section: index, pdf: false }} navigate={navigate}>{section.title}<ArrowRight aria-hidden="true" /></Action></li>)}</ol></section><section className={styles.sources}><h2>References & source notes</h2><References entry={entry} /></section></article>
       <aside className={styles.context}><figure><div><Image src={p.image.src} alt={p.image.alt} fill sizes="(max-width: 800px) 100vw, 380px" /></div><figcaption>{p.image.caption}</figcaption></figure><dl><div><dt>Publication type</dt><dd>{p.type}</dd></div><div><dt>Topic</dt><dd>{p.topic}</dd></div><div><dt>Review status</dt><dd>{p.status}</dd></div></dl><p className={styles.disclosure}>A sample publication prepared for the Geo–Kurdistan showcase. Scientific wording remains subject to review.</p></aside></div>
     {entry.related.length > 0 && <section className={styles.related}><p className={styles.eyebrow}>Connect the reading to the evidence</p><h2>Related geological records</h2><div>{entry.related.map((record) => <Link key={record.slug} href={`/explore/${record.category}/${record.slug}`}><span>{record.recordType}</span><strong>{record.name}</strong><ArrowRight aria-hidden="true" /></Link>)}</div></section>}
@@ -161,8 +164,8 @@ function Reader({ entry, view, navigate }: EntryProps) {
   const sectionIndex = Math.min(view.section, doc.sections.length);
   const section = doc.sections[sectionIndex];
   return <>
-    <header className={styles.readerHeading}><div><p>{p.type} · {p.year} · {doc.readingTime}</p><h1 id="research-heading" tabIndex={-1}>{p.title}</h1><span>{p.authors}</span></div><div className={styles.formatSwitch}><Action view={{ ...view, pdf: false }} navigate={navigate} className={!view.pdf ? styles.selected : ""}>Read online</Action>{entry.pdf && <Action view={{ ...view, pdf: true }} navigate={navigate} className={view.pdf ? styles.selected : ""}><FileText aria-hidden="true" /> PDF</Action>}</div></header>
-    {view.pdf && entry.pdf ? <section className={styles.pdfPane} aria-label="Publication PDF"><div className={styles.pdfBar}><span>Sample publication · PDF</span><a className={styles.action} href={entry.pdf} target="_blank" rel="noreferrer">Open PDF in new tab <ArrowRight aria-hidden="true" /></a></div><object data={entry.pdf} type="application/pdf" aria-label={`PDF: ${p.title}`}><p>Your browser cannot display this PDF here. <a href={entry.pdf}>Open the PDF</a> or use the online reader.</p></object></section> : <div className={styles.readerGrid}><aside className={styles.toc}><p className={styles.eyebrow}>Contents</p><nav aria-label="Publication sections">{doc.sections.map((item, index) => <Action key={item.id} view={{ ...view, section: index, pdf: false }} navigate={navigate} className={index === sectionIndex ? styles.selected : ""}><span>{String(index + 1).padStart(2, "0")}</span>{item.title}</Action>)}<Action view={{ ...view, section: doc.sections.length, pdf: false }} navigate={navigate} className={!section ? styles.selected : ""}>References</Action></nav><small>{doc.readingTime}<br />{p.status}</small></aside><article className={styles.readingPaper}><div className={styles.paperMasthead}><span>Geo–Kurdistan / Research</span><span>{sectionIndex + 1} / {doc.sections.length + 1}</span></div>{section ? <section key={section.id}><div className={styles.sectionHeading}><p className={styles.eyebrow}>Section {String(sectionIndex + 1).padStart(2, "0")}</p><h2 id="research-section-heading" tabIndex={-1}>{section.title}</h2></div><div className={styles.sectionText}>{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>{section.figure && <figure><div><Image src={section.figure.src} alt={section.figure.alt} fill sizes="(max-width: 800px) 100vw, 900px" /></div><figcaption>{section.figure.caption}<small>{section.figure.credit}</small></figcaption></figure>}</section> : <section><div className={styles.sectionHeading}><p className={styles.eyebrow}>Sources</p><h2 id="research-section-heading" tabIndex={-1}>References & editorial limits</h2></div><References entry={entry} /></section>}<nav className={styles.sectionNav} aria-label="Reading navigation"><button className={styles.action} disabled={sectionIndex === 0} onClick={() => navigate({ ...view, section: sectionIndex - 1 })}><ChevronLeft aria-hidden="true" /> Previous section</button><button className={styles.action} disabled={sectionIndex === doc.sections.length} onClick={() => navigate({ ...view, section: sectionIndex + 1 })}>Next section <ChevronRight aria-hidden="true" /></button></nav></article></div>}
+    <header className={styles.readerHeading}><div><p>{p.type} · {p.year} · {doc.readingTime}</p><h1 id="research-heading" tabIndex={-1}>{p.title}</h1><span>{p.authors}</span></div><div className={styles.formatSwitch}><Action action="selection" view={{ ...view, pdf: false }} navigate={navigate} className={!view.pdf ? styles.selected : ""}>Read online</Action>{entry.pdf && <Action action="selection" view={{ ...view, pdf: true }} navigate={navigate} className={view.pdf ? styles.selected : ""}><FileText aria-hidden="true" /> PDF</Action>}</div></header>
+    {view.pdf && entry.pdf ? <section className={styles.pdfPane} aria-label="Publication PDF"><div className={styles.pdfBar}><span>Sample publication · PDF</span><a data-ui-action="primary" className={styles.action} href={entry.pdf} target="_blank" rel="noreferrer">Open PDF in new tab <ArrowRight aria-hidden="true" /></a></div><div className={styles.pdfMobileFallback}><FileText aria-hidden="true" /><h2>Open the PDF in your browser</h2><p>Embedded document readers are unreliable on smaller devices. Open the publication in a dedicated tab for easier zooming and navigation.</p><a data-ui-action="primary" className={styles.action} href={entry.pdf} target="_blank" rel="noreferrer">Open publication PDF <ArrowRight aria-hidden="true" /></a></div><object data={entry.pdf} type="application/pdf" aria-label={`PDF: ${p.title}`}><p>Your browser cannot display this PDF here. <a href={entry.pdf}>Open the PDF</a> or use the online reader.</p></object></section> : <div className={styles.readerGrid}><aside className={styles.toc}><p className={styles.eyebrow}>Contents</p><nav aria-label="Publication sections">{doc.sections.map((item, index) => <Action action="selection" key={item.id} view={{ ...view, section: index, pdf: false }} navigate={navigate} className={index === sectionIndex ? styles.selected : ""}><span>{String(index + 1).padStart(2, "0")}</span>{item.title}</Action>)}<Action action="selection" view={{ ...view, section: doc.sections.length, pdf: false }} navigate={navigate} className={!section ? styles.selected : ""}>References</Action></nav><small>{doc.readingTime}<br />{p.status}</small></aside><article className={styles.readingPaper}><div className={styles.paperMasthead}><span>Geo–Kurdistan / Research</span><span>{sectionIndex + 1} / {doc.sections.length + 1}</span></div>{section ? <section key={section.id}><div className={styles.sectionHeading}><p className={styles.eyebrow}>Section {String(sectionIndex + 1).padStart(2, "0")}</p><h2 id="research-section-heading" tabIndex={-1}>{section.title}</h2></div><div className={styles.sectionText}>{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>{section.figure && <figure><div><Image src={section.figure.src} alt={section.figure.alt} fill sizes="(max-width: 800px) calc(100vw - 48px), 900px" /></div><figcaption>{section.figure.caption}<small>{section.figure.credit}</small></figcaption></figure>}</section> : <section><div className={styles.sectionHeading}><p className={styles.eyebrow}>Sources</p><h2 id="research-section-heading" tabIndex={-1}>References & editorial limits</h2></div><References entry={entry} /></section>}<nav className={styles.sectionNav} aria-label="Reading navigation"><button data-ui-action="pagination" className={styles.action} disabled={sectionIndex === 0} onClick={() => navigate({ ...view, section: sectionIndex - 1 })}><ChevronLeft aria-hidden="true" /> Previous section</button><button data-ui-action="pagination" className={styles.action} disabled={sectionIndex === doc.sections.length} onClick={() => navigate({ ...view, section: sectionIndex + 1 })}>Next section <ChevronRight aria-hidden="true" /></button></nav></article></div>}
   </>;
 }
 
@@ -193,8 +196,13 @@ export function ResearchBrowser({ entries, initialView }: { entries: ResearchEnt
   }, [navigate]);
   useEffect(() => {
     const initial = parseResearchView(window.location.pathname, new URLSearchParams(window.location.search));
-    viewRef.current = initial;
-    setView(initial);
+    let initialFrame = 0;
+    if (researchHref(initial) !== researchHref(viewRef.current)) {
+      initialFrame = requestAnimationFrame(() => {
+        viewRef.current = initial;
+        setView(initial);
+      });
+    }
     const pop = () => {
       const previous = viewRef.current;
       scrollPositions.current.set(researchHref(previous), window.scrollY);
@@ -211,11 +219,11 @@ export function ResearchBrowser({ entries, initialView }: { entries: ResearchEnt
     };
     window.addEventListener("popstate", pop);
     window.addEventListener("keydown", key);
-    return () => { window.removeEventListener("popstate", pop); window.removeEventListener("keydown", key); };
+    return () => { cancelAnimationFrame(initialFrame); window.removeEventListener("popstate", pop); window.removeEventListener("keydown", key); };
   }, [close, navigate]);
   useEffect(() => { document.title = `${entry ? `${view.mode === "read" ? "Read: " : ""}${entry.publication.title}` : "Research"} | Geo-Kurdistan`; }, [entry, view.mode]);
   return <main className={styles.page}>
-    {view.mode !== "library" && <nav className={styles.toolbar} aria-label="Research navigation"><button className={styles.action} onClick={close}><ArrowLeft aria-hidden="true" />{view.mode === "read" ? "Close reader" : "Back to research"}</button><span>{view.mode === "read" ? "Publication reader" : "Publication details"}</span>{view.mode === "read" && <Action view={{ ...view, mode: "library", slug: undefined, pdf: false }} navigate={navigate}>Research library <BookOpenText aria-hidden="true" /></Action>}</nav>}
-    {view.mode === "library" ? <Library key={`${view.q}:${view.type}`} entries={entries} view={view} navigate={navigate} /> : entry ? view.mode === "read" ? <Reader entry={entry} view={view} navigate={navigate} /> : <Publication entry={entry} view={view} navigate={navigate} /> : <div className={styles.empty}><h1>Publication not found</h1><Action view={{ ...view, mode: "library" }} navigate={navigate}>Back to research</Action></div>}
+    {view.mode !== "library" && <nav className={styles.toolbar} aria-label="Research navigation"><button data-ui-action="back" className={styles.action} onClick={close}><ArrowLeft aria-hidden="true" />{view.mode === "read" ? "Close reader" : "Back to research"}</button><span>{view.mode === "read" ? "Publication reader" : "Publication details"}</span>{view.mode === "read" && <Action action="secondary" view={{ ...view, mode: "library", slug: undefined, pdf: false }} navigate={navigate}>Research library <BookOpenText aria-hidden="true" /></Action>}</nav>}
+    {view.mode === "library" ? <Library key={`${view.q}:${view.type}`} entries={entries} view={view} navigate={navigate} /> : entry ? view.mode === "read" ? <Reader entry={entry} view={view} navigate={navigate} /> : <Publication entry={entry} view={view} navigate={navigate} /> : <div className={styles.empty}><h1>Publication not found</h1><Action action="back" view={{ ...view, mode: "library" }} navigate={navigate}>Back to research</Action></div>}
   </main>;
 }

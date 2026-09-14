@@ -22,6 +22,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         type={type}
         className={cn(styles.button, variantClass, sizeClass, className)}
         data-slot="button"
+        data-ui-action={variant === "default" ? "primary" : variant === "ghost" ? "text" : variant === "outline" ? "secondary" : variant}
         data-variant={variant}
         data-size={size}
         {...props}

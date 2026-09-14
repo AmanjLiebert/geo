@@ -5,13 +5,16 @@
   background: var(--fossil);
   border-bottom: 2px solid var(--carbon);
   cursor: grab;
-  scrollbar-width: none;
-  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: var(--iron) transparent;
+  -ms-overflow-style: none;
+  touch-action: pan-y pinch-zoom;
   overscroll-behavior-inline: contain;
 }
 
-.viewport::-webkit-scrollbar { display: none; }
-.viewport.dragging { cursor: grabbing; }
+.viewport::-webkit-scrollbar { height: 5px; }
+.viewport::-webkit-scrollbar-thumb { background: var(--iron); }
+.viewport.dragging { cursor: grabbing; scroll-behavior: auto; }
 .viewport:focus-visible { outline-offset: -5px; }
 
 .track {
@@ -36,6 +39,8 @@
   cursor: inherit;
   user-select: none;
   -webkit-user-drag: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
@@ -63,7 +68,18 @@
   .copy h3 { font-size: 20px; }
 }
 
+@media (max-width: 680px) and (pointer:coarse) {
+  .tile { width: min(82vw,290px); grid-template-rows: 170px 180px; }
+  .copy h3 { font-size: 22px; }
+  .copy > p { font-size: 13px; }
+  .cardFooter { min-height: 48px; }
+}
+
+@media (hover:none), (pointer:coarse) {
+  .viewport { cursor: auto; }
+  .tile:hover { background: var(--card-surface); box-shadow: var(--card-shadow); transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .group[aria-hidden="true"] { display: none; }
   .tile,.visual img,.cardFooter svg { transition: none; }
 }

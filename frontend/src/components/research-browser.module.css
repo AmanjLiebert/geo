@@ -75,6 +75,8 @@
   transform: rotate(180deg);
 }
 
+.typeFilterLabelCompact { display: none; }
+
 .filterChevron {
   width: 14px;
   height: 14px;
@@ -176,8 +178,91 @@
 .sectionNav { display: flex; justify-content: space-between; gap: 15px; border-top: 1px solid #cecabe; padding: 16px 24px; }
 .pdfPane { border: 2px solid var(--carbon); background: var(--limestone); }
 .pdfBar { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 10px 16px; font: 12px var(--mono); }
+.pdfMobileFallback { display: none; }
 .pdfPane object { display: block; width: 100%; height: max(500px,calc(100dvh - 250px)); }
-@media(max-width:1120px) { .libraryHeader { grid-template-columns: minmax(280px,1fr) auto; } .mastheadDescription { grid-column: 1/2; grid-row: 2; max-width: none; margin-left: 69px; padding: 9px 0 0; border-left: 0; border-top: 1px solid var(--line); } .libraryStamp { grid-column: 2; grid-row: 1/3; } .publications { grid-template-columns: repeat(2,minmax(0,1fr)); } .detailGrid { grid-template-columns: minmax(0,1fr) 280px; gap: 24px; } }
-@media(max-width:800px) { .page { width: calc(100% - 24px); } .libraryHeader { grid-template-columns: 1fr; gap: 9px; } .libraryStamp { display: none; } .mastheadDescription { grid-column: 1; grid-row: 2; margin-left: 69px; padding-top: 8px; } .tools { grid-template-columns: 1fr; } .toolActions { justify-content: space-between; } .typeFilter { flex-direction: row; align-items: center; flex-wrap: wrap; } .publicationHeader { grid-template-columns: 1fr; gap: 18px; padding: 20px 18px; } .readAccess { border-left: 0; border-top: 1px solid rgba(251,248,241,.32); padding: 16px 0 0; display: grid; grid-template-columns: 1fr 1fr; } .readAccess > div { grid-column: 1/-1; } .detailGrid { grid-template-columns: 1fr; padding: 20px 18px; } .detailGrid > article { grid-template-columns: 1fr; } .sources { grid-column: 1; } .context { padding: 20px 0 0; border-left: 0; border-top: 1px solid #d0cdc2; } .context figure { max-width: 460px; } .readerHeading { align-items: flex-start; flex-direction: column; gap: 12px; } .readerGrid { grid-template-columns: 1fr; } .toc { position: static; } .toc nav { display: grid; grid-template-columns: 1fr 1fr; } .toc small { display: none; } .related > div { grid-template-columns: 1fr; } }
-@media(max-width:560px) { .publications { grid-template-columns: 1fr; } .libraryHeader h1 { font-size: 31px; } .mastheadDescription { font-size: 14px; } .toolActions { display: grid; grid-template-columns: auto minmax(0,1fr); } .typeFilterTrigger { width: 100%; } .searchPopoverForm .search { min-height: 44px; } .resultLine { flex-wrap: wrap; gap: 8px; padding: 10px 0; } .resultLine > span { display: none; } .publication h2 { font-size: 28px; } .publication footer { padding: 14px; } .edition { font-size: 10px; } .byline { display: grid; gap: 5px; } .byline span { padding-left: 0; border-left: 0; } .toolbar > span { display: none; } .toolbar .action { font-size: 10px; padding: 9px; } .toc nav { grid-template-columns: 1fr; } .sectionHeading { grid-template-columns: 1fr; gap: 2px; } .sectionText { columns: 1; } .sectionNav { padding: 14px; gap: 10px; } .sectionNav .action { font-size: 10px; padding: 9px; } .pdfBar { flex-wrap: wrap; } }
+
+@media(max-width:1120px) {
+  .libraryHeader { grid-template-columns: minmax(280px,1fr) auto; }
+  .mastheadDescription { grid-column: 1/2; grid-row: 2; max-width: none; margin-left: 69px; padding: 9px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .libraryStamp { grid-column: 2; grid-row: 1/3; }
+  .publications { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .detailGrid { grid-template-columns: minmax(0,1fr) 280px; gap: 24px; }
+}
+
+@media(max-width:980px) {
+  .tools,.toolbar,.toc { transition: top 280ms cubic-bezier(.22,1,.36,1); }
+  :global(.mobile-header-hidden) .tools,
+  :global(.mobile-header-hidden) .toolbar { top: 0; }
+  :global(.mobile-header-hidden) .toc { top: 84px; }
+}
+
+@media(max-width:800px) {
+  .page { width: calc(100% - 24px); }
+  .libraryHeader { grid-template-columns: 1fr; gap: 9px; }
+  .libraryStamp { display: none; }
+  .mastheadDescription { grid-column: 1; grid-row: 2; margin-left: 69px; padding-top: 8px; }
+  .tools { top: var(--header-height); grid-template-columns: 1fr; }
+  .toolActions { justify-content: space-between; }
+  .publicationHeader { grid-template-columns: 1fr; gap: 18px; padding: 20px 18px; }
+  .readAccess { grid-template-columns: 1fr 1fr; display: grid; padding: 16px 0 0; border-top: 1px solid rgba(251,248,241,.32); border-left: 0; }
+  .readAccess > div { grid-column: 1/-1; }
+  .detailGrid { grid-template-columns: 1fr; padding: 20px 18px; }
+  .detailGrid > article { grid-template-columns: 1fr; }
+  .sources { grid-column: 1; }
+  .context { padding: 20px 0 0; border-top: 1px solid #d0cdc2; border-left: 0; }
+  .context figure { max-width: 460px; }
+  .readerHeading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .formatSwitch { width: 100%; }
+  .formatSwitch .action { flex: 1; }
+  .readerGrid { grid-template-columns: 1fr; }
+  .toc { position: static; min-width: 0; }
+  .toc .eyebrow { margin-bottom: 8px; }
+  .toc nav { display: flex; flex-direction: row; gap: 8px; padding: 3px 3px 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; }
+  .toc .action { min-width: min(72vw,280px); min-height: 48px; flex: none; scroll-snap-align: start; }
+  .toc small { display: none; }
+  .related > div { grid-template-columns: 1fr; }
+  .pdfPane object { display: none; }
+  .pdfMobileFallback { min-height: 340px; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 40px 24px; text-align: center; border-top: 2px solid var(--carbon); }
+  .pdfMobileFallback > svg { width: 48px; height: 48px; padding: 10px; color: var(--limestone); background: var(--iron); border: 2px solid var(--carbon); box-shadow: 4px 4px 0 var(--carbon); }
+  .pdfMobileFallback h2 { margin-top: 22px; font-size: 30px; }
+  .pdfMobileFallback p { max-width: 550px; margin: 12px auto 20px; color: var(--ink-soft); font-size: 16px; line-height: 1.6; }
+}
+
+@media(max-width:560px) {
+  .page { width: calc(100% - 16px); padding-bottom: 24px; }
+  .libraryHeader { padding-block: 14px; }
+  .libraryHeader h1 { font-size: 31px; }
+  .mastheadDescription { margin-left: 0; font-size: 14px; }
+  .tools { gap: 10px; padding: 9px; }
+  .tools > div:first-child { justify-content: space-between; }
+  .toolActions { display: grid; grid-template-columns: 1fr 1fr; }
+  .typeFilterTrigger { width: 100%; min-width: 0; padding-inline: 10px; }
+  .typeFilterTrigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .typeFilterLabelFull { display: none; }
+  .typeFilterLabelCompact { display: block; }
+  .searchPopoverForm .search { min-height: 48px; }
+  .resultLine { flex-wrap: wrap; gap: 8px; padding: 10px 2px; }
+  .resultLine > span { display: none; }
+  .publications { grid-template-columns: 1fr; gap: 14px; }
+  .publication h2 { font-size: 28px; }
+  .publication footer { align-items: stretch; flex-direction: column; padding: 14px; }
+  .publication footer .action { width: 100%; }
+  .edition { font-size: 10px; }
+  .publicationHeader { padding: 18px 15px; }
+  .byline { display: grid; gap: 5px; }
+  .byline span { padding-left: 0; border-left: 0; }
+  .readAccess { grid-template-columns: 1fr; }
+  .readAccess > div { grid-column: 1; }
+  .toolbar { top: var(--header-height); justify-content: space-between; gap: 8px; padding: 8px 0; }
+  .toolbar > span { display: none; }
+  .toolbar .action { min-width: 0; padding: 9px; font-size: 10px; }
+  .readerHeading { padding: 14px; }
+  .sectionHeading { grid-template-columns: 1fr; gap: 2px; }
+  .sectionText { columns: 1; }
+  .readingPaper > section { padding-inline: 17px; }
+  .sectionNav { padding: 12px; gap: 8px; }
+  .sectionNav .action { flex: 1; min-width: 0; padding: 8px; font-size: 10px; }
+  .pdfBar { align-items: stretch; flex-direction: column; }
+  .pdfBar .action { width: 100%; }
+}
 @media(prefers-reduced-motion:reduce) { .action,.related a,.typeFilterTrigger { transition: none; } }

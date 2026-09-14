@@ -14,7 +14,7 @@ function ModuleBar({ icon: Icon, title, titleId, note, link }: { icon: LucideIco
   return (
     <header className={styles.moduleBar}>
       <div><span><Icon aria-hidden="true" /></span><h2 id={titleId}>{title}</h2>{note && <NeoBadge variant="outline" className={styles.moduleBadge}>{note}</NeoBadge>}</div>
-      {link && <NeoAction href={link.href} variant="dark" className={styles.moduleAction}>{link.label}<ArrowUpRight aria-hidden="true" /></NeoAction>}
+      {link && <NeoAction href={link.href} variant="dark" className={styles.moduleAction} ariaLabel={link.label}><span className={styles.moduleActionLabel}>{link.label}</span><ArrowUpRight aria-hidden="true" /></NeoAction>}
     </header>
   );
 }
@@ -59,9 +59,9 @@ export default function Home() {
       <section className={styles.researchSection} aria-labelledby="research-title">
         <ModuleBar icon={FileText} title="Research" titleId="research-title" note={`${research.length} publications`} link={{ href: "/research", label: "Library" }} />
         <div className={styles.researchGrid}>
-          {research.map((item) => (
+          {research.slice(0, 3).map((item) => (
             <Link className={styles.researchCard} href="/research" key={item.slug}>
-              <div className={styles.researchImage}><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 100vw, 34vw" /><b className={styles.researchTopic}>{item.topic}</b></div>
+              <div className={styles.researchImage}><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 680px) 82vw, (max-width: 900px) 38vw, 34vw" /><b className={styles.researchTopic}>{item.topic}</b></div>
               <div><small>{item.type} · {item.year}</small><h3>{item.title}</h3><p>{item.abstract}</p><footer><span>{item.authors}</span><ArrowUpRight aria-hidden="true" /></footer></div>
             </Link>
           ))}
@@ -73,7 +73,7 @@ export default function Home() {
         <div className={styles.fieldJournal}>
           {fieldObservations.slice(0, 4).map((item, index) => (
             <Link href="/field" key={item.slug}>
-              <div><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 700px) 100vw, 25vw" /><b>{String(index + 1).padStart(2, "0")}</b></div>
+              <div><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 680px) 35vw, (max-width: 900px) 50vw, 25vw" /><b>{String(index + 1).padStart(2, "0")}</b></div>
               <article><NeoBadge className={styles.cardBadge}>{item.type}</NeoBadge><h3>{item.title}</h3><span className={styles.locationMeta}><MapPinned aria-hidden="true" />{item.location}</span></article>
             </Link>
           ))}
@@ -81,11 +81,11 @@ export default function Home() {
       </section>
 
       <section id="shop" className={styles.shopSection} aria-labelledby="shop-title">
-        <ModuleBar icon={ShoppingBag} title="Shop" titleId="shop-title" note={`${shopProducts.length} study objects`} />
+        <ModuleBar icon={ShoppingBag} title="Shop" titleId="shop-title" note={`${shopProducts.length} study objects`} link={{ href: "/shop", label: "Shop" }} />
         <div className={styles.productShelf}>
           {shopProducts.map((product) => (
-              <Link href={`/shop/${product.slug}`} key={product.name}>
-                <div><Image src={product.image} alt={product.alt} fill sizes="(max-width: 700px) 50vw, 17vw" /></div>
+              <Link href="/shop" key={product.name}>
+                <div><Image src={product.image} alt={product.alt} fill sizes="(max-width: 360px) 72vw, (max-width: 680px) 62vw, (max-width: 1120px) 33vw, 17vw" /></div>
                 <NeoBadge variant="outline" className={styles.productBadge}>{product.type}</NeoBadge>
                 <h3>{product.name}</h3>
                 <footer><span>{product.price}</span><ArrowUpRight aria-hidden="true" /></footer>
@@ -96,7 +96,7 @@ export default function Home() {
 
       <section id="search" className={styles.searchStrip} aria-labelledby="search-title">
         <div><Search aria-hidden="true" /><h2 id="search-title">Search the archive</h2></div>
-        <form action="/search"><label htmlFor="site-search">Name, place, age or formation</label><div><input id="site-search" name="q" placeholder="Rawandiz, calcite, fold…" /><button type="submit">Search</button></div></form>
+        <form action="/search"><label htmlFor="site-search">Name, place, age or formation</label><div><input id="site-search" name="q" placeholder="Rawandiz, calcite, fold…" /><button type="submit" data-ui-action="primary">Search</button></div></form>
       </section>
     </main>
   );

@@ -2,26 +2,39 @@
 
 import Link from "@/components/safe-link";
 import { usePathname } from "next/navigation";
-import { Landmark, MapPinned, Microscope, Pickaxe, ShoppingBag, TentTree } from "lucide-react";
+import {
+  GeoArchiveIcon,
+  GeoHomeIcon,
+  GeoMapIcon,
+  GeoNotebookIcon,
+  GeoResearchIcon,
+  GeoRockIcon,
+  GeoTagIcon,
+} from "@/components/geo-icons";
 
-const items = [
-  { href: "/explore", label: "Explore", match: "/explore", icon: Pickaxe },
-  { href: "/maps", label: "Map", match: "/maps", icon: MapPinned },
-  { href: "/research", label: "Research", match: "/research", icon: Microscope },
-  { href: "/field", label: "Field", match: "/field", icon: TentTree },
-  { href: "/shop", label: "Shop", match: "/shop", icon: ShoppingBag },
-  { href: "/about", label: "About", match: "/about", icon: Landmark },
-];
+export const navigationItems = [
+  { href: "/", label: "Home", match: "/", icon: GeoHomeIcon },
+  { href: "/explore", label: "Explore", match: "/explore", icon: GeoArchiveIcon },
+  { href: "/maps", label: "Map", match: "/maps", icon: GeoMapIcon },
+  { href: "/research", label: "Research", match: "/research", icon: GeoResearchIcon },
+  { href: "/field", label: "Field", match: "/field", icon: GeoNotebookIcon },
+  { href: "/shop", label: "Shop", match: "/shop", icon: GeoTagIcon },
+  { href: "/about", label: "About", match: "/about", icon: GeoRockIcon },
+] as const;
 
-export function PrimaryNavigation({ className, label }: { className: string; label: string }) {
+export function PrimaryNavigation({ className, label, onNavigate }: { className: string; label: string; onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
     <nav className={className} aria-label={label}>
-      {items.map((item) => {
-        const active = item.match ? pathname.startsWith(item.match) : false;
+      {navigationItems.map((item) => {
+        const active = item.href === "/" ? pathname === "/" : item.match ? pathname.startsWith(item.match) : false;
         const Icon = item.icon;
-        return <Link href={item.href} aria-current={active ? "page" : undefined} key={item.label}><i aria-hidden="true"><Icon /></i><span>{item.label}</span></Link>;
+        return <Link href={item.href} aria-current={active ? "page" : undefined} key={item.label} onClick={onNavigate}>
+          <i aria-hidden="true"><Icon /></i>
+          <span>{item.label}</span>
+          <em className="navigation-bearing" aria-hidden="true"><span /></em>
+        </Link>;
       })}
     </nav>
   );

@@ -28,14 +28,14 @@ export function UnderDevelopment({ code, eyebrow, title, message, icon: Icon }: 
 
           {/* Actions directing visitors to working sections */}
           <div className={styles.actions}>
-            <Link href="/" className={styles.actionHome}>
+            <Link href="/" data-ui-action="back" className={styles.actionHome}>
               <House aria-hidden="true" />
               Home
             </Link>
-            <Link href="/explore" className={styles.actionExplore}>
+            <Link href="/explore" data-ui-action="primary" className={styles.actionExplore}>
               Explore the catalogue <ArrowRight aria-hidden="true" />
             </Link>
-            <Link href="/research" className={styles.actionResearch}>
+            <Link href="/research" data-ui-action="secondary" className={styles.actionResearch}>
               Read the research
             </Link>
           </div>
@@ -52,4 +52,3 @@ export function UnderDevelopment({ code, eyebrow, title, message, icon: Icon }: 
     </main>
   );
 }
-

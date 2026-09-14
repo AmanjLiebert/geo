@@ -1,5 +1,5 @@
 .page {
-  height: calc(100svh - var(--header-height));
+  height: calc(100dvh - var(--header-height));
   min-height: 0;
   display: grid;
   padding: clamp(12px, 1.6vw, 22px);
@@ -10,6 +10,7 @@
 /* Main Exploration Panel */
 .panel {
   width: 100%;
+  min-width: 0;
   height: 100%;
   min-height: 0;
   display: grid;
@@ -176,6 +177,8 @@
 /* 5. Visual Column */
 .visual {
   position: relative;
+  width: 100%;
+  min-width: 0;
   min-height: 380px;
   background: #ecdcc8;
   border-left: 2px solid var(--carbon);
@@ -213,24 +216,25 @@
 /* Responsive Rules */
 @media (max-width: 960px) {
   .page {
-    height: auto;
-    min-height: calc(100svh - var(--header-height));
-    overflow-y: auto;
+    height: calc(100dvh - var(--header-height));
+    min-height: 0;
+    overflow: hidden;
     padding: 10px;
   }
 
   .panel {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
+    grid-template-rows: minmax(0, 1fr) minmax(220px, 36%);
   }
 
   .copy {
-    padding: 28px 20px;
+    justify-content: flex-start;
+    padding: clamp(20px, 4vh, 28px) 20px;
   }
 
   .visual {
-    min-height: 300px;
-    aspect-ratio: 16 / 10;
+    min-height: 0;
+    aspect-ratio: auto;
     border-left: 0;
     border-top: 2px solid var(--carbon);
   }
@@ -243,6 +247,7 @@
 
 @media (max-width: 600px) {
   .page {
+    height: calc(100dvh - var(--header-height) - 2px);
     padding: 8px;
   }
 
@@ -279,21 +284,24 @@
   }
 
   .actions {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
     gap: 8px;
     margin-top: 16px;
   }
 
   .actions a {
     width: 100%;
-    min-height: 40px;
+    min-height: 44px;
     padding: 8px 12px;
-    font-size: 10.5px;
+    font-size: 12px;
   }
 
+  .actions a:last-child { grid-column: 1 / -1; }
+
   .visual {
-    min-height: 220px;
-    aspect-ratio: 16 / 11;
+    min-height: 0;
+    aspect-ratio: auto;
   }
 
   .marker {
@@ -301,6 +309,14 @@
     padding: 6px 9px;
     gap: 5px;
   }
+}
+
+@media (max-width: 380px), (max-height: 690px) and (max-width: 600px) {
+  .copy { padding-block: 14px; }
+  .status { margin-bottom: 10px; }
+  .note { display: none; }
+  .actions { margin-top: 12px; }
+  .panel { grid-template-rows: minmax(0, 1fr) minmax(170px, 29%); }
 }
 
 @media (max-height: 740px) and (min-width: 961px) {
@@ -335,5 +351,3 @@
     animation: none !important;
   }
 }
-
-
