@@ -1,38 +1,32 @@
 # Geo-Kurdistan
 
-Geo-Kurdistan is a geological knowledge platform focused on the geology, discoveries, resources, research, and geological heritage of the Kurdistan Region.
+Geo-Kurdistan is a geological knowledge platform for exploring the geology, discoveries, resources, research, places, and geological heritage of the Kurdistan Region.
 
-This repository is currently in the visitor-facing showcase phase. The showcase will use realistic mock data to help geology teachers and domain experts validate the information architecture, content model, and user experience before backend or database design begins.
+The existing Next.js visitor experience is the visual baseline. Development is now moving toward a secure, configurable production platform with a NestJS API, PostgreSQL, editorial tools, and future AI-assisted discovery.
 
-## Repository structure
+## Start here
 
-- frontend/ — Next.js visitor showcase
-- backend/ — intentionally deferred; contains documentation only
-- docs/ — product context, showcase requirements, and frontend architecture proposal
+1. Read [`PLAN.md`](PLAN.md) for the ordered implementation plan.
+2. Read [`MAP.md`](MAP.md) for the system, data, permission, and workflow maps.
+3. Read [`DESIGN.md`](DESIGN.md) before changing the interface.
+4. Follow [`AGENTS.md`](AGENTS.md) for repository-wide development rules.
 
-## Current scope
+## Repository
 
-The current phase includes documentation and a frontend scaffold only. It explicitly excludes a production backend, database schema, authentication, AI, payments, premium accounts, and real administration features.
+- `frontend/` — Next.js public site and future administration interface.
+- `backend/` — NestJS API workspace; implementation begins in Phase 1.
+- `docs/` — supporting content, media, and operational documentation.
 
-## Run the frontend
+## Frontend commands
 
-From the frontend directory:
+Run from `frontend/`:
 
-    npm install
-    npm run dev
+```text
+npm install
+npm run dev
+npm run test
+npm run lint
+npm run build
+```
 
-Then open http://localhost:3000.
-
-Useful checks:
-
-    npm run lint
-    npm run build
-
-## Documentation
-
-- docs/project-context.md — product vision, audience, constraints, and decision principles
-- docs/requirements.md — showcase requirements and acceptance criteria
-- docs/frontend-architecture.md — proposed frontend boundaries, routes, and mock-data approach
-
-The requirements are a review baseline, not a finalized database contract. Teacher feedback from the showcase should be recorded before backend design begins.
-
+The frontend still uses local data today. Replace that data through its repository/query boundary during Phase 6; do not rewrite working pages just to connect the API.

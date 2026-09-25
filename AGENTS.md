@@ -1,86 +1,53 @@
 # Geo-Kurdistan Development Rules
 
-## Current Phase
+## Source of truth
 
-We are currently building the visitor-facing showcase.
+Read these files before making architectural or product changes:
 
-Do NOT implement:
-- Production backend
-- PostgreSQL schema
-- Prisma models
-- Authentication
-- Admin dashboard
-- FIB payment integration
-- AI integration
-- Premium accounts
-- Production storage architecture
+1. `PLAN.md` — ordered delivery plan, scope, and completion gates.
+2. `MAP.md` — system boundaries, data ownership, roles, and flows.
+3. `DESIGN.md` — visual and accessibility rules.
 
-unless explicitly requested.
+If documents conflict, `PLAN.md` wins for delivery scope and `MAP.md` wins for system boundaries.
 
-## Development Philosophy
+## Current phase
 
-The showcase exists to validate the project's information architecture with geology teachers before backend development begins.
+The visitor showcase is complete enough to preserve as the current frontend baseline. The project is now moving toward a production-capable platform.
 
-Use realistic mock data.
+Current work must follow the active phase in `PLAN.md`. Do not jump ahead to AI, payments, or advanced infrastructure before the earlier phase completion gates pass.
 
-Do not hardcode the application around one example item.
+## Product rules
 
-Keep components reusable.
+- Do not block development on the final geological taxonomy.
+- Categories and subcategories are managed data, never hardcoded business rules.
+- A draft record may be unclassified; a published record must have a valid publishable category.
+- Category-specific fields come from versioned templates.
+- Editors manage content. Only super admins manage taxonomy, templates, roles, and global configuration.
+- Preserve references, provenance, revisions, and audit history.
+- Never silently invent permanent geological rules. Unknown scientific decisions stay configurable and visibly provisional.
 
-Keep mock content/data separate from UI components where practical.
+## Architecture rules
 
-Do not assume every geological category has identical fields.
+- Frontend: Next.js, React, TypeScript.
+- Backend: NestJS modular monolith.
+- Primary database: PostgreSQL. Use PostGIS for spatial data and pgvector only when RAG work begins.
+- Store media in private object storage; store metadata and ownership in PostgreSQL.
+- Keep business rules and authorization in NestJS, not in browser components.
+- Keep database access behind backend modules; the frontend must use documented API contracts.
+- Begin with one deployable backend and one database. Split services only after measured operational need.
+- Use migrations for every schema change. Do not edit production data structures manually.
 
-Do not create unnecessary complexity.
+## Engineering rules
 
-## Design
+- Prefer small, focused modules and reusable components.
+- Validate every external input at the API boundary.
+- Use explicit permissions, deny by default, and test authorization.
+- Use soft deletion or archival for business records; retain audit history.
+- Add tests with each behavior, especially permissions, publication rules, and migrations.
+- Never commit secrets, credentials, tokens, private documents, or production personal data.
+- Keep localization and right-to-left layouts possible; do not couple identifiers to translated labels.
+- Preserve existing user work and avoid unrelated rewrites.
 
-The website should feel:
-- Scientific
-- Modern
-- Trustworthy
-- Organized
-- Educational
-- Visually interesting
+## Design direction
 
-Use a modern Neo/Neo-scientific direction combined with clean Material-style organization.
-
-Avoid generic corporate/university website aesthetics.
-
-The design should prioritize:
-1. Clear information hierarchy
-2. Excellent exploration
-3. Strong typography
-4. Good spacing
-5. Visual geological content
-6. Responsive behavior
-7. Accessibility
-
-The website should feel impressive through exploration rather than relying on excessive visual effects.
-
-## Engineering
-
-Use:
-- Next.js
-- TypeScript
-- React
-- Component-based architecture
-
-Prefer:
-- Reusable components
-- Clear naming
-- Small focused components
-- Type safety
-- Maintainable architecture
-
-Avoid:
-- Giant components
-- Duplicate UI
-- Unnecessary dependencies
-- Premature backend/database decisions
-
-## Important
-
-When requirements are uncertain, do not silently invent permanent business rules.
-
-Use mock data and make the UI flexible so the requirements can be changed after teacher feedback.
+The product should feel scientific, modern, trustworthy, organized, educational, and visually interesting. Follow `DESIGN.md`; do not replace the established visual language with a generic admin template.
