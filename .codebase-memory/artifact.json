@@ -1,0 +1,11 @@
+{
+    "schema_version": 2,
+    "commit": "0fc0c2718d664feee2e2d8a511970de7aca368df",
+    "indexed_at": "2026-09-25T17:08:40Z",
+    "project": "geo-kurdistan",
+    "nodes": 1130,
+    "edges": 2809,
+    "original_size": 4390912,
+    "compressed_size": 817269,
+    "compression_level": 9
+}

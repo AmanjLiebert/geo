@@ -1,0 +1,40 @@
+.page { background: var(--fossil); }
+.section { padding-block: 72px 96px; border-bottom: 2px solid var(--carbon); }
+.shell { display: grid; grid-template-columns: minmax(0, .9fr) minmax(360px, 1.1fr); gap: clamp(28px, 6vw, 86px); align-items: start; }
+.panel { min-height: 420px; padding: clamp(24px, 4vw, 42px); background: var(--limestone); border: var(--neo-border); border-radius: var(--neo-radius); box-shadow: var(--neo-shadow-iron); }
+.panelHeader { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 18px; align-items: center; padding-bottom: 24px; border-bottom: 2px solid var(--carbon); }
+.panelHeader > svg { width: 58px; height: 58px; padding: 13px; color: var(--limestone); background: var(--shale); border: 2px solid var(--carbon); box-shadow: 3px 3px 0 var(--ochre); }
+.panelHeader span,.accountFacts dt,.form label { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.panelHeader h2 { margin-top: 5px; font-size: clamp(28px, 4vw, 42px); line-height: 1; }
+.primaryAction,.secondaryAction { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 24px; padding: 10px 18px; border: 2px solid var(--carbon); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .035em; text-transform: uppercase; cursor: pointer; }
+.primaryAction { color: var(--limestone); background: var(--carbon); box-shadow: 4px 4px 0 var(--iron); }
+.primaryAction span { width: 25px; height: 25px; display: grid; place-items: center; color: var(--carbon); background: var(--limestone); border: 1px solid var(--limestone); font-size: 13px; }
+.primaryAction svg { width: 16px; margin-left: auto; }
+.secondaryAction { background: var(--ochre); box-shadow: 3px 3px 0 var(--carbon); }
+.primaryAction:hover,.secondaryAction:hover { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--carbon); }
+.primaryAction:disabled,.secondaryAction:disabled { cursor: wait; opacity: .62; transform: none; }
+.divider { display: flex; align-items: center; gap: 12px; margin-block: 26px 20px; color: var(--ink-soft); font-family: var(--mono); font-size: 9px; text-transform: uppercase; }
+.divider::before,.divider::after { height: 1px; flex: 1; content: ""; background: var(--line); }
+.form { display: grid; gap: 11px; }
+.inputRow { display: grid; grid-template-columns: 46px 1fr; border: 2px solid var(--carbon); background: var(--fossil); }
+.inputRow svg { width: 18px; align-self: center; justify-self: center; }
+.inputRow input,.codeInput { width: 100%; min-height: 50px; padding: 10px 13px; background: var(--limestone); border: 0; border-inline-start: 1px solid var(--carbon); font-family: var(--mono); }
+.codeInput { border: 2px solid var(--carbon); font-size: 20px; letter-spacing: .3em; text-align: center; }
+.recaptcha { min-height: 0; overflow: hidden; }
+.textAction { justify-self: start; padding: 7px 0; color: var(--iron); background: transparent; border: 0; border-bottom: 1px solid currentColor; font-size: 12px; font-weight: 700; cursor: pointer; }
+.message,.invitation,.note,.privacy,.state { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--carbon); font-size: 13px; line-height: 1.55; }
+.message { background: var(--fossil); }
+.invitation { background: var(--ochre); }
+.note { color: var(--limestone); background: var(--shale); }
+.privacy { padding-inline: 0; color: var(--ink-soft); background: transparent; border-width: 1px 0 0; }
+.accountFacts { margin-top: 24px; border-top: 1px solid var(--line); }
+.accountFacts div { display: grid; grid-template-columns: 90px 1fr; gap: 15px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.accountFacts dd { text-transform: capitalize; }
+.assurance { padding-top: 24px; }
+.assurance h2 { max-width: 620px; font-size: clamp(38px, 5vw, 68px); letter-spacing: -.035em; line-height: .96; }
+.assurance ol { margin-top: 40px; list-style: none; border-top: 2px solid var(--carbon); }
+.assurance li { display: grid; grid-template-columns: 48px 1fr; gap: 18px; padding: 19px 0; border-bottom: 1px solid var(--carbon); }
+.assurance li > span { font-family: var(--mono); font-size: 10px; font-weight: 700; }
+.assurance li p { color: var(--ink-soft); line-height: 1.6; }
+.assurance li strong { display: block; color: var(--carbon); }
+@media (max-width: 820px) { .shell { grid-template-columns: 1fr; } .section { padding-block: 42px 70px; } }

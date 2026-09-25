@@ -5,9 +5,11 @@ node_modules/
 .next/
 out/
 build/
+dist/
 
 # Test and coverage output
 coverage/
+backups/
 
 # Local environment files
 .env
@@ -31,3 +33,8 @@ Thumbs.db
 
 # Deployment tooling
 .vercel/
+
+# Local operational state
+.restic-cache/
+secrets/*
+!secrets/README.md

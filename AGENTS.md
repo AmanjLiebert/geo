@@ -12,7 +12,7 @@ If documents conflict, `PLAN.md` wins for delivery scope and `MAP.md` wins for s
 
 ## Current phase
 
-The visitor showcase is complete enough to preserve as the current frontend baseline. The project is now moving toward a production-capable platform.
+The visitor showcase remains the frontend baseline. Phase 2 — identity, three-role authorization, and visitor accounts — is the active code phase. The Phase 1 Docker/PostgreSQL/queue/backup/restore rehearsal is still required before production sign-off. Do not begin Phase 3 content work until both the Phase 1 operational gate and Phase 2 identity gate pass.
 
 Current work must follow the active phase in `PLAN.md`. Do not jump ahead to AI, payments, or advanced infrastructure before the earlier phase completion gates pass.
 
@@ -22,7 +22,10 @@ Current work must follow the active phase in `PLAN.md`. Do not jump ahead to AI,
 - Categories and subcategories are managed data, never hardcoded business rules.
 - A draft record may be unclassified; a published record must have a valid publishable category.
 - Category-specific fields come from versioned templates.
-- Editors manage content. Only super admins manage taxonomy, templates, roles, and global configuration.
+- The only application roles are `visitor`, `teacher`, and `admin`; authentication state is not a separate role.
+- Teachers manage geological records, research, translations, evidence, locations, and media. Admins have the same scientific capabilities plus simple operational management such as news, site pages, user activation, and an optional future shop.
+- Taxonomy, record types, and templates are centrally seeded and maintained through reviewed migrations; routine application roles do not edit them in the dashboard.
+- Keep revisions and safe audit history automatically for recovery and security, but do not build a complex audit-log or permission-management interface for client users.
 - Preserve references, provenance, revisions, and audit history.
 - Never silently invent permanent geological rules. Unknown scientific decisions stay configurable and visibly provisional.
 

@@ -5,7 +5,7 @@ This document defines system boundaries, data ownership, permissions, and workfl
 ## 1. System map
 
 ```text
-Visitors and members                       Teachers and administrators
+Anonymous/registered visitors                  Teachers and admins
           │                                             │
           └──────────────────┬──────────────────────────┘
                              ▼
@@ -29,7 +29,7 @@ Visitors and members                       Teachers and administrators
                                                   └── AI ingestion*
 
 External trust and recovery boundaries
-├── Managed identity provider — Google and phone sign-in
+├── Firebase Authentication — Google and verified phone sign-in
 ├── Encrypted off-server database and media recovery copies
 └── External AI providers* — generation and embeddings
 
@@ -44,12 +44,12 @@ The production database may contain configuration, taxonomy, record types, templ
 | --- | --- | --- |
 | CDN / reverse proxy | TLS termination, public routing, coarse request limits, static/public caching, origin protection | Application authorization, private-response caching, canonical data |
 | Next.js | Rendering, interaction, accessibility, locale/direction, route metadata, dashboard forms | Final authorization, raw database access, private geometry, secret keys |
-| NestJS | Business rules, validation, permission/scope checks, publication, public data projection, API contracts, audit events | Visual presentation |
+| NestJS | Business rules, validation, role/object checks, publication, public data projection, API contracts, audit events | Visual presentation |
 | PostgreSQL | Durable structured data, translations, relations, revisions, permissions, exact/public spatial data, initial durable job queue | Original media files, public network exposure |
 | Object storage | Private originals, processed derivatives, research documents | Business authorization without backend checks |
 | Worker | Slow, retryable, idempotent processing | User-facing authorization decisions |
 | Off-server recovery store | Encrypted database backups, WAL/archive data, media recovery copy, retention | Serving as the primary database or only copy of secrets |
-| Identity provider | Login verification, account recovery, Google/phone identity | Application roles, departments, scientific permissions |
+| Firebase Authentication | Login verification, account recovery, Google/phone identity | Application roles, account status, invitations, sessions, and scientific permissions |
 | AI provider | Model inference | Canonical content, access decisions, autonomous publishing |
 
 ## 3. Backend module map
@@ -65,9 +65,9 @@ App
 │   └── API documentation
 ├── Identity and Access
 │   ├── Users and external identities
-│   ├── Departments and scopes
-│   ├── Roles and permissions
+│   ├── Three fixed roles and permissions
 │   ├── Sessions and privileged access
+│   ├── Saved records / watch-later
 │   └── Authorization policies
 ├── Scientific Content
 │   ├── Taxonomy
@@ -105,7 +105,7 @@ App
 │   ├── Review and publication
 │   ├── Structure requests
 │   ├── Template migrations
-│   └── Audit log
+│   └── Automatic audit history
 ├── Discovery
 │   ├── Search
 │   └── Public queries
@@ -119,7 +119,7 @@ App
 
 Module direction:
 
-- Every non-public API request passes identity, permission, and scope checks before business actions.
+- Every non-public API request passes identity, role, and object-level checks before business actions.
 - Public routes are explicitly marked; absence of a rule means denial.
 - Taxonomy, record types, templates, languages, and permissions can exist without records.
 - Records depend on approved scientific structure; taxonomy and templates do not depend on records.
@@ -169,11 +169,6 @@ No module may require local application memory or disk for canonical sessions, u
 ## 4. Scientific content map
 
 ```text
-Department / Scope
-        │
-        ├──────────────────────────────► ScopedRoleAssignment
-        │
-        ▼
 Category
 ├── parentCategory ───────────────────► Category
 ├── translations ─────────────────────► CategoryTranslation[]
@@ -210,7 +205,7 @@ Record
 ├── evidence ─────────────────────────► EvidenceLink[]
 ├── relationships ────────────────────► RecordRelation[]
 ├── revisions ────────────────────────► RecordRevision[]
-└── ownership ────────────────────────► User / Department
+└── authorship/ownership ─────────────► User
 ```
 
 The record type is first-class data. It must not be stored only as an unrestricted string or confused with a subcategory.
@@ -220,31 +215,31 @@ The record type is first-class data. It must not be stored only as an unrestrict
 ```text
 User
 ├── identities ───────────────────────► ExternalIdentity[]
-├── assignments ──────────────────────► ScopedRoleAssignment[]
+├── role ─────────────────────────────► VISITOR | TEACHER | ADMIN
+├── savedRecords ─────────────────────► SavedRecord[]
 └── actions ──────────────────────────► AuditEvent[]
 
-ScopedRoleAssignment
-├── role ─────────────────────────────► Role
-├── department/category scope ────────► Scope
-└── permissions ──────────────────────► Permission[]
+SavedRecord
+├── user ─────────────────────────────► User
+└── record ───────────────────────────► Record
 ```
 
-Roles are permission bundles, not hardcoded authorization shortcuts. NestJS checks the required permission and the target resource scope.
+Exactly three application roles exist. They map to fixed, tested permission bundles in NestJS; the client has no custom-role or permission editor. Anonymous browsing is public access, not a fourth role.
 
-| Capability | Visitor | Member | Editor | Publisher | Department admin | Admin | Super admin |
-| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Read published public content | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Save visitor preferences | No | Yes | Yes | Yes | Yes | Yes | Yes |
-| Create/edit drafts | No | No | Scoped | Scoped | Scoped | All editorial | All |
-| Submit for review | No | No | Scoped | Scoped | Scoped | All editorial | All |
-| Publish/archive | No | No | No | Scoped | If granted | All editorial | All |
-| Manage reviewed news and site pages | No | No | If granted | Scoped | If granted | All editorial | All |
-| Manage taxonomy/types/templates | No | No | No | No | No | No | Yes |
-| Manage cross-department editorial content | No | No | No | No | No | Yes | Yes |
-| Manage ordinary editorial users | No | No | No | No | Scoped | Yes | Yes |
-| Manage global roles, identity, and settings | No | No | No | No | No | No | Yes |
+| Capability | Visitor | Teacher | Admin |
+| --- | :---: | :---: | :---: |
+| Read published public content | Yes | Yes | Yes |
+| Sign in/out and save records to watch later | Yes | Yes | Yes |
+| Create/edit scientific drafts | No | Yes | Yes |
+| Manage translations, evidence, location, media, and research | No | Yes | Yes |
+| Review, publish, archive, and restore scientific content | No | Yes | Yes |
+| Manage reviewed news and site pages | No | No | Yes |
+| Manage user accounts and the three role assignments | No | No | Yes, simple controls |
+| Manage optional future shop | No | No | Yes, when enabled |
+| Manage taxonomy, record types, or templates | No | No | No |
+| Manage custom roles, raw audit logs, or technical settings | No | No | No |
 
-The interface may hide unavailable actions for clarity, but the API always enforces permissions. Department administration permits scoped content workflow and ordinary editorial-user management; it never implies taxonomy, template, role-definition, identity, or global-system access.
+The interface shows only the work relevant to the role, but the API always enforces authorization. Teacher and admin share one scientific workspace. Admin receives a small additional operational area; it is not a technical system console.
 
 ### Security request boundary
 
@@ -255,7 +250,7 @@ Request
 NestJS authentication
   │ session/token validity and revocation
   ▼
-permission + target-resource scope
+fixed role permission + target-object policy
   │ deny by default; object-level authorization
   ▼
 validated command / query
@@ -264,21 +259,19 @@ validated command / query
 public-safe or authorized private response
 ```
 
-- Staff identities are invited initially. Public member registration remains disabled until its feature, recovery, privacy, and abuse policy are approved.
+- Visitor registration creates only a visitor after verification and abuse controls are ready. Teacher and admin accounts require controlled invitation or explicit protected promotion.
 - Privileged identities use provider-supported MFA and reauthenticate before high-risk permission, security, migration, export, or restricted-location actions.
 - Cookie sessions, when used, are secure, HTTP-only, appropriately same-site, rotated, CSRF-protected, and revocable.
-- Authorization is performed after identifier resolution and before returning or mutating the target resource; changing an ID cannot cross a scope.
+- Authorization is performed after identifier resolution and before returning or mutating the target resource; changing an ID cannot expose another user's saved list, a draft, a protected file, or restricted geometry.
 - Safe audit events include authentication changes, failed authorization, publishing, migrations, exports, restricted-location reads, and security/global configuration changes without copying secrets or protected data into logs.
 
 ## 6. Minimum entity definitions
 
 | Entity | Important fields |
 | --- | --- |
-| Department | id, stableKey, name, status |
-| Scope | id, departmentId, categoryRootId, status |
-| ScopedRoleAssignment | userId, roleId, scopeId, grantedBy, timestamps |
+| User | id, role (`VISITOR`, `TEACHER`, or `ADMIN`), status, profile metadata, timestamps |
 | Permission | stableKey, description, riskLevel |
-| Category | id, parentId, scopeId, stableKey, slug, recordsAllowed, status, position |
+| Category | id, parentId, stableKey, slug, recordsAllowed, status, position |
 | CategoryTranslation | categoryId, locale, name, description, reviewStatus |
 | RecordType | id, stableKey, status |
 | RecordTypeTranslation | recordTypeId, locale, name, description, reviewStatus |
@@ -288,7 +281,7 @@ public-safe or authorized private response
 | FieldDefinition | id, stableKey, dataType, required, validation, unit, search/filter behavior, position, status |
 | FieldDefinitionTranslation | fieldDefinitionId, locale, label, helpText, reviewStatus |
 | TemplateMigration | fromVersionId, toVersionId, mapping, dryRunResult, status, approvedBy |
-| Record | id, stableId, slug, status, categoryId, recordTypeId, templateVersionId, attributes, ownerId, scopeId, timestamps |
+| Record | id, stableId, slug, status, categoryId, recordTypeId, templateVersionId, attributes, ownerId, timestamps |
 | RecordTranslation | recordId, locale, title, summary, description, sourceLocale, status, translatorId, reviewerId |
 | RecordRevision | recordId, revision, complete snapshot, reason, actorId, createdAt |
 | Reference | id, type, citation metadata, identifier, URL/documentId, rights, verification status |
@@ -308,7 +301,8 @@ public-safe or authorized private response
 | MediaAsset | id, storageKey, type, MIME type, size, checksum, rights, status, ownerId |
 | RecordRelation | sourceId, targetType, targetId, relationType, explanation |
 | ExternalIdentity | userId, provider, providerSubject, verified contact metadata |
-| AuditEvent | actorId, action, targetType, targetId, scopeId, safe metadata, timestamp |
+| SavedRecord | userId, recordId, createdAt; unique user/record pair |
+| AuditEvent | actorId, action, targetType, targetId, safe metadata, timestamp |
 
 Never use translated labels, email addresses, or phone numbers as permanent identifiers.
 
@@ -316,9 +310,9 @@ Never use translated labels, email addresses, or phone numbers as permanent iden
 
 ```text
 Authenticated teacher
-        │ permission + scope check
+        │ fixed role + object policy check
         ▼
-Create unclassified draft or choose active category
+Choose active category
         │
         ├── recordsAllowed = true ──► continue
         │
@@ -339,6 +333,8 @@ Create unclassified draft or choose active category
 
 Rules:
 
+- The visible path is **Add record → category → subcategory when required → record type → generated form**.
+- The active template is selected by the system and is not another choice for the teacher.
 - A public category page may aggregate records from descendants.
 - A record stores the category it belongs to, not every ancestor.
 - A category may allow several record types and scientific templates.
@@ -418,7 +414,7 @@ Publication requires:
 - Evidence required by the record type.
 - Valid media rights and reference access.
 - Public-safe geographic representation.
-- Authorization within the record scope.
+- Teacher or admin authorization for the target record.
 
 ## 11. Record lifecycle map
 
@@ -459,6 +455,23 @@ Reference
 
 Research is not stored as a geological record and is not reduced to a citation. It remains a dedicated module inside the modular monolith.
 
+### Online-only research and media delivery
+
+```text
+Private original in object storage
+        │ backend rights + visibility decision
+        ▼
+short-lived authorized inline response or processed viewer derivative
+        │ no permanent storage URL; no download control
+        ▼
+image/document viewer
+```
+
+- Original images and research files are private by default.
+- Public or visitor viewing uses public-safe derivatives, document pages/tiles, or short-lived authorized inline delivery.
+- Responses use private/no-store caching where appropriate, rate limits, and rights checks. Bulk export is not part of the routine roles.
+- The browser cannot guarantee DRM: a person can still take a screenshot or copy pixels that have been rendered. The security boundary prevents unintended original-file and direct-storage access.
+
 ### Publishing and site-content map
 
 ```text
@@ -482,7 +495,7 @@ OrganizationProfile
 
 - News is editorial publishing, not geological evidence by default. A news source may also be represented as a scientific reference only after the evidence rules accept it for a specific claim.
 - Automated feeds, scraping, or AI-assisted news ingestion are not launch behavior. Later ingestion uses source allowlists, rights review, SSRF-safe fetching, deduplication, provenance, and human publication approval.
-- Page editors may update reviewed public information without receiving taxonomy, identity, role, or global-security permissions.
+- Admins may update reviewed public information without receiving taxonomy, custom-role, raw-audit-log, or global-security interfaces.
 - Privacy and terms pages retain their published revision and effective date so later edits do not erase what users previously saw.
 
 ## 13. Geographic privacy map
@@ -512,19 +525,19 @@ Public API and map
 
 ```text
 Idempotent production initialization
-├── permissions and roles
+├── three fixed role bundles
 ├── locales and workflow states
-├── departments and scopes
 ├── categories and subcategories
 ├── record types and category/type rules
 ├── template versions and field definitions
 ├── relationship/evidence/visibility types
-└── bootstrap super-admin
+└── initial admin invitation
 
 Geological records       0
 Research publications   0
 Media assets             0
 Public locations         0
+Saved records            0
 ```
 
 Mock data and automated-test fixtures are separate from production initialization. Teachers create the first real records through the protected dashboard.
@@ -535,14 +548,13 @@ Mock data and automated-test fixtures are separate from production initializatio
 frontend/src
 ├── app
 │   ├── public routes: home, explore, maps, research, news, field, search, about, ownership/contact, privacy/terms
+│   ├── account routes: register, sign in/out, recovery, saved records
 │   └── future dashboard routes
 │       ├── records and review
 │       ├── research
-│       ├── news, scheduling, and managed pages
-│       ├── taxonomy, record types, and templates
 │       ├── translations and evidence
 │       ├── geography and media
-│       └── users, scopes, and audit
+│       └── admin-only news, managed pages, organization, users, and optional shop
 ├── components
 │   ├── existing shared visual components
 │   └── feature-specific interactive components
@@ -570,14 +582,21 @@ Browser → Next.js server → NestJS public API → publication + locale + visi
 Editorial write:
 
 ```text
-Dashboard → identity verification → permission + scope check → validation
+Dashboard → identity verification → fixed role + target-object check → validation
           → transaction → revision + audit event → PostgreSQL
+```
+
+Save for later:
+
+```text
+Signed-in user → visitor-or-higher role check → published-record check
+               → upsert/delete private SavedRecord → user-only response
 ```
 
 Restricted location read:
 
 ```text
-Dashboard → identity → restricted-location permission + scope → audit event
+Dashboard → identity → restricted-location policy → audit event
           → exact geometry
 ```
 
@@ -587,6 +606,13 @@ Private upload:
 Dashboard → identity + upload permission → type/size preflight → signed private upload
           → quarantine → magic-byte/expansion/malware checks → safe processing
           → rights + ownership + checksum metadata → reviewer approval → public derivative
+```
+
+Online-only document/image view:
+
+```text
+Viewer → publication + identity/rights check → short-lived inline or derivative response
+       → private/no-store cache policy + rate limit → no direct original URL
 ```
 
 Future AI answer:

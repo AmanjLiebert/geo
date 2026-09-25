@@ -8,6 +8,8 @@ The next goal is a secure, maintainable production foundation that teachers can 
 
 This document is planning only. Backend implementation begins only when it is requested separately.
 
+Current execution status: **Phase 2 identity code is active.** The Phase 1 foundation passes local code checks but still requires its Docker/PostgreSQL/queue/backup/restore rehearsal before production sign-off. Firebase identity exchange, internal three-role authorization, revocable sessions, invitations, account controls, and the visitor account screen now exist at code level; Phase 2 remains incomplete until they pass real-provider and PostgreSQL integration/security tests.
+
 ## 2. Decisions already made
 
 | Area | Decision |
@@ -25,9 +27,11 @@ This document is planning only. Backend implementation begins only when it is re
 | Site content | About, ownership/publisher identity, contact, privacy, and terms are managed, translated, revisioned pages rather than hardcoded application text |
 | Geography | Exact geometry is protected separately from its public representation |
 | Media | Private object storage with ownership, rights, and metadata in PostgreSQL |
-| Authentication | Managed identity provider supporting Google and phone sign-in |
-| Authorization | NestJS is the authority; permission-based, deny-by-default, and scope-aware |
-| Administration | Editors and department administrators manage content/workflow within scope; only super admins manage taxonomy, record types, templates, roles, and global configuration |
+| Authentication | Managed identity provider supporting Google and phone sign-in; anonymous browsing remains available |
+| Authorization | NestJS is the authority; exactly three fixed role bundles (`visitor`, `teacher`, `admin`), deny by default, with object-level checks |
+| Administration | Teachers manage all scientific content. Admins have the same scientific capabilities plus simple operational management. No routine role edits taxonomy, templates, role definitions, or technical settings in the dashboard |
+| Visitor accounts | Registered visitors can sign in, sign out, and save or remove geological records from a private watch-later list |
+| Protected content | Images and research documents are viewable through controlled online delivery; originals and direct storage URLs remain private and no download action is offered |
 | AI | External model API first, behind a provider interface; application-owned RAG and evaluation layer |
 | Deployment | One paid compute server initially, running one frontend, one backend, one PostgreSQL database, and one worker behind a reverse proxy; no microservices initially |
 | Operations | Off-server backups, external identity, private object storage, and optional CDN/WAF remain separate trust and recovery boundaries even when compute uses one server |
@@ -64,10 +68,10 @@ Rules:
 4. `recordsAllowed` decides whether records may attach directly to a category or must use a descendant.
 5. A record stores the category it actually belongs to, its record type, and the template version used to validate it.
 6. Draft records may be unclassified. Published records require an active publishable category, allowed record type, valid template version, and required evidence.
-7. Editors choose existing scientific structure while editing; they do not create categories inside the record form.
-8. Department administrators may coordinate content and editorial access within assigned scopes, but they do not manage taxonomy, record types, or templates.
-9. Taxonomy, record types, templates, global settings, identity configuration, permission definitions, and cross-department control remain super-admin responsibilities.
-10. Missing structure is requested through a review workflow.
+7. Teachers and admins choose existing scientific structure while editing; they do not create categories, record types, templates, or fields inside the record form.
+8. The normal creation path is: **Add record → category → subcategory when required → record type → generated form**. The system selects the active template automatically.
+9. Taxonomy, record types, and templates are centrally prepared and changed only through reviewed, versioned maintenance and database migrations; they are not exposed as ordinary dashboard management.
+10. Missing scientific structure is recorded as a request for later reviewed maintenance instead of being invented during data entry.
 11. Labels are translatable; identifiers and stable keys are not derived from translated text.
 12. Archiving or moving scientific structure must not erase records, revisions, translations, or history.
 
@@ -151,12 +155,21 @@ Research publications remain separate from geological records and ordinary refer
 - Research shares translations, media, revisions, review, publication, references, relationships, and permissions with the rest of the platform.
 - Research remains a module inside the NestJS monolith, not a separate service.
 
+### Online-only media and research access
+
+- Original images and research documents remain private in object storage; public pages never expose permanent storage keys or direct original-file URLs.
+- The application provides an online image/document viewer using public-safe derivatives, page images/tiles, or short-lived authorized delivery as appropriate.
+- Viewer responses use short-lived access, inline disposition, strict caching rules, rate limits, and rights checks. The interface does not provide a download button or bulk-export action.
+- Teachers and admins upload and manage files through protected workflows, but routine roles receive no unrestricted original-file export capability.
+- Resized or watermarked public image derivatives may be used when rights policy requires them.
+- This policy deters ordinary downloading and prevents accidental original-file exposure; it cannot guarantee prevention of screenshots or copying content already rendered on a user's device.
+
 ### Geography
 
 - Exact geometry is protected data and is never exposed merely because a public map exists.
 - Every place or record location has a visibility level: `PUBLIC`, `APPROXIMATE`, `RESTRICTED`, or `EMBARGOED`.
 - Public geometry is stored or generated separately as a generalized point, area, region-only label, or hidden representation.
-- Sensitivity reason, permitted scopes, public precision, owner, and embargo date are recorded.
+- Sensitivity reason, authorized role or user access, public precision, owner, and embargo date are recorded.
 - Geological map layers store source, licence, format, coordinate reference system, scale/resolution, geographic extent, version/date, and visibility.
 - Access to restricted geometry is authorized and audited.
 
@@ -166,14 +179,13 @@ The system must support a useful but scientifically empty production database.
 
 Production initialization creates only configuration and approved structure:
 
-- Roles, permissions, and scopes.
+- The three fixed role bundles: `visitor`, `teacher`, and `admin`.
 - Supported locales and workflow statuses.
-- Departments or organizational scopes.
 - Categories and subcategories.
 - Record types and allowed category/record-type combinations.
 - Versioned scientific templates and field definitions.
 - Relationship, reference, evidence, and geographic visibility types.
-- One controlled bootstrap super-admin account or invitation.
+- One controlled initial admin account or invitation.
 
 Initial production counts may be:
 
@@ -182,6 +194,7 @@ Geological records:       0
 Research publications:   0
 Uploaded media:           0
 Public locations:         0
+Saved records:            0
 ```
 
 Rules:
@@ -236,16 +249,16 @@ Paying for one compute server does not make external SMS, object storage, off-se
 ## 10. Security, privacy, and abuse baseline
 
 - Treat OWASP ASVS Level 2 as the minimum production verification checklist and maintain a small threat model for public browsing, staff administration, uploads, exact geography, identity recovery, and AI.
-- Staff accounts begin as controlled invitations. Public self-registration is delayed until a defined member feature justifies its privacy, abuse, support, and SMS costs.
+- Visitor registration is allowed only after its verification, recovery, privacy, and abuse controls are ready. Teacher and admin accounts use controlled invitations or explicit admin promotion; public signup can never select a privileged role.
 - Privileged accounts require multi-factor authentication when the chosen provider supports it, short-lived privileged sessions, reauthentication for high-risk actions, revocation, and recovery procedures.
 - If browser authentication uses cookies, they are `Secure`, `HttpOnly`, appropriately `SameSite`, rotated after authentication, and protected against CSRF.
-- Every resource lookup performs object-level permission and scope checks. Knowing or changing an identifier must never bypass authorization.
+- Every resource lookup performs object-level permission and visibility checks. Knowing or changing an identifier must never bypass authorization.
 - Rich text is sanitized with an allowlist. External URLs are validated against SSRF and unsafe-scheme rules before the server fetches anything.
 - Uploads use allowlisted types, signature/magic-byte verification, size and expansion limits, generated storage keys, quarantine, safe processing, rights metadata, and malware scanning where practical.
 - Authentication, failed authorization, privileged actions, restricted-location access, publication, migration, exports, and configuration changes produce safe audit events. Tokens, secrets, exact restricted coordinates, and unnecessary personal data are never written to logs.
 - Define personal-data inventory, retention, export, correction, account disablement/deletion, legal ownership, privacy notice, and incident-response responsibilities before public accounts launch.
 - Dependency and container-image scanning run in continuous integration. Critical production vulnerabilities block deployment until fixed or explicitly risk-accepted with a documented temporary mitigation.
-- Rate limits are action-aware: login, OTP, search, uploads, exports, publication, and AI receive separate limits, budgets, and abuse alerts.
+- Rate limits are action-aware: login, OTP, registration, watch-list changes, search, uploads, protected viewing, publication, and AI receive separate limits, budgets, and abuse alerts.
 
 ## 11. News, managed pages, and ownership information
 
@@ -254,14 +267,14 @@ Geological news is editorial content, not a geological record or research public
 `publishing` owns:
 
 - News articles, translations, authorship, topics/tags, source links, cover media, revisions, scheduling, review, publication, expiry, and archive state.
-- Explicit permissions for creating, reviewing, scheduling, publishing, and archiving news.
+- Admin-only capabilities for creating, reviewing, scheduling, publishing, and archiving news.
 - Manual, reviewed authoring at launch. Automated feeds, scraping, or AI-assisted ingestion remain disabled until source allowlists, rights review, SSRF protection, deduplication, provenance, and editorial approval exist.
 
 `site-content` owns:
 
 - Revisioned and translated managed pages such as About Geo-Kurdistan, mission, contact, privacy, and terms.
 - The organization/publisher profile: stable legal and display names, ownership statement, logo/media, contact channels, address when appropriate, and social links.
-- SEO metadata and publication state without granting page editors access to global security configuration.
+- SEO metadata and publication state without exposing global security configuration.
 
 Both modules reuse translations, media, revisions, audit, review, publication, and permissions. They do not reuse geological templates merely to avoid creating the correct content model.
 
@@ -285,9 +298,9 @@ Phase 0  Planning agreement
    ↓
 Phase 1  Backend and database foundation
    ↓
-Phase 2  Identity, authorization, departments, and scopes
+Phase 2  Identity, three roles, and secure sessions
    ↓
-Phase 3  Taxonomy, record types, templates, translations, records, revisions
+Phase 3  Taxonomy, record types, templates, translations, records, saved records, revisions
    ↓
 Phase 4  Evidence, geography, media, research, publishing, site content, publication
    ↓
@@ -341,41 +354,42 @@ Completion gate:
 - A database backup leaves the server and is restored into a clean environment successfully.
 - No production secret or mock geological record exists in the production seed.
 
-### Phase 2 — Identity, authorization, and organizational scope
+### Phase 2 — Identity, three-role authorization, and visitor accounts
+
+Implementation status: Firebase Authentication is selected for Google/phone identity proof. NestJS owns internal users, fixed role bundles, invitations, opaque PostgreSQL sessions, CSRF, recent-auth enforcement, and audit events. The static frontend has an account route for Google/phone verification. Provider configuration and full database/browser authorization rehearsal remain pending.
 
 Tasks:
 
 - Select a managed identity provider supporting Google and phone verification.
 - Verify provider tokens in NestJS and link external identities to internal users.
-- Begin with invited staff identities; do not enable unrestricted public registration until a member feature and abuse/privacy policy are approved.
-- Add departments or organizational scopes.
-- Implement roles as permission bundles and assign permissions within explicit scopes.
+- Support visitor registration, verification, sign-in, sign-out, recovery, and account disablement only after the associated privacy and abuse controls are complete.
+- Create teacher and admin identities through controlled invitations or explicit admin promotion. Public registration always creates a visitor.
+- Implement exactly three fixed role bundles. Do not build a client-facing custom permission or role editor.
 - Install a global deny-by-default authorization guard; mark public endpoints explicitly.
-- Add bootstrap super-admin setup, privileged-account MFA where supported, high-risk reauthentication, secure session handling, CSRF protection when cookie-based, session revocation, action-aware rate limiting, security headers, and authorization tests.
-- Add audit events for identity, role, permission, and scope changes.
+- Add initial-admin setup, privileged-account MFA where supported, high-risk reauthentication, secure session handling, CSRF protection when cookie-based, session revocation, action-aware rate limiting, security headers, and authorization tests.
+- Add automatic audit events for identity and role changes; retain them for security and recovery without exposing a complex audit-log dashboard.
 
 Initial roles:
 
-- `visitor` — reads published public content.
-- `member` — uses approved visitor account features.
-- `editor` — creates and edits drafts within assigned scopes.
-- `publisher` — reviews and publishes within assigned scopes.
-- `department_admin` — manages scoped editorial content and ordinary editorial access within assigned departments or category branches, without taxonomy/template authority.
-- `admin` — manages platform-wide editorial content and ordinary editorial users, without global security settings.
-- `super_admin` — manages global permissions, identity configuration, system settings, and cross-scope administration.
+- `visitor` — browses published content and, when signed in, saves or removes geological records from a private watch-later list.
+- `teacher` — has visitor capabilities and can create, edit, translate, validate, review, publish, archive, and restore geological records and research, including their evidence, locations, relationships, and media.
+- `admin` — has every teacher capability plus simple operational management for teacher/visitor accounts, news, managed site pages and organization information, and an optional future shop.
+
+Anonymous browsing is public access, not a fourth role. Taxonomy, record types, templates, role definitions, raw audit logs, and technical security settings are not routine dashboard capabilities for any of the three roles.
 
 Completion gate:
 
 - Every non-public endpoint has tested allow and deny cases.
-- Object-level and cross-scope authorization tests prevent identifier changes from exposing another department's data.
-- Department administrators can manage assigned editorial workflows and ordinary editorial access without receiving taxonomy, template, role-definition, or global-setting permissions.
-- No writable content endpoint exists without authenticated permission and scope checks.
+- Object-level authorization tests prevent identifier changes from exposing another user's private saved list, drafts, restricted locations, or protected files.
+- Visitor signup cannot assign or escalate to teacher or admin.
+- The three role bundles are seeded and tested; no client-facing permission editor exists.
+- No writable content endpoint exists without authenticated role and object-level authorization checks.
 
 ### Phase 3 — Configurable scientific content foundation
 
 Build these modules:
 
-1. `taxonomy` — categories, hierarchy, translations, ordering, scope, and structure requests.
+1. `taxonomy` — centrally maintained categories, hierarchy, translations, ordering, and structure requests.
 2. `record-types` — type definitions and category/type allowances.
 3. `templates` — immutable versions, stable field definitions, translations, validation, deprecation, and migration previews.
 4. `records` — shared fields, structured attributes, translations, ownership, and draft lifecycle.
@@ -385,7 +399,8 @@ Build these modules:
 Tasks:
 
 - Implement the zero-record production initialization described above.
-- Permit authenticated teachers to create unclassified or classified drafts according to scope.
+- Permit teachers and admins to create unclassified or classified drafts using the approved structure.
+- After the record entity exists, add the private saved-record/watch-later relation with a unique user/record pair and no effect on the geological record itself.
 - Keep publication disabled until Phase 4 evidence and location policies are enforceable.
 
 Completion gate:
@@ -413,7 +428,7 @@ Completion gate:
 
 - A record can be published without exposing restricted data and with evidence appropriate to its record type.
 - A managed research publication can be linked as content and cited as evidence.
-- Authorized editors can publish reviewed news and managed pages without receiving taxonomy or global-security permissions.
+- Admins can publish reviewed news and managed pages without receiving taxonomy or global-security configuration interfaces.
 - Failed jobs retry without duplicating results.
 
 ### Phase 5 — Protected administration dashboard
@@ -421,30 +436,30 @@ Completion gate:
 Build in this order:
 
 1. Sign-in and protected dashboard shell.
-2. Scope-aware record, research, news, and managed-page lists with real empty states.
-3. Record editor: category → optional subcategory → record type → generated template fields.
+2. Role-appropriate record, research, news, and managed-page lists with real empty states.
+3. One obvious **Add record** flow: category → subcategory when required → record type → generated template form.
 4. Translation workspace with locale-specific review status.
 5. Evidence, references, location visibility, media, and relationship editors.
-6. Review, publication, archive, revision history, restore, and template migration flows.
+6. Review, publication, archive, record history, and restore flows; template migration remains a controlled maintenance operation rather than a routine client screen.
 7. News, scheduled publication, managed pages, and organization-profile editors.
-8. Department-admin scoped content workflow and ordinary editorial-user management.
-9. Super-admin taxonomy, record-type, template, user, role, scope, audit, security, and global-settings screens.
+8. A simple admin account screen for inviting teachers, activating or disabling users, and assigning only `visitor`, `teacher`, or `admin` through protected actions.
+9. Admin-only news, managed-page, organization-profile, and optional future shop navigation, kept separate from the teacher's scientific workflow.
 
 Dashboard rules:
 
 - Never place unrestricted category creation inside the record form.
-- Display the active department/category scope and permission limits.
+- Do not display templates, schema versions, role definitions, audit logs, or technical settings unless a specific recovery or maintenance task requires them outside the routine client dashboard.
 - Warn before leaving unsaved work; autosave only drafts and show save state.
 - Use archive/restore for business content; avoid permanent deletion in normal workflows.
 - Display validation and missing evidence beside the relevant field and in a page summary.
-- Show template version and migration effects before applying a change.
+- Show teachers the generated scientific fields and plain-language validation; do not make them choose or understand template versions.
 
 Completion gate:
 
 - Teachers can populate an initially empty collection without direct database access.
-- Department administrators can manage assigned editorial workflows without changing scientific structure.
-- Super admins can evolve taxonomy, record types, and templates through versioned, audited workflows.
-- Super admins retain control of global security and platform settings.
+- Teachers and admins can complete the same simple scientific record workflow without changing scientific structure.
+- Admins can perform the agreed operational tasks without a complex system-administration area.
+- Taxonomy and template maintenance remains versioned, tested, auditable, and outside routine dashboard use.
 - News and ownership/site pages follow review, revision, translation, and publication permissions rather than bypassing them as static text.
 
 ### Phase 6 — Connect the public frontend
@@ -456,6 +471,8 @@ Tasks:
 - Generate a typed API client from the backend contract or maintain an equivalently checked boundary.
 - Replace local repository implementations route by route.
 - Connect public news, About, ownership/publisher, contact, privacy, and terms routes to published managed content.
+- Connect visitor registration, sign-in, sign-out, and the private saved-record/watch-later page.
+- Add online-only image and research viewers with no download controls, private originals, protected delivery, and clear access/rights states.
 - Add zero-record, zero-location, untranslated, loading, unavailable, and error states.
 - Implement locale routing, direction changes, translation fallback, and server-side cache/revalidation.
 - Define cache keys and invalidation for locale, publication revision, and public visibility; never publicly cache dashboard, user-specific, draft, or restricted-location responses.
@@ -466,6 +483,8 @@ Completion gate:
 
 - Public pages read only published, authorized API data.
 - News and managed pages expose only published revisions and verified public media/source links.
+- A signed-in visitor can privately save and remove a published record, and cannot read another user's saved list.
+- Images and research documents open in the controlled online viewer without exposing original storage URLs or a download action.
 - An empty collection renders correctly without fake records or failures.
 - Drafts, restricted coordinates, private media, and unpublished translations cannot be reached publicly.
 - Frontend tests, lint, and production build pass.
@@ -537,7 +556,8 @@ Completion gate:
 - A separate vector database before pgvector is measured.
 - Redis before a measured workload requires it; the initial durable queue uses PostgreSQL.
 - Complex commerce, payments, premium accounts, or orders.
-- Unrestricted public self-registration before a defined member feature, privacy policy, recovery flow, and abuse controls exist.
+- Visitor self-registration before verification, recovery, privacy, rate-limit, and abuse controls exist.
+- Client-facing taxonomy, template, custom-role, raw-audit-log, or technical-settings dashboards.
 - Automated news scraping or feed ingestion before source rights, allowlists, SSRF protection, deduplication, provenance, and editorial review exist.
 - Allowing AI to publish or mutate administrative data autonomously.
 - Permanent category-specific code when configuration and templates are sufficient.
@@ -545,15 +565,12 @@ Completion gate:
 
 ## 16. Next authorized work
 
-This planning update does not authorize backend implementation.
+Complete the Phase 1 operational rehearsal and Phase 2 identity integration/security gate:
 
-When implementation is separately requested, begin with Phase 1 only:
+1. Run both migrations and the configuration/role seed against PostgreSQL/PostGIS.
+2. Configure Firebase Google and phone providers, authorized domains, quotas, and the backend service account.
+3. Create and accept the one-time initial-admin invitation.
+4. Exercise visitor signup, invitation matching, sign-in/out, reauthentication, session revocation, role/status changes, CSRF denial, and allow/deny cases against the real API.
+5. Run the complete Compose topology, durable job proof, encrypted off-server backup, and clean restore rehearsal.
 
-1. Record the data-access, PostgreSQL-backed queue, session, deployment, backup, and recovery decisions.
-2. Select the NestJS data-access tool only after verifying PostGIS, JSONB, transactions, migrations, and pooling.
-3. Bootstrap the backend and the one-server local/production service topology.
-4. Add PostgreSQL development setup, migration infrastructure, configuration-only seeds, and a durable job proof.
-5. Add configuration validation, secret handling, request limits, logging, errors, health, metrics, and OpenAPI.
-6. Add backend build, lint, migration, dependency-audit, test, deployment, backup, and restore checks.
-
-Do not create content endpoints, dashboard pages, or AI functionality in the Phase 1 change.
+Do not start Phase 3 scientific content endpoints or dashboard record forms until these gates pass.

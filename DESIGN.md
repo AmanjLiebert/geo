@@ -12,7 +12,7 @@ Geo-Kurdistan is a public geological knowledge platform used by visitors, studen
 4. One connected action language: functional controls use the shared bordered, hard-shadow action system and consistent hover, focus, active, and disabled states.
 5. Geological character through material: restrained strata colours, documentary imagery, mono metadata, and paper-like surfaces create identity without excessive effects.
 6. Scientific state is visible: draft, review, evidence, translation, location sensitivity, and publication status must be understandable without opening technical metadata.
-7. Permissions remain legible: dashboard users can see their active department or category scope and understand why an action is unavailable.
+7. Roles remain legible: visitors, teachers, and admins see only the work relevant to them and understand why an action is unavailable.
 8. Empty is a valid state: zero records, zero results, missing translations, and unconfigured optional content receive intentional guidance rather than fake content.
 9. One identity across languages: translations are alternate presentations of the same scientific entity, not duplicate records.
 10. Trust is attributable: scientific claims, news, managed pages, AI answers, and ownership information show who published or reviewed them and when.
@@ -60,19 +60,17 @@ Runtime tokens in `frontend/src/app/globals.css` are canonical:
 
 The record editor follows the scientific decision sequence:
 
-1. Department or assigned scope, when the user has more than one.
-2. Category and optional subcategory.
-3. Record type.
-4. Fields generated from the active template version.
-5. Translations.
-6. Evidence and references.
-7. Location and public-visibility representation.
-8. Media and relationships.
-9. Validation, review, and publication.
+1. Select **Add record**.
+2. Choose a category.
+3. Choose a subcategory when that category requires one.
+4. Choose a record type.
+5. Complete the scientific form generated automatically from the active template.
+6. Add translations, evidence/references, location visibility, media, and relationships in guided sections.
+7. Validate, review, and publish.
 
 The interface must:
 
-- Show the chosen category, record type, and template version together.
+- Show the chosen category, subcategory, and record type together; do not ask the teacher to choose or understand a template version.
 - Explain the difference between subcategory and record type in plain language.
 - Never offer unrestricted category creation inside a record form.
 - Keep advanced sections collapsed until relevant while preserving a clear completion summary.
@@ -80,28 +78,29 @@ The interface must:
 - Show autosave, unsaved, saved, conflict, and offline/error states clearly.
 - Use archive and restore as the normal removal workflow.
 
-## Roles, permissions, and scope
+## Roles and permissions
 
-- Display the active department, category branch, or collection scope in the dashboard header or page context.
-- Department administrators receive scoped content-workflow and ordinary editorial-user tools, but no taxonomy, record-type, template, role-definition, identity, or global-setting tools.
-- Taxonomy, record-type, template, role-definition, identity, and global-setting interfaces are super-admin-only and visually separated from ordinary content administration.
-- Global identity, permission, security, and system settings remain visually separated from scientific administration.
+- The only application roles are visitor, teacher, and admin. Anonymous browsing is not a separate role.
+- A visitor browses published content and, when signed in, saves or removes geological records from a private watch-later list.
+- A teacher manages geological records and research, including translations, evidence, locations, media, review, publication, archive, and restore.
+- An admin can do everything a teacher can and receives a small additional area for user activation/invitations, news, managed pages, organization information, and an optional future shop.
+- Teacher and admin use the same scientific workspace. Do not duplicate or complicate the record flow for admin.
+- Taxonomy, record-type, template, custom-role, raw-audit-log, and technical-setting interfaces are not part of the routine client dashboard.
 - Hide irrelevant unavailable actions when that improves clarity, but explain a disabled action when the user reasonably expects access.
 - Never rely on interface visibility as authorization; API denial states must be clear and non-destructive.
-- Privileged actions such as publishing, template activation, migration, permission changes, and restricted-location access require explicit confirmation and produce visible audit context.
+- Privileged actions such as publishing, role promotion, and restricted-location access require explicit confirmation and produce automatic audit history behind the scenes.
 - High-risk actions that require reauthentication or multi-factor confirmation must preserve the user's unsaved work and return them to the intended action safely.
 - Session expiry, revocation, rate limiting, and permission denial use distinct messages; never blame the user or reveal whether another person's protected resource exists.
 
-## Dynamic templates and migrations
+## Template behavior and controlled maintenance
 
-Template editing must make compatibility and risk understandable:
+Templates drive the form but are not edited by teachers or admins in routine use:
 
-- Always identify draft versus active template versions.
-- Show stable field identity separately from translated label text when needed by administrators.
-- Mark additions as optional or required and explain the effect on existing records.
-- Represent removal as deprecation when values already exist.
-- Preview migration counts: total affected, automatically valid, requires manual correction, and blocked.
-- Never imply that activating a template version rewrites or republishes existing records.
+- Load the correct active template after category, subcategory, and record type are chosen.
+- Present required fields first and keep advanced fields collapsed until relevant.
+- Use plain scientific labels and help text; hide schema keys, migration controls, and version mechanics from routine users.
+- Centrally maintained changes preserve stable field identity, deprecate used fields instead of erasing values, and preview migration effects outside the normal dashboard.
+- Never imply that a maintenance template update rewrites or republishes existing records.
 - Provide a record-level banner when content uses an older template and a reviewed migration is available.
 
 ## Multilingual and bidirectional design
@@ -127,9 +126,24 @@ Template editing must make compatibility and risk understandable:
 ## Research experience
 
 - Research remains a dedicated browsing, detail, and reading experience rather than appearing as an ordinary geological record.
-- The dashboard gives research its own list and editor while reusing translation, evidence, media, relationship, review, and publication patterns.
+- The teacher/admin dashboard gives research its own list and form while reusing translation, evidence, media, relationship, review, and publication patterns.
 - Clearly distinguish an external citation from a managed research publication with its own document and rights.
 - Document availability, access limits, licence, version, and reading status must be visible without promising impossible copy protection.
+
+## Visitor accounts and saved records
+
+- Public exploration works without an account. Registration or sign-in is requested only when a visitor chooses **Save for later** or opens their saved list.
+- Saving and removing a record is a one-action control with immediate saved/unsaved feedback and an accessible label.
+- The saved-record page is private, supports useful empty and removed-record states, and never changes the geological record or its public popularity visibly by default.
+- Sign-in, sign-out, recovery, and account-disabled states remain simple and return the visitor to the page they were using when safe.
+
+## Online-only images and research documents
+
+- Public and visitor interfaces provide **View image** or **Read online**, not download or bulk-export actions.
+- Images use approved resized or watermarked derivatives when rights policy requires them; research documents use an embedded page/stream viewer with clear loading, access, licence, and error states.
+- Never reveal permanent original-file URLs, storage keys, or downloadable metadata in markup, page source, API payloads, or shareable routes.
+- The interface may deter ordinary saving, but it must not claim that screenshots or copying rendered pixels can be prevented.
+- Teachers and admins can upload, replace, and archive protected media through the dashboard without receiving an unrestricted original-file download library.
 
 ## News and managed site content
 
@@ -138,11 +152,12 @@ Template editing must make compatibility and risk understandable:
 - Scheduled, expired, draft, and archived news states remain clear in the dashboard and never leak through public previews or cached responses.
 - About, mission, contact, privacy, terms, and ownership/publisher pages use the established reading typography and carry their effective or last-reviewed date where appropriate.
 - Organization ownership and contact information is easy to find, readable in each supported locale, and visually separated from scientific claims.
-- News and managed-page editors reuse translation, revision, media, review, and publication interfaces while seeing only the permissions relevant to their role.
+- Admin news and managed-page forms reuse translation, revision, media, review, and publication patterns without becoming a technical settings area.
 
 ## Accounts and security-sensitive states
 
-- Staff invitation, sign-in, multi-factor challenge, recovery, reauthentication, and session-expiry screens use the established visual language and avoid a generic identity-provider feel where customization is available.
+- Visitor registration plus teacher/admin invitation, sign-in, multi-factor challenge, recovery, reauthentication, and session-expiry screens use the established visual language and avoid a generic identity-provider feel where customization is available.
+- Public registration always creates a visitor; no signup control may offer teacher or admin.
 - Never expose tokens, provider errors, stack traces, private identifiers, exact restricted locations, or whether a protected resource belongs to another user.
 - Upload interfaces show pending, quarantined, processing, rejected, approved, and failed states. Rejection messages are useful but do not disclose exploitable scanner internals.
 - Rate-limited actions show when retry is reasonable. Expensive actions such as exports, document processing, or AI display queued/running/failed state rather than encouraging repeated submission.
@@ -163,8 +178,8 @@ Template editing must make compatibility and risk understandable:
 - Never display exact restricted coordinates in public cards, URLs, page source, map payloads, alt text, or downloadable metadata.
 - Public maps use only the approved public representation: exact, generalized, approximate area, region-only, or hidden.
 - Clearly label approximate locations without inviting users to infer the protected point.
-- Dashboard location editors show exact and public representations side by side, with sensitivity level, reason, permitted scope, precision, and embargo information.
-- Accessing restricted geometry must be a deliberate action with permission feedback and audit visibility.
+- Dashboard location forms show exact and public representations side by side, with sensitivity level, reason, authorized access, precision, and embargo information.
+- Accessing restricted geometry must be a deliberate action with permission feedback; its automatic audit event does not require a client-facing audit screen.
 - Map-layer interfaces show source, licence, date/version, coordinate reference system, scale or resolution, and visibility.
 
 ## Empty collection and first-use states
@@ -182,6 +197,6 @@ Dashboard empty states:
 - Explain what can be created, who has permission, and which category/template will be used.
 - Offer a clear “Create first record” action only to authorized users.
 - Show setup problems separately from valid zero-content states.
-- Allow taxonomy, record types, templates, translations, permissions, and evidence policies to be reviewed before the first record exists.
+- Allow the centrally prepared taxonomy, record types, templates, translations, and evidence policies to be verified during deployment before the first record exists; do not expose their maintenance as routine client work.
 
 Test fixtures and existing mock content may support development and visual testing, but they must never appear as production scientific data.

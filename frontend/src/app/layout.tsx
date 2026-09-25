@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible_Next, IBM_Plex_Mono } from "next/font/google";
 import { SiteFooter, SiteHeader } from "@/components/site-shell";
+import { AuthProvider } from "@/components/auth-provider";
 import "./globals.css";
 
 const readableSans = Atkinson_Hyperlegible_Next({
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${readableSans.variable} ${plexMono.variable}`}>
-      <body><SiteHeader />{children}<SiteFooter /></body>
+      <body><AuthProvider><SiteHeader />{children}<SiteFooter /></AuthProvider></body>
     </html>
   );
 }

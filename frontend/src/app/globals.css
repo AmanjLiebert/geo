@@ -93,6 +93,10 @@ img { display: block; }
   transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease, transform 140ms ease;
 }
 .brutal-search:hover,.brutal-search:focus-visible { color: var(--carbon); background: var(--ochre); border-color: var(--ochre); outline: 0; }
+.brutal-account { position: relative; width: 44px; height: 44px; display: grid; place-items: center; color: var(--limestone); background: rgba(242,235,221,.06); border: 2px solid rgba(242,235,221,.26); border-radius: 4px; }
+.brutal-account:hover,.brutal-account:focus-visible,.brutal-account[aria-current="page"] { color: var(--carbon); background: var(--ochre); border-color: var(--ochre); outline: 0; }
+.brutal-account svg { width: 19px; height: 19px; }
+.brutal-account-status { position: absolute; right: 4px; bottom: 4px; width: 8px; height: 8px; background: #8fb86d; border: 1px solid var(--carbon); border-radius: 50%; }
 .brutal-search kbd { margin-left: auto; padding: 3px 6px; color: var(--carbon); background: var(--fossil); border: 1px solid var(--carbon); box-shadow: 2px 2px 0 var(--iron); font: inherit; }
 .brutal-language { height: 38px; gap: 6px; padding: 0 8px; color: var(--limestone); }
 .brutal-map-action { width: 40px; height: 40px; color: var(--carbon); background: var(--ochre); border: 2px solid var(--carbon); border-radius: 50%; box-shadow: 4px 4px 0 var(--iron); transition: transform 160ms ease, box-shadow 160ms ease; }

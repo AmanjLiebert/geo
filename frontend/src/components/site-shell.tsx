@@ -8,6 +8,7 @@ import { PrimaryNavigation } from "./primary-navigation";
 import { NavbarSearch } from "./navbar-search";
 import { MobileNavigation } from "./mobile-navigation";
 import { ScrollAwareHeader } from "./scroll-aware-header";
+import { AccountNav } from "./account-nav";
 
 function BrutalBrand({ light = false }: { light?: boolean }) {
   return (
@@ -28,6 +29,7 @@ export function SiteHeader() {
           <BrutalBrand />
           <PrimaryNavigation className="brutal-links" label="Primary navigation" />
           <div className="brutal-tools">
+            <AccountNav />
             <NavbarSearch />
           </div>
           <div className="brutal-mobile">
