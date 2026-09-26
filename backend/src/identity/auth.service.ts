@@ -175,6 +175,7 @@ export class AuthService {
         this.assertMfaForPrivilegedRole(identity, invitation.role);
         const previousRole = user.role;
         user.role = invitation.role;
+        await this.revokeSessions(manager, user.id, now);
         await this.recordAudit(
           manager,
           user.id,
@@ -251,6 +252,20 @@ export class AuthService {
     }
 
     return invitation;
+  }
+
+  private async revokeSessions(
+    manager: EntityManager,
+    userId: string,
+    revokedAt: Date,
+  ): Promise<void> {
+    await manager
+      .createQueryBuilder()
+      .update(UserSessionEntity)
+      .set({ revokedAt })
+      .where('user_id = :userId', { userId })
+      .andWhere('revoked_at IS NULL')
+      .execute();
   }
 
   private assertMfaForPrivilegedRole(identity: VerifiedIdentity, role: UserRole): void {

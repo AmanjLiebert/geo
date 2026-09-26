@@ -34,7 +34,7 @@ pg_dump \
   --no-privileges \
   --file "$dump_file"
 
-sha256sum "$dump_file" > "$dump_file.sha256"
+(cd "$backup_directory" && sha256sum "$(basename "$dump_file")" > "$(basename "$dump_file").sha256")
 restic backup "$dump_file" "$dump_file.sha256" \
   --tag geo-kurdistan \
   --tag postgresql \

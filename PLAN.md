@@ -8,7 +8,7 @@ The next goal is a secure, maintainable production foundation that teachers can 
 
 This document is planning only. Backend implementation begins only when it is requested separately.
 
-Current execution status: **Phase 2 identity code is active.** The Phase 1 foundation passes local code checks but still requires its Docker/PostgreSQL/queue/backup/restore rehearsal before production sign-off. Firebase identity exchange, internal three-role authorization, revocable sessions, invitations, account controls, and the visitor account screen now exist at code level; Phase 2 remains incomplete until they pass real-provider and PostgreSQL integration/security tests.
+Current execution status: **The Phase 1 foundation gate and the Phase 2 identity gate passed their development rehearsals on 2026-09-26; Phase 3 is now the active code phase.** Google and phone sign-in, the three roles, PostgreSQL-backed sessions, invitation and authorization checks, Compose health, the real worker queue proof, encrypted off-server Backblaze B2 backup, checksum verification, clean restore, and a full isolated rebuild from that restored database were exercised successfully. Production-server rebuild, production domain and quota configuration, external monitoring, and the final privileged-account MFA decision remain launch requirements, not blockers for beginning the Phase 3 schema and draft-record foundation.
 
 ## 2. Decisions already made
 
@@ -356,7 +356,7 @@ Completion gate:
 
 ### Phase 2 — Identity, three-role authorization, and visitor accounts
 
-Implementation status: Firebase Authentication is selected for Google/phone identity proof. NestJS owns internal users, fixed role bundles, invitations, opaque PostgreSQL sessions, CSRF, recent-auth enforcement, and audit events. The static frontend has an account route for Google/phone verification. Provider configuration and full database/browser authorization rehearsal remain pending.
+Implementation status: Firebase Authentication is selected and configured for Google/phone identity proof. NestJS owns internal users, fixed role bundles, invitations, opaque PostgreSQL sessions, CSRF, recent-auth enforcement, and audit events. The account route and real-provider flows have passed local browser checks for visitor, teacher, and admin, and the expanded API/PostgreSQL authorization rehearsal passes. The Phase 2 gate is complete for the currently implemented identity surface. Object-level allow/deny tests remain mandatory for each saved-record, draft, restricted-location, and protected-file endpoint when those resources are introduced in Phases 3 and 4. Production-domain configuration and the final launch checklist remain pending.
 
 Tasks:
 
@@ -565,12 +565,26 @@ Completion gate:
 
 ## 16. Next authorized work
 
-Complete the Phase 1 operational rehearsal and Phase 2 identity integration/security gate:
+Local completion evidence recorded on 2026-09-26:
 
-1. Run both migrations and the configuration/role seed against PostgreSQL/PostGIS.
-2. Configure Firebase Google and phone providers, authorized domains, quotas, and the backend service account.
-3. Create and accept the one-time initial-admin invitation.
-4. Exercise visitor signup, invitation matching, sign-in/out, reauthentication, session revocation, role/status changes, CSRF denial, and allow/deny cases against the real API.
-5. Run the complete Compose topology, durable job proof, encrypted off-server backup, and clean restore rehearsal.
+1. Migrations and the idempotent configuration/role seed pass against PostgreSQL/PostGIS.
+2. Firebase Google and phone providers, authorized localhost, the backend service account, and all three role flows pass local real-provider checks.
+3. Initial-admin invitation and role switching were exercised against the real API.
+4. Visitor signup, invitation matching, sign-in/out, session revocation, role/status changes, CSRF denial, and allow/deny cases passed the local integration/security rehearsal.
+5. The complete Compose topology is healthy, the durable job proof is processed by the real worker, and encrypted backup/checksum/clean restore passes with restored identity counts matching the source.
 
-Do not start Phase 3 scientific content endpoints or dashboard record forms until these gates pass.
+Additional completion evidence recorded on 2026-09-26:
+
+1. The private, encrypted Backblaze B2 recovery repository was initialized and received snapshot `eb4ae4ea`.
+2. That off-server snapshot restored successfully into a disposable database; checksum, PostGIS, platform settings, and identity-table counts matched the source.
+3. A second isolated Compose project rebuilt the database, migrations, seed, API, worker, frontend, and reverse proxy from the off-server snapshot in 60.6 seconds.
+4. The rebuilt API reported ready, its real worker completed queue proof job `ddbbf580-4260-42e7-8052-2c1a43e76bd6`, and only `127.0.0.1:18080` was published for the isolated rehearsal.
+5. The isolated containers, network, and volumes were removed after verification; the normal development stack remained healthy.
+
+Phase 3 is authorized. Start with reviewed migrations and tests for taxonomy, record types, immutable template versions, record drafts, translations, revisions, and audit events. Keep publication disabled until the Phase 4 evidence, geographic-privacy, and private-media controls exist.
+
+Still required before production launch, but not before Phase 3 development:
+
+1. Repeat the documented rebuild on the selected production Linux server and record recovery time against the approved objective.
+2. Configure the production domain, Firebase authorized domain, quotas/cost controls, external monitoring and alert ownership, and the privileged-account MFA policy.
+3. Run the later staging, security, privacy, accessibility, performance, zero-record initialization, and teacher-led first-record gates in their assigned phases.

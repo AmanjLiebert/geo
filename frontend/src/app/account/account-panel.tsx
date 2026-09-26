@@ -13,6 +13,7 @@ import { FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "re
 import { useAuth } from "@/components/auth-provider";
 import { exchangeFirebaseToken } from "@/lib/auth-api";
 import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase-auth";
+import { firebaseAuthMessage, isE164PhoneNumber, normalizePhoneNumber } from "@/lib/phone-auth";
 import styles from "./account.module.css";
 
 type Activity = "idle" | "google" | "phone-send" | "phone-confirm" | "signout";
@@ -54,7 +55,7 @@ export function AccountPanel() {
       const credential = await signInWithPopup(auth, provider);
       await completeServerSignIn(await credential.user.getIdToken(true));
     } catch (error) {
-      setMessage(toFriendlyMessage(error));
+      setMessage(firebaseAuthMessage(error));
     } finally {
       setActivity("idle");
     }
@@ -65,16 +66,21 @@ export function AccountPanel() {
     setActivity("phone-send");
     setMessage(null);
     try {
+      const normalizedPhone = normalizePhoneNumber(phone);
+      if (!isE164PhoneNumber(normalizedPhone)) {
+        setMessage("Enter the phone in international format, such as +9647500000000.");
+        return;
+      }
       const auth = await getFirebaseAuth();
       recaptchaRef.current?.clear();
       const verifier = new RecaptchaVerifier(auth, "account-recaptcha", { size: "normal" });
       recaptchaRef.current = verifier;
-      setConfirmation(await signInWithPhoneNumber(auth, phone.trim(), verifier));
+      setConfirmation(await signInWithPhoneNumber(auth, normalizedPhone, verifier));
       setMessage("Verification code sent. It may take a moment to arrive.");
     } catch (error) {
       recaptchaRef.current?.clear();
       recaptchaRef.current = null;
-      setMessage(toFriendlyMessage(error));
+      setMessage(firebaseAuthMessage(error));
     } finally {
       setActivity("idle");
     }
@@ -89,7 +95,7 @@ export function AccountPanel() {
       const credential = await confirmation.confirm(code.trim());
       await completeServerSignIn(await credential.user.getIdToken(true));
     } catch (error) {
-      setMessage(toFriendlyMessage(error));
+      setMessage(firebaseAuthMessage(error));
     } finally {
       setActivity("idle");
     }
@@ -101,7 +107,7 @@ export function AccountPanel() {
     try {
       await signOut();
     } catch (error) {
-      setMessage(toFriendlyMessage(error));
+      setMessage(firebaseAuthMessage(error));
     } finally {
       setActivity("idle");
     }
@@ -172,15 +178,6 @@ export function AccountPanel() {
       <p className={styles.privacy}>Google and phone verify who you are. Geo-Kurdistan—not the provider—decides your application role.</p>
     </section>
   );
-}
-
-function toFriendlyMessage(error: unknown): string {
-  const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
-  if (code.includes("popup-closed")) return "The sign-in window was closed before verification finished.";
-  if (code.includes("invalid-phone-number")) return "Enter the phone in international format, such as +964…";
-  if (code.includes("invalid-verification-code")) return "That verification code is not correct. Try again.";
-  if (code.includes("too-many-requests")) return "Too many attempts were made. Please wait before trying again.";
-  return "Sign-in could not be completed safely. Please try again.";
 }
 
 function subscribeToHash(onStoreChange: () => void): () => void {

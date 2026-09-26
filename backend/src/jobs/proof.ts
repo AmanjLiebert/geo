@@ -2,7 +2,12 @@ import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import PgBoss from 'pg-boss';
 import { validateEnvironment } from '../config/environment';
-import { FOUNDATION_PROOF_QUEUE, FoundationProofPayload } from './jobs.constants';
+import {
+  FOUNDATION_PROOF_QUEUE,
+  FOUNDATION_PROOF_QUEUE_OPTIONS,
+  FoundationProofPayload,
+} from './jobs.constants';
+import { waitForJobCompletion } from './proof-status';
 
 async function runProof(): Promise<void> {
   const environment = validateEnvironment(process.env);
@@ -13,7 +18,6 @@ async function runProof(): Promise<void> {
     max: 2,
   });
   const runId = randomUUID();
-  let timeout: NodeJS.Timeout | undefined;
 
   boss.on('error', (error) => {
     process.stderr.write(`Queue error: ${error.message}\n`);
@@ -22,28 +26,7 @@ async function runProof(): Promise<void> {
   await boss.start();
 
   try {
-    await boss.createQueue(FOUNDATION_PROOF_QUEUE, {
-      retryLimit: 3,
-      retryDelay: 1,
-      retryBackoff: true,
-      expireInSeconds: 30,
-      retentionSeconds: 3_600,
-    });
-
-    const processed = new Promise<string>((resolve) => {
-      void boss.work<FoundationProofPayload>(
-        FOUNDATION_PROOF_QUEUE,
-        { batchSize: 1, pollingIntervalSeconds: 1 },
-        (jobs) => {
-          for (const job of jobs) {
-            if (job.data.runId === runId) {
-              resolve(job.id);
-            }
-          }
-          return Promise.resolve();
-        },
-      );
-    });
+    await boss.createQueue(FOUNDATION_PROOF_QUEUE, FOUNDATION_PROOF_QUEUE_OPTIONS);
 
     const payload: FoundationProofPayload = {
       runId,
@@ -57,21 +40,15 @@ async function runProof(): Promise<void> {
       throw new Error('The proof job was not enqueued.');
     }
 
-    const processedJobId = await Promise.race([
-      processed,
-      new Promise<never>((_, reject) => {
-        timeout = setTimeout(
-          () => reject(new Error('The proof job did not complete before the timeout.')),
-          environment.JOB_PROOF_TIMEOUT_MS,
-        );
-      }),
-    ]);
+    await waitForJobCompletion(
+      boss,
+      FOUNDATION_PROOF_QUEUE,
+      jobId,
+      environment.JOB_PROOF_TIMEOUT_MS,
+    );
 
-    process.stdout.write(`Queue proof succeeded for job ${processedJobId}.\n`);
+    process.stdout.write(`Queue proof succeeded for job ${jobId}.\n`);
   } finally {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
     await boss.stop({ graceful: true, timeout: 10_000, wait: true });
   }
 }

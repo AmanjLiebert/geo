@@ -3,7 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
 import PgBoss from 'pg-boss';
 import { Environment } from '../config/environment';
-import { FOUNDATION_PROOF_QUEUE, FoundationProofPayload } from './jobs.constants';
+import {
+  FOUNDATION_PROOF_QUEUE,
+  FOUNDATION_PROOF_QUEUE_OPTIONS,
+  FoundationProofPayload,
+} from './jobs.constants';
 
 @Injectable()
 export class QueueService implements OnModuleInit, OnApplicationShutdown {
@@ -27,13 +31,7 @@ export class QueueService implements OnModuleInit, OnApplicationShutdown {
     this.boss.on('warning', (warning) => this.logger.warn({ warning }, 'Queue warning'));
 
     await this.boss.start();
-    await this.boss.createQueue(FOUNDATION_PROOF_QUEUE, {
-      retryLimit: 3,
-      retryDelay: 2,
-      retryBackoff: true,
-      expireInSeconds: 30,
-      retentionSeconds: 86_400,
-    });
+    await this.boss.createQueue(FOUNDATION_PROOF_QUEUE, FOUNDATION_PROOF_QUEUE_OPTIONS);
     await this.boss.work<FoundationProofPayload>(
       FOUNDATION_PROOF_QUEUE,
       {
