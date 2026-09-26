@@ -10,6 +10,14 @@ const foundationSettings = [
     key: 'platform.content_state',
     value: { initializedAsEmpty: true },
   },
+  {
+    key: 'platform.scientific_content',
+    value: {
+      schemaVersion: 1,
+      geologicalRecordsSeeded: 0,
+      structureSource: 'reviewed-migrations',
+    },
+  },
 ] as const;
 
 async function seed(): Promise<void> {

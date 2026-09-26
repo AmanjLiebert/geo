@@ -13,6 +13,7 @@ import { MetricsController } from './platform/metrics.controller';
 import { MetricsInterceptor } from './platform/metrics.interceptor';
 import { MetricsService } from './platform/metrics.service';
 import { ProblemDetailsFilter } from './platform/problem-details.filter';
+import { ScientificContentModule } from './scientific-content/scientific-content.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ProblemDetailsFilter } from './platform/problem-details.filter';
     }),
     HealthModule,
     IdentityModule,
+    ScientificContentModule,
   ],
   controllers: [AppController, MetricsController],
   providers: [

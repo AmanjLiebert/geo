@@ -6,9 +6,9 @@ This is the single execution plan for Geo-Kurdistan. The existing Next.js fronte
 
 The next goal is a secure, maintainable production foundation that teachers can populate and manage even when the geological taxonomy evolves. The production database may begin with approved categories, record types, scientific templates, permissions, and locales while containing zero geological records.
 
-This document is planning only. Backend implementation begins only when it is requested separately.
+This document governs both planning and separately authorized implementation. Each phase advances only after its completion evidence is recorded.
 
-Current execution status: **The Phase 1 foundation gate and the Phase 2 identity gate passed their development rehearsals on 2026-09-26; Phase 3 is now the active code phase.** Google and phone sign-in, the three roles, PostgreSQL-backed sessions, invitation and authorization checks, Compose health, the real worker queue proof, encrypted off-server Backblaze B2 backup, checksum verification, clean restore, and a full isolated rebuild from that restored database were exercised successfully. Production-server rebuild, production domain and quota configuration, external monitoring, and the final privileged-account MFA decision remain launch requirements, not blockers for beginning the Phase 3 schema and draft-record foundation.
+Current execution status: **The Phase 1 foundation, Phase 2 identity, and Phase 3 configurable scientific-content gates passed their development rehearsals on 2026-09-26. Phase 4 is the next authorized code phase but has not started.** The system now supports a scientifically empty initialization, reviewed structure migrations, unclassified and classified drafts, translations, validation, immutable template history, revisions, archive/restore, structure requests, and private saved-record ownership. Publication remains unavailable until Phase 4 evidence, geographic-privacy, media, research, and publication policies pass together. Production-server rebuild, production domain and quota configuration, external monitoring, and the final privileged-account MFA decision remain launch requirements.
 
 ## 2. Decisions already made
 
@@ -387,6 +387,8 @@ Completion gate:
 
 ### Phase 3 — Configurable scientific content foundation
 
+Implementation status: complete for the backend foundation. The production-style seed contains zero geological records and invents no permanent taxonomy. Temporary live fixtures proved category → record type → generated template selection, unclassified/classified drafts, translations, validation, revisions, archive/restore, private saved-record ownership, structure requests, and non-mutating template migration previews. Active templates and deprecated versions pinned by records are protected against mutation at the database layer. The repeatable evidence is recorded in `docs/operations/phase3-rehearsal-2026-09-26.md`.
+
 Build these modules:
 
 1. `taxonomy` — centrally maintained categories, hierarchy, translations, ordering, and structure requests.
@@ -581,9 +583,19 @@ Additional completion evidence recorded on 2026-09-26:
 4. The rebuilt API reported ready, its real worker completed queue proof job `ddbbf580-4260-42e7-8052-2c1a43e76bd6`, and only `127.0.0.1:18080` was published for the isolated rehearsal.
 5. The isolated containers, network, and volumes were removed after verification; the normal development stack remained healthy.
 
-Phase 3 is authorized. Start with reviewed migrations and tests for taxonomy, record types, immutable template versions, record drafts, translations, revisions, and audit events. Keep publication disabled until the Phase 4 evidence, geographic-privacy, and private-media controls exist.
+Phase 3 completion evidence recorded on 2026-09-26:
 
-Still required before production launch, but not before Phase 3 development:
+1. Four Phase 3 forward migrations establish taxonomy, record types, category/type allowances, versioned templates and fields, record drafts, translations, revisions, saved records, content audit events, and structure requests; the complete six-migration chain passes from a blank disposable database.
+2. The production-style seed remains at zero geological records and does not invent permanent taxonomy.
+3. Forty backend tests pass across 18 files; formatting, typecheck, lint, build, Compose migration, and live readiness pass.
+4. A temporary teacher completed category → record type → generated form, unclassified/classified draft creation, translation, failed-and-passed validation, revision, archive, and restore through the protected API.
+5. A visitor was denied teacher routes; saved-record ownership was isolated between signed-in users.
+6. A template-v2 migration preview validated a pinned record without changing it, and PostgreSQL rejected mutation of a deprecated template field still pinned by a record.
+7. The temporary structure, users, sessions, records, translations, revisions, saved rows, requests, and audit rows were removed; the live scientific collection returned to its intended empty state.
+
+Phase 4 is the next authorized implementation phase. Add evidence, exact/public geography separation, private media, research, publishing, news, and managed site content as one policy-controlled layer. Do not expose record publication until the Phase 4 permission, evidence, translation, rights, media, and public-geometry checks pass together.
+
+Still required before production launch, but not before Phase 4 development:
 
 1. Repeat the documented rebuild on the selected production Linux server and record recovery time against the approved objective.
 2. Configure the production domain, Firebase authorized domain, quotas/cost controls, external monitoring and alert ownership, and the privileged-account MFA policy.
