@@ -16,6 +16,7 @@ import {
   ScientificRecordStatus,
 } from './scientific-content.types';
 import { validateAttributes } from './template-validation';
+import { ScientificTrustService } from '../publishing/scientific-trust.service';
 
 interface RecordRow {
   id: string;
@@ -82,7 +83,10 @@ interface SavedRecordRow {
 
 @Injectable()
 export class RecordsService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly trust: ScientificTrustService,
+  ) {}
 
   async list(limit = 50, offset = 0, status?: string) {
     const safeLimit = Math.min(Math.max(limit, 1), 100);
@@ -245,7 +249,7 @@ export class RecordsService {
     await this.dataSource.transaction(async (manager) => {
       const record = await this.findRecord(manager, recordId, true);
       this.assertEditable(record);
-      const status = input.status ?? ContentTranslationStatus.DRAFT;
+      const status = ContentTranslationStatus.DRAFT;
       await manager.query(
         `
           INSERT INTO record_translations (
@@ -271,7 +275,7 @@ export class RecordsService {
           input.sourceLocale ?? null,
           status,
           actorUserId,
-          status === ContentTranslationStatus.REVIEWED ? actorUserId : null,
+          null,
         ],
       );
       await manager.query(`UPDATE scientific_records SET updated_at = now() WHERE id = $1`, [
@@ -290,6 +294,36 @@ export class RecordsService {
       );
     });
 
+    return this.get(recordId);
+  }
+
+  async reviewTranslation(reviewerUserId: string, recordId: string, locale: string) {
+    await this.dataSource.transaction(async (manager) => {
+      const record = await this.findRecord(manager, recordId, true);
+      this.assertEditable(record);
+      const rows = (await manager.query(
+        `SELECT translator_user_id FROM record_translations
+         WHERE record_id = $1 AND locale = $2 FOR UPDATE`,
+        [recordId, locale],
+      )) as unknown as Array<{ translator_user_id: string | null }>;
+      if (!rows[0]) throw new NotFoundException('Record translation not found.');
+      if (rows[0].translator_user_id === reviewerUserId) {
+        throw new BadRequestException('A translator cannot review their own translation.');
+      }
+      await manager.query(
+        `UPDATE record_translations SET status = 'reviewed', reviewer_user_id = $3,
+          updated_at = now() WHERE record_id = $1 AND locale = $2`,
+        [recordId, locale, reviewerUserId],
+      );
+      await this.writeRevision(manager, recordId, reviewerUserId, `translation.${locale}.reviewed`);
+      await this.writeAudit(
+        manager,
+        reviewerUserId,
+        'scientific-record.translation-reviewed',
+        recordId,
+        { locale },
+      );
+    });
     return this.get(recordId);
   }
 
@@ -315,6 +349,61 @@ export class RecordsService {
       });
     }
     return { valid: issues.length === 0, issues };
+  }
+
+  async submitForReview(actorUserId: string, recordId: string) {
+    const validation = await this.validate(recordId);
+    if (!validation.valid) {
+      throw new BadRequestException({
+        message: 'The record is not ready for review.',
+        issues: validation.issues,
+      });
+    }
+    await this.dataSource.transaction(async (manager) => {
+      const record = await this.findRecord(manager, recordId, true);
+      this.assertEditable(record);
+      await manager.query(
+        `UPDATE scientific_records SET status = 'in_review', updated_at = now() WHERE id = $1`,
+        [recordId],
+      );
+      await this.writeRevision(manager, recordId, actorUserId, 'record.submitted-for-review');
+      await this.writeAudit(
+        manager,
+        actorUserId,
+        'scientific-record.submitted-for-review',
+        recordId,
+        {},
+      );
+    });
+    return this.get(recordId);
+  }
+
+  async publish(reviewerUserId: string, recordId: string) {
+    const validation = await this.validate(recordId);
+    const publication = await this.trust.publicationIssues(recordId, reviewerUserId);
+    const issues = [...validation.issues, ...publication.issues];
+    if (issues.length > 0) {
+      throw new BadRequestException({ message: 'Publication checks failed.', issues });
+    }
+    await this.dataSource.transaction(async (manager) => {
+      const record = await this.findRecord(manager, recordId, true);
+      if (record.status !== ScientificRecordStatus.IN_REVIEW) {
+        throw new ConflictException('Only a record in review can be published.');
+      }
+      await manager.query(
+        `UPDATE record_translations SET status = 'published', reviewer_user_id = $2, updated_at = now()
+         WHERE record_id = $1 AND status = 'reviewed'`,
+        [recordId, reviewerUserId],
+      );
+      await manager.query(
+        `UPDATE scientific_records SET status = 'published', reviewed_by_user_id = $2,
+          published_at = now(), updated_at = now() WHERE id = $1`,
+        [recordId, reviewerUserId],
+      );
+      await this.writeRevision(manager, recordId, reviewerUserId, 'record.published');
+      await this.writeAudit(manager, reviewerUserId, 'scientific-record.published', recordId, {});
+    });
+    return this.get(recordId);
   }
 
   async archive(actorUserId: string, recordId: string) {

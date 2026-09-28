@@ -59,6 +59,15 @@ services:
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
       AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
       AUTH_PRIVILEGED_MFA_REQUIRED: ${AUTH_PRIVILEGED_MFA_REQUIRED:-false}
+      MEDIA_STORAGE_ENDPOINT: ${MEDIA_STORAGE_ENDPOINT:-}
+      MEDIA_STORAGE_REGION: ${MEDIA_STORAGE_REGION:-us-west-004}
+      MEDIA_STORAGE_BUCKET: ${MEDIA_STORAGE_BUCKET:-}
+      MEDIA_STORAGE_KEY_ID: ${MEDIA_STORAGE_KEY_ID:-}
+      MEDIA_STORAGE_APPLICATION_KEY: ${MEDIA_STORAGE_APPLICATION_KEY:-}
+      MEDIA_SCANNER_HOST: ${MEDIA_SCANNER_HOST:-clamav}
+      MEDIA_SCANNER_PORT: ${MEDIA_SCANNER_PORT:-3310}
+      MEDIA_SCANNER_TIMEOUT_MS: ${MEDIA_SCANNER_TIMEOUT_MS:-120000}
+      MEDIA_MAX_PDF_PAGES: ${MEDIA_MAX_PDF_PAGES:-100}
     depends_on:
       database:
         condition: service_healthy
@@ -135,6 +144,8 @@ services:
     depends_on:
       seed:
         condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
     networks:
       - private
     healthcheck:
@@ -150,6 +161,25 @@ services:
     mem_limit: ${WORKER_MEMORY_LIMIT:-512m}
     cpus: ${WORKER_CPU_LIMIT:-1.0}
     pids_limit: 150
+
+  clamav:
+    image: clamav/clamav:1.5.4
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 180s
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: ${CLAMAV_MEMORY_LIMIT:-3g}
+    cpus: ${CLAMAV_CPU_LIMIT:-1.0}
+    pids_limit: 200
 
   frontend:
     build:
@@ -221,6 +251,7 @@ volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  clamav_data:
 
 secrets:
   firebase_service_account:

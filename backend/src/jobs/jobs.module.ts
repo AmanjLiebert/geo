@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { QueueService } from './queue.service';
+import { JobQueueService } from './job-queue.service';
 
 @Module({
-  providers: [QueueService],
+  providers: [JobQueueService],
+  exports: [JobQueueService],
 })
 export class JobsModule {}

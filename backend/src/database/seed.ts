@@ -18,6 +18,18 @@ const foundationSettings = [
       structureSource: 'reviewed-migrations',
     },
   },
+  {
+    key: 'platform.publishing',
+    value: {
+      schemaVersion: 1,
+      referencesSeeded: 0,
+      researchPublicationsSeeded: 0,
+      mediaAssetsSeeded: 0,
+      publicLocationsSeeded: 0,
+      newsArticlesSeeded: 0,
+      publicationPolicy: 'deny-until-complete',
+    },
+  },
 ] as const;
 
 async function seed(): Promise<void> {

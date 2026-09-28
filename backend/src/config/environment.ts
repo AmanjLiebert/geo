@@ -33,6 +33,15 @@ export interface Environment {
   AUTH_COOKIE_SECURE: boolean;
   AUTH_COOKIE_DOMAIN: string;
   AUTH_PRIVILEGED_MFA_REQUIRED: boolean;
+  MEDIA_STORAGE_ENDPOINT: string;
+  MEDIA_STORAGE_REGION: string;
+  MEDIA_STORAGE_BUCKET: string;
+  MEDIA_STORAGE_KEY_ID: string;
+  MEDIA_STORAGE_APPLICATION_KEY: string;
+  MEDIA_SCANNER_HOST: string;
+  MEDIA_SCANNER_PORT: number;
+  MEDIA_SCANNER_TIMEOUT_MS: number;
+  MEDIA_MAX_PDF_PAGES: number;
 }
 
 export const environmentSchema = Joi.object<Environment>({
@@ -100,6 +109,18 @@ export const environmentSchema = Joi.object<Environment>({
     }),
   AUTH_COOKIE_DOMAIN: Joi.string().trim().allow('').default(''),
   AUTH_PRIVILEGED_MFA_REQUIRED: Joi.boolean().truthy('true').falsy('false').default(false),
+  MEDIA_STORAGE_ENDPOINT: Joi.string()
+    .uri({ scheme: ['https'] })
+    .allow('')
+    .default(''),
+  MEDIA_STORAGE_REGION: Joi.string().trim().max(80).default('us-west-004'),
+  MEDIA_STORAGE_BUCKET: Joi.string().trim().max(255).allow('').default(''),
+  MEDIA_STORAGE_KEY_ID: Joi.string().trim().allow('').default(''),
+  MEDIA_STORAGE_APPLICATION_KEY: Joi.string().trim().allow('').default(''),
+  MEDIA_SCANNER_HOST: Joi.string().hostname().default('clamav'),
+  MEDIA_SCANNER_PORT: Joi.number().port().default(3310),
+  MEDIA_SCANNER_TIMEOUT_MS: Joi.number().integer().min(1_000).max(300_000).default(120_000),
+  MEDIA_MAX_PDF_PAGES: Joi.number().integer().min(1).max(250).default(100),
 }).unknown(true);
 
 export function validateEnvironment(input: NodeJS.ProcessEnv): Environment {

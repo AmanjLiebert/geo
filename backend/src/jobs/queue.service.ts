@@ -1,60 +1,67 @@
 import { Injectable, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
-import PgBoss from 'pg-boss';
-import { Environment } from '../config/environment';
-import {
-  FOUNDATION_PROOF_QUEUE,
-  FOUNDATION_PROOF_QUEUE_OPTIONS,
-  FoundationProofPayload,
-} from './jobs.constants';
+import { MediaProcessorService } from '../media/media-processor.service';
+import { JobQueueService } from './job-queue.service';
 
 @Injectable()
 export class QueueService implements OnModuleInit, OnApplicationShutdown {
-  private boss?: PgBoss;
+  private cleanupTimer?: NodeJS.Timeout;
+  private cleanupRunning = false;
 
   constructor(
-    private readonly config: ConfigService<Environment, true>,
+    private readonly jobs: JobQueueService,
+    private readonly mediaProcessor: MediaProcessorService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(QueueService.name);
   }
 
   async onModuleInit(): Promise<void> {
-    this.boss = new PgBoss({
-      connectionString: this.config.get('DATABASE_URL', { infer: true }),
-      schema: this.config.get('QUEUE_SCHEMA', { infer: true }),
-      application_name: `${this.config.get('APP_NAME', { infer: true })}-worker`,
-      max: this.config.get('QUEUE_CONCURRENCY', { infer: true }) + 1,
+    await this.jobs.workFoundation((jobs) => {
+      for (const job of jobs)
+        this.logger.info(
+          { jobId: job.id, runId: job.data.runId },
+          'Processed idempotent foundation proof job',
+        );
+      return Promise.resolve();
     });
-    this.boss.on('error', (error) => this.logger.error({ err: error }, 'Queue failure'));
-    this.boss.on('warning', (warning) => this.logger.warn({ warning }, 'Queue warning'));
-
-    await this.boss.start();
-    await this.boss.createQueue(FOUNDATION_PROOF_QUEUE, FOUNDATION_PROOF_QUEUE_OPTIONS);
-    await this.boss.work<FoundationProofPayload>(
-      FOUNDATION_PROOF_QUEUE,
-      {
-        batchSize: 1,
-        pollingIntervalSeconds: 2,
-      },
-      (jobs) => {
-        for (const job of jobs) {
+    await this.jobs.workMedia(async (jobs) => {
+      await Promise.all(
+        jobs.map(async (job) => {
           this.logger.info(
-            { jobId: job.id, runId: job.data.runId },
-            'Processed idempotent foundation proof job',
+            { jobId: job.id, mediaAssetId: job.data.mediaAssetId },
+            'Processing quarantined media',
           );
-        }
-        return Promise.resolve();
-      },
-    );
+          await this.mediaProcessor.process(job.data.mediaAssetId);
+        }),
+      );
+    });
+
+    for (const mediaAssetId of await this.mediaProcessor.pendingIds()) {
+      await this.jobs.enqueueMedia(mediaAssetId);
+    }
+
+    await this.runMediaCleanup();
+    this.cleanupTimer = setInterval(() => void this.runMediaCleanup(), 15 * 60 * 1_000);
+    this.cleanupTimer.unref();
 
     this.logger.info('PostgreSQL job worker started');
   }
 
-  async onApplicationShutdown(): Promise<void> {
-    if (this.boss) {
-      await this.boss.stop({ graceful: true, timeout: 10_000, wait: true });
+  onApplicationShutdown(): void {
+    if (this.cleanupTimer) clearInterval(this.cleanupTimer);
+  }
+
+  private async runMediaCleanup(): Promise<void> {
+    if (this.cleanupRunning) return;
+    this.cleanupRunning = true;
+    try {
+      const cleaned = await this.mediaProcessor.cleanupExpiredUploads();
+      if (cleaned) this.logger.info({ cleaned }, 'Archived expired pending media uploads');
+    } catch (error) {
+      this.logger.error({ err: error }, 'Expired media upload cleanup failed');
+    } finally {
+      this.cleanupRunning = false;
     }
   }
 }

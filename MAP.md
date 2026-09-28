@@ -23,7 +23,7 @@ Anonymous/registered visitors                  Teachers and admins
         ▼                    ▼                           ▼
    PostgreSQL          Object storage             Background worker
    ├── PostGIS         ├── Private originals      ├── Durable PostgreSQL queue
-   ├── durable jobs    ├── Public derivatives     ├── Media processing
+   ├── durable jobs    ├── Private derivatives    ├── Media processing
    └── pgvector*       └── Research documents     ├── Document extraction
                                                   ├── Scheduled publishing
                                                   └── AI ingestion*
@@ -137,12 +137,13 @@ Linux host
 ├── Next.js                private application port; stateless
 ├── NestJS                 private API port; authoritative validation/authz
 ├── worker                 no public port; bounded concurrent jobs
+├── ClamAV                 private scanner port only; no host exposure
 └── PostgreSQL + PostGIS   private database port; persistent encrypted volume
 
 Outside the host
 ├── DNS/CDN/WAF            optional edge protection and public caching
 ├── identity provider      authentication and recovery
-├── object storage         private originals and public derivatives
+├── object storage         private originals and processed derivatives
 └── recovery storage       encrypted database/WAL and media copies
 ```
 
@@ -471,6 +472,7 @@ image/document viewer
 - Public or visitor viewing uses public-safe derivatives, document pages/tiles, or short-lived authorized inline delivery.
 - Responses use private/no-store caching where appropriate, rate limits, and rights checks. Bulk export is not part of the routine roles.
 - The browser cannot guarantee DRM: a person can still take a screenshot or copy pixels that have been rendered. The security boundary prevents unintended original-file and direct-storage access.
+- Confirmation failures delete the quarantined object before recording rejection. Unconfirmed uploads receive a one-hour grace period, after which the worker deletes the object and archives its metadata; the sweep runs at worker startup and every fifteen minutes.
 
 ### Publishing and site-content map
 
@@ -604,8 +606,8 @@ Private upload:
 
 ```text
 Dashboard → identity + upload permission → type/size preflight → signed private upload
-          → quarantine → magic-byte/expansion/malware checks → safe processing
-          → rights + ownership + checksum metadata → reviewer approval → public derivative
+          → quarantine → magic-byte/expansion checks → private ClamAV scan → safe processing
+          → rights + ownership + checksum metadata → reviewer approval → public-safe derivative
 ```
 
 Online-only document/image view:

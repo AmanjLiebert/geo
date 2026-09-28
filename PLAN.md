@@ -8,7 +8,7 @@ The next goal is a secure, maintainable production foundation that teachers can 
 
 This document governs both planning and separately authorized implementation. Each phase advances only after its completion evidence is recorded.
 
-Current execution status: **The Phase 1 foundation, Phase 2 identity, and Phase 3 configurable scientific-content gates passed their development rehearsals on 2026-09-26. Phase 4 is the next authorized code phase but has not started.** The system now supports a scientifically empty initialization, reviewed structure migrations, unclassified and classified drafts, translations, validation, immutable template history, revisions, archive/restore, structure requests, and private saved-record ownership. Publication remains unavailable until Phase 4 evidence, geographic-privacy, media, research, and publication policies pass together. Production-server rebuild, production domain and quota configuration, external monitoring, and the final privileged-account MFA decision remain launch requirements.
+Current execution status: **The Phase 1 foundation, Phase 2 identity, Phase 3 configurable scientific-content, and Phase 4 evidence/publishing/media gates passed their development rehearsals by 2026-09-28. Phase 5 — the protected administration dashboard — is now the active authorized implementation phase.** The Phase 4 live proofs cover policy enforcement, geographic privacy, independent review, approved-media publication, a separate private primary-media bucket, signed upload, metadata and magic-byte checks, ClamAV scanning, image and PDF derivatives, failed-job recovery, duplicate-job idempotency, rejected-object deletion, abandoned-upload expiry, short-lived inline viewing, and cleanup without retained mock content or test objects. Public visitor delivery remains a Phase 6 integration concern. Production-server rebuild, production domain and quota configuration, external monitoring, and the final privileged-account MFA decision remain launch requirements.
 
 ## 2. Decisions already made
 
@@ -413,6 +413,8 @@ Completion gate:
 
 ### Phase 4 — Evidence, geography, media, research, publishing, site content, and publication
 
+Implementation status: complete for the development gate. Five forward migrations establish structured evidence, exact/public PostGIS separation, public-safe location views, private media metadata and derivatives, typed content relationships, research, news, managed pages, organization identity, revisions, and database-enforced independent review/publication rules. Protected APIs cover the corresponding teacher/admin workflows, while missing object storage or malware scanning fails closed. The PostgreSQL worker performs ClamAV scanning, bounded image processing, bounded PDF page rendering, deterministic derivative writes, retry-safe claims, and periodic cleanup of expired unconfirmed uploads. A separate private primary-media bucket passes real signed upload, metadata, size, magic-byte, quarantine, clean/infected processing, transient scanner-outage recovery, duplicate-job idempotency, immediate rejected-object deletion, abandoned-upload expiry, approved-attachment publication, controlled viewing, and cleanup checks. The repeatable live evidence is recorded in `docs/operations/phase4-rehearsal-2026-09-26.md`.
+
 Tasks:
 
 - Add structured references and claim/field-level evidence links.
@@ -593,7 +595,7 @@ Phase 3 completion evidence recorded on 2026-09-26:
 6. A template-v2 migration preview validated a pinned record without changing it, and PostgreSQL rejected mutation of a deprecated template field still pinned by a record.
 7. The temporary structure, users, sessions, records, translations, revisions, saved rows, requests, and audit rows were removed; the live scientific collection returned to its intended empty state.
 
-Phase 4 is the next authorized implementation phase. Add evidence, exact/public geography separation, private media, research, publishing, news, and managed site content as one policy-controlled layer. Do not expose record publication until the Phase 4 permission, evidence, translation, rights, media, and public-geometry checks pass together.
+Phase 4 is complete for its development gate. Its policy/data/API foundation, publication rehearsal, real private-bucket workflow, scanning, image/PDF derivatives, failed-job recovery, duplicate-job idempotency, approved-media publication, cleanup, and short-lived controlled viewing pass together. Phase 5 is authorized and active. Keep the recovery bucket separate; public file delivery and public-page integration remain Phase 6 work and must use only approved derivatives through the backend policy boundary.
 
 Still required before production launch, but not before Phase 4 development:
 

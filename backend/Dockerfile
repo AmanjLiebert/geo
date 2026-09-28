@@ -12,7 +12,9 @@ RUN npm prune --omit=dev
 FROM node:24-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
-RUN addgroup -S geo && adduser -S geo -G geo
+RUN apk add --no-cache poppler-utils \
+    && addgroup -S geo \
+    && adduser -S geo -G geo
 COPY --from=build --chown=geo:geo /app/package.json /app/package-lock.json ./
 COPY --from=build --chown=geo:geo /app/node_modules ./node_modules
 COPY --from=build --chown=geo:geo /app/dist ./dist

@@ -14,6 +14,10 @@ import { MetricsInterceptor } from './platform/metrics.interceptor';
 import { MetricsService } from './platform/metrics.service';
 import { ProblemDetailsFilter } from './platform/problem-details.filter';
 import { ScientificContentModule } from './scientific-content/scientific-content.module';
+import { EditorialModule } from './editorial/editorial.module';
+import { MediaModule } from './media/media.module';
+import { PublishingModule } from './publishing/publishing.module';
+import { ResearchModule } from './research/research.module';
 
 @Module({
   imports: [
@@ -31,7 +35,11 @@ import { ScientificContentModule } from './scientific-content/scientific-content
     }),
     HealthModule,
     IdentityModule,
+    PublishingModule,
     ScientificContentModule,
+    MediaModule,
+    ResearchModule,
+    EditorialModule,
   ],
   controllers: [AppController, MetricsController],
   providers: [

@@ -1,5 +1,4 @@
-import { IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
-import { ContentTranslationStatus } from '../scientific-content.types';
+import { IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 const localePattern = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
 
@@ -23,10 +22,6 @@ export class UpsertRecordTranslationDto {
   @IsString()
   @Matches(localePattern)
   sourceLocale?: string | null;
-
-  @IsOptional()
-  @IsEnum(ContentTranslationStatus)
-  status?: ContentTranslationStatus;
 }
 
 export { localePattern };

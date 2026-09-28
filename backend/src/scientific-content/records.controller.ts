@@ -12,7 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { Permission } from '../identity/access-control';
-import { CurrentAuth, RequirePermissions } from '../identity/access.decorators';
+import { CurrentAuth, HighRiskAction, RequirePermissions } from '../identity/access.decorators';
 import { AuthContext } from '../identity/auth-context';
 import { CreateRecordDto } from './dto/create-record.dto';
 import { RecordListQueryDto } from './dto/record-list-query.dto';
@@ -66,9 +66,32 @@ export class RecordsController {
     return this.records.upsertTranslation(auth.user.id, recordId, locale, input);
   }
 
+  @Post(':id/translations/:locale/review')
+  @HighRiskAction()
+  reviewTranslation(
+    @CurrentAuth() auth: AuthContext,
+    @Param('id', ParseUUIDPipe) recordId: string,
+    @Param('locale') locale: string,
+  ) {
+    if (!localePattern.test(locale)) throw new BadRequestException('Invalid locale.');
+    return this.records.reviewTranslation(auth.user.id, recordId, locale);
+  }
+
   @Post(':id/validate')
   validate(@Param('id', ParseUUIDPipe) recordId: string) {
     return this.records.validate(recordId);
+  }
+
+  @Post(':id/submit-review')
+  submitForReview(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) recordId: string) {
+    return this.records.submitForReview(auth.user.id, recordId);
+  }
+
+  @Post(':id/publish')
+  @RequirePermissions(Permission.PUBLISH_SCIENTIFIC_CONTENT)
+  @HighRiskAction()
+  publish(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) recordId: string) {
+    return this.records.publish(auth.user.id, recordId);
   }
 
   @Post(':id/archive')
