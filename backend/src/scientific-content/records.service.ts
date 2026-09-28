@@ -32,6 +32,14 @@ interface RecordRow {
   updated_at: Date;
 }
 
+interface RecordListRow {
+  id: string;
+  status: ScientificRecordStatus;
+  is_classified: boolean;
+  updated_at: Date;
+  title: string | null;
+}
+
 interface TranslationRow {
   locale: string;
   title: string;
@@ -97,7 +105,12 @@ export class RecordsService {
 
     const rows = (await this.dataSource.query(
       `
-        SELECT r.*, t.title
+        SELECT
+          r.id,
+          r.status,
+          (r.category_id IS NOT NULL AND r.record_type_id IS NOT NULL) AS is_classified,
+          r.updated_at,
+          t.title
         FROM scientific_records r
         LEFT JOIN LATERAL (
           SELECT title FROM record_translations
@@ -110,14 +123,20 @@ export class RecordsService {
         LIMIT $1 OFFSET $2
       `,
       values,
-    )) as unknown as Array<RecordRow & { title: string | null }>;
+    )) as unknown as RecordListRow[];
     const countRows = (await this.dataSource.query(
       `SELECT COUNT(*)::text AS total FROM scientific_records r ${status ? 'WHERE r.status = $1' : ''}`,
       status ? [status] : [],
     )) as unknown as CountRow[];
 
     return {
-      items: rows.map((row) => ({ ...this.presentRecord(row), title: row.title })),
+      items: rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        status: row.status,
+        isClassified: Boolean(row.is_classified),
+        updatedAt: new Date(row.updated_at).toISOString(),
+      })),
       total: Number(countRows[0]?.total ?? 0),
       limit: safeLimit,
       offset: safeOffset,

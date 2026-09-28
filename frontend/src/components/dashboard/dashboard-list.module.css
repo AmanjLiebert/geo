@@ -141,6 +141,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
@@ -155,6 +156,7 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .itemTitle {
@@ -164,6 +166,10 @@
   color: var(--carbon);
   line-height: 1.3;
   margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .badges {
@@ -241,12 +247,15 @@
   font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-soft);
+  min-width: 0;
 }
 
 .metaItem {
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .metaLabel {
@@ -254,6 +263,13 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--carbon);
+  flex-shrink: 0;
+}
+
+.metaValue {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Empty state */

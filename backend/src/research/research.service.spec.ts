@@ -79,15 +79,9 @@ describe('research list query and service', () => {
         return Promise.resolve([
           {
             id: 'uuid-1',
-            stable_id: 'stable-1',
-            slug: 'test-slug',
             status: 'published',
             publication_year: 2024,
             doi: '10.1234/test',
-            rights_statement: 'CC-BY-4.0',
-            owner_user_id: 'user-1',
-            published_at: new Date('2024-06-01T00:00:00Z'),
-            created_at: new Date('2024-01-01T00:00:00Z'),
             updated_at: new Date('2024-06-02T00:00:00Z'),
             title: 'Sample Publication',
           },
@@ -102,21 +96,15 @@ describe('research list query and service', () => {
       expect(result.offset).toBe(0);
       expect(result.items).toHaveLength(1);
 
-      // verify camelCase representation
+      // verify minimal camelCase representation
       const item = result.items[0];
       expect(item).toEqual({
         id: 'uuid-1',
-        stableId: 'stable-1',
-        slug: 'test-slug',
+        title: 'Sample Publication',
         status: 'published',
         publicationYear: 2024,
         doi: '10.1234/test',
-        rightsStatement: 'CC-BY-4.0',
-        ownerUserId: 'user-1',
-        publishedAt: '2024-06-01T00:00:00.000Z',
-        createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-06-02T00:00:00.000Z',
-        title: 'Sample Publication',
       });
     });
 

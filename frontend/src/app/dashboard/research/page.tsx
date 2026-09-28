@@ -13,6 +13,7 @@ import {
   calculatePagination,
   formatDate,
   formatResearchStatus,
+  getRecoveredOffset,
 } from "@/components/dashboard/dashboard-list-utils";
 import styles from "@/components/dashboard/dashboard-list.module.css";
 
@@ -54,6 +55,11 @@ export default function DashboardResearchPage() {
     })
       .then((res) => {
         if (!ignore) {
+          const recoveredOffset = getRecoveredOffset(res.total, PAGE_SIZE, offset);
+          if (recoveredOffset !== null) {
+            setOffset(recoveredOffset);
+            return;
+          }
           setResearch(res.items);
           setTotal(res.total);
           setError(null);
@@ -226,10 +232,12 @@ export default function DashboardResearchPage() {
       {/* Empty state */}
       {!loading && !error && research.length === 0 && (
         <div className={styles.emptyState}>
-          <h2 className={styles.emptyStateTitle}>Zero publications found</h2>
+          <h2 className={styles.emptyStateTitle}>
+            {statusFilter === "all" ? "No research publications yet" : "Zero publications found"}
+          </h2>
           <p className={styles.emptyStateText}>
             {statusFilter === "all"
-              ? "The research library contains zero managed publications. Teachers will catalogue scientific literature as references are introduced."
+              ? "No research publications yet. Publications will appear here once they are added."
               : `No research publications currently match the "${formatResearchStatus(statusFilter)}" filter.`}
           </p>
           {statusFilter !== "all" && (
@@ -273,18 +281,20 @@ export default function DashboardResearchPage() {
                   {item.publicationYear !== null && (
                     <span className={styles.metaItem}>
                       <span className={styles.metaLabel}>Year:</span>
-                      <span>{item.publicationYear}</span>
+                      <span className={styles.metaValue}>{item.publicationYear}</span>
                     </span>
                   )}
                   {item.doi && (
                     <span className={styles.metaItem}>
                       <span className={styles.metaLabel}>DOI:</span>
-                      <span>{item.doi}</span>
+                      <span className={styles.metaValue}>{item.doi}</span>
                     </span>
                   )}
                   <span className={styles.metaItem}>
                     <span className={styles.metaLabel}>Updated:</span>
-                    <time dateTime={item.updatedAt}>{formatDate(item.updatedAt)}</time>
+                    <time dateTime={item.updatedAt} className={styles.metaValue}>
+                      {formatDate(item.updatedAt)}
+                    </time>
                   </span>
                 </div>
               </li>

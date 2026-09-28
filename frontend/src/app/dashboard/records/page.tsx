@@ -13,6 +13,7 @@ import {
   calculatePagination,
   formatDate,
   formatRecordStatus,
+  getRecoveredOffset,
 } from "@/components/dashboard/dashboard-list-utils";
 import styles from "@/components/dashboard/dashboard-list.module.css";
 
@@ -56,6 +57,11 @@ export default function DashboardRecordsPage() {
     })
       .then((res) => {
         if (!ignore) {
+          const recoveredOffset = getRecoveredOffset(res.total, PAGE_SIZE, offset);
+          if (recoveredOffset !== null) {
+            setOffset(recoveredOffset);
+            return;
+          }
           setRecords(res.items);
           setTotal(res.total);
           setError(null);
@@ -229,10 +235,12 @@ export default function DashboardRecordsPage() {
       {/* Empty state */}
       {!loading && !error && records.length === 0 && (
         <div className={styles.emptyState}>
-          <h2 className={styles.emptyStateTitle}>Zero records found</h2>
+          <h2 className={styles.emptyStateTitle}>
+            {statusFilter === "all" ? "No records yet" : "Zero records found"}
+          </h2>
           <p className={styles.emptyStateText}>
             {statusFilter === "all"
-              ? "The geological collection begins empty. Teachers will create and curate scientific records through the structured publication workflow."
+              ? "No records yet. Records will appear here once they are added."
               : `No records currently match the "${formatRecordStatus(statusFilter)}" filter.`}
           </p>
           {statusFilter !== "all" && (
@@ -253,7 +261,7 @@ export default function DashboardRecordsPage() {
       {!loading && !error && records.length > 0 && (
         <ul className={styles.list} aria-label="Scientific records list">
           {records.map((record) => {
-            const isClassified = Boolean(record.categoryId);
+            const isClassified = record.isClassified;
             const statusLabel = formatRecordStatus(record.status);
             const badgeClass = getStatusBadgeClass(record.status);
 
@@ -282,7 +290,9 @@ export default function DashboardRecordsPage() {
                 <div className={styles.cardMeta}>
                   <span className={styles.metaItem}>
                     <span className={styles.metaLabel}>Updated:</span>
-                    <time dateTime={record.updatedAt}>{formatDate(record.updatedAt)}</time>
+                    <time dateTime={record.updatedAt} className={styles.metaValue}>
+                      {formatDate(record.updatedAt)}
+                    </time>
                   </span>
                 </div>
               </li>

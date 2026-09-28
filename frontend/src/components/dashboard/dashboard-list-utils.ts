@@ -77,3 +77,32 @@ export function calculatePagination(total: number, limit: number, offset: number
     rangeText,
   };
 }
+
+/**
+ * Calculates a recovered offset if the current offset is invalid for the returned total.
+ * - If currentOffset < 0: returns 0.
+ * - If total === 0 and currentOffset > 0: returns 0.
+ * - If total > 0 and currentOffset >= total: returns the offset of the last valid page.
+ * - Otherwise (offset is valid): returns null.
+ */
+export function getRecoveredOffset(
+  total: number,
+  limit: number,
+  currentOffset: number,
+): number | null {
+  const safeLimit = Math.max(1, limit);
+
+  if (currentOffset < 0) {
+    return 0;
+  }
+
+  if (total <= 0) {
+    return currentOffset > 0 ? 0 : null;
+  }
+
+  if (currentOffset >= total) {
+    return Math.floor((total - 1) / safeLimit) * safeLimit;
+  }
+
+  return null;
+}

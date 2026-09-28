@@ -20,17 +20,11 @@ interface ResearchRow {
   status: string;
 }
 
-interface ResearchPublicationRow {
+interface ResearchPublicationListRow {
   id: string;
-  stable_id: string;
-  slug: string | null;
   status: string;
   publication_year: number | null;
   doi: string | null;
-  rights_statement: string | null;
-  owner_user_id: string;
-  published_at: Date | string | null;
-  created_at: Date | string;
   updated_at: Date | string;
   title: string | null;
 }
@@ -51,8 +45,7 @@ export class ResearchService {
     if (status) values.push(status);
 
     const rows = (await this.dataSource.query(
-      `SELECT p.id, p.stable_id, p.slug, p.status, p.publication_year, p.doi,
-        p.rights_statement, p.owner_user_id, p.published_at, p.created_at, p.updated_at,
+      `SELECT p.id, p.status, p.publication_year, p.doi, p.updated_at,
         t.title
        FROM research_publications p
        LEFT JOIN LATERAL (
@@ -63,7 +56,7 @@ export class ResearchService {
        ORDER BY p.updated_at DESC, p.id
        LIMIT $1 OFFSET $2`,
       values,
-    )) as unknown as ResearchPublicationRow[];
+    )) as unknown as ResearchPublicationListRow[];
 
     const countRows = (await this.dataSource.query(
       `SELECT COUNT(*)::text AS total FROM research_publications p ${status ? 'WHERE p.status = $1' : ''}`,
@@ -73,17 +66,11 @@ export class ResearchService {
     return {
       items: rows.map((row) => ({
         id: row.id,
-        stableId: row.stable_id,
-        slug: row.slug,
+        title: row.title,
         status: row.status,
         publicationYear: row.publication_year,
         doi: row.doi,
-        rightsStatement: row.rights_statement,
-        ownerUserId: row.owner_user_id,
-        publishedAt: row.published_at ? new Date(row.published_at).toISOString() : null,
-        createdAt: new Date(row.created_at).toISOString(),
         updatedAt: new Date(row.updated_at).toISOString(),
-        title: row.title,
       })),
       total: Number(countRows[0]?.total ?? 0),
       limit: safeLimit,

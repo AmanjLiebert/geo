@@ -41,14 +41,9 @@ describe("dashboard-api", () => {
         items: [
           {
             id: "rec-1",
-            stableId: "stable-1",
-            slug: "rock-formation",
-            status: "published",
-            categoryId: "cat-1",
-            recordTypeId: "type-1",
-            templateVersionId: "ver-1",
             title: "Limestone Bedding",
-            createdAt: "2026-01-01T00:00:00.000Z",
+            status: "published" as const,
+            isClassified: true,
             updatedAt: "2026-01-02T00:00:00.000Z",
           },
         ],
@@ -158,25 +153,101 @@ describe("dashboard-api", () => {
         expect(apiError.kind).toBe("aborted");
       }
     });
+
+    it("throws server error on malformed 200 responses (non-object envelope)", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(["not", "an", "object"]),
+      } as Response);
+
+      await expect(listDashboardRecords()).rejects.toThrow(
+        "The scientific server returned an unparseable response.",
+      );
+    });
+
+    it("throws server error on malformed 200 responses (invalid pagination or non-array items)", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ total: -1, limit: 20, offset: 0, items: [] }),
+      } as Response);
+
+      await expect(listDashboardRecords()).rejects.toThrow(
+        "The scientific server returned an unparseable response.",
+      );
+    });
+
+    it("throws server error when record item has invalid status or non-boolean isClassified", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            total: 1,
+            limit: 20,
+            offset: 0,
+            items: [
+              {
+                id: "rec-1",
+                title: "Test",
+                status: "invalid_status",
+                isClassified: "not-a-boolean",
+                updatedAt: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+          }),
+      } as Response);
+
+      try {
+        await listDashboardRecords();
+        expect.fail("Should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(DashboardApiError);
+        const apiError = err as DashboardApiError;
+        expect(apiError.status).toBe(200);
+        expect(apiError.kind).toBe("server");
+      }
+    });
+
+    it("throws server error when record item has invalid updatedAt date string", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            total: 1,
+            limit: 20,
+            offset: 0,
+            items: [
+              {
+                id: "rec-1",
+                title: "Test",
+                status: "draft",
+                isClassified: false,
+                updatedAt: "not-a-valid-date",
+              },
+            ],
+          }),
+      } as Response);
+
+      await expect(listDashboardRecords()).rejects.toThrow(
+        "The scientific server returned an unparseable response.",
+      );
+    });
   });
 
   describe("listDashboardResearch", () => {
-    it("fetches research publications and parses camelCase response", async () => {
+    it("fetches research publications and parses minimal projection response", async () => {
       const mockData = {
         items: [
           {
             id: "res-1",
-            stableId: "stable-res-1",
-            slug: "zagros-study",
-            status: "published",
+            title: "Tectonics of Kurdistan",
+            status: "published" as const,
             publicationYear: 2024,
             doi: "10.1234/zagros",
-            rightsStatement: "Open Access",
-            ownerUserId: "usr-1",
-            publishedAt: "2024-05-01T00:00:00.000Z",
-            createdAt: "2024-01-01T00:00:00.000Z",
             updatedAt: "2024-05-02T00:00:00.000Z",
-            title: "Tectonics of Kurdistan",
           },
         ],
         total: 1,
@@ -197,8 +268,12 @@ describe("dashboard-api", () => {
       expect(url).toContain("/api/v1/research?limit=50&offset=0");
       expect(init?.credentials).toBe("include");
       expect(init?.cache).toBe("no-store");
+      expect(result.items[0].id).toBe("res-1");
+      expect(result.items[0].title).toBe("Tectonics of Kurdistan");
+      expect(result.items[0].status).toBe("published");
       expect(result.items[0].publicationYear).toBe(2024);
-      expect(result.items[0].rightsStatement).toBe("Open Access");
+      expect(result.items[0].doi).toBe("10.1234/zagros");
+      expect(result.items[0].updatedAt).toBe("2024-05-02T00:00:00.000Z");
     });
 
     it("handles genuine empty state from API", async () => {
@@ -211,6 +286,78 @@ describe("dashboard-api", () => {
       const result = await listDashboardResearch();
       expect(result.items).toEqual([]);
       expect(result.total).toBe(0);
+    });
+
+    it("throws server error on malformed 200 responses (non-object envelope)", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(null),
+      } as Response);
+
+      await expect(listDashboardResearch()).rejects.toThrow(
+        "The scientific server returned an unparseable response.",
+      );
+    });
+
+    it("throws server error when research item has invalid status", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            total: 1,
+            limit: 20,
+            offset: 0,
+            items: [
+              {
+                id: "res-1",
+                title: "Paper",
+                status: "unknown_status",
+                publicationYear: 2023,
+                doi: null,
+                updatedAt: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+          }),
+      } as Response);
+
+      try {
+        await listDashboardResearch();
+        expect.fail("Should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(DashboardApiError);
+        const apiError = err as DashboardApiError;
+        expect(apiError.status).toBe(200);
+        expect(apiError.kind).toBe("server");
+      }
+    });
+
+    it("throws server error when research item has non-integer publicationYear or non-string doi", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            total: 1,
+            limit: 20,
+            offset: 0,
+            items: [
+              {
+                id: "res-1",
+                title: "Paper",
+                status: "draft",
+                publicationYear: "twenty-twenty",
+                doi: 12345,
+                updatedAt: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+          }),
+      } as Response);
+
+      await expect(listDashboardResearch()).rejects.toThrow(
+        "The scientific server returned an unparseable response.",
+      );
     });
   });
 });
