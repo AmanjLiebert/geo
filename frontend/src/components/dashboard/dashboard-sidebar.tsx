@@ -19,38 +19,42 @@ function SidebarNavItem({ item }: { item: NavItem }) {
   const pathname = usePathname();
   const Icon = ITEM_ICONS[item.id] ?? FileText;
 
-  // Items without an href are "coming next" — not broken links.
+  // Items without an href are "coming next" — rendered as non-interactive li.
   if (!item.href) {
     return (
-      <span
-        className={`${styles.sidebarItem} ${styles.sidebarItemComingSoon}`}
-        aria-label={`${item.label} — coming next`}
-        title={item.description}
-        aria-disabled="true"
-      >
-        <span className={styles.sidebarItemIcon} aria-hidden="true">
-          <Icon aria-hidden="true" />
+      <li>
+        <span
+          className={`${styles.sidebarItem} ${styles.sidebarItemComingSoon}`}
+          aria-label={`${item.label} — coming next`}
+          title={item.description}
+          aria-disabled="true"
+        >
+          <span className={styles.sidebarItemIcon} aria-hidden="true">
+            <Icon aria-hidden="true" />
+          </span>
+          <span className={styles.sidebarItemLabel}>{item.label}</span>
+          <span className={styles.comingSoonTag} aria-hidden="true">Soon</span>
         </span>
-        <span className={styles.sidebarItemLabel}>{item.label}</span>
-        <span className={styles.comingSoonTag} aria-hidden="true">Soon</span>
-      </span>
+      </li>
     );
   }
 
   const isCurrent = pathname === item.href || pathname.startsWith(`${item.href}/`);
   return (
-    <Link
-      href={item.href}
-      className={styles.sidebarItem}
-      aria-current={isCurrent ? "page" : undefined}
-      aria-label={item.label}
-      title={item.description}
-    >
-      <span className={styles.sidebarItemIcon} aria-hidden="true">
-        <Icon aria-hidden="true" />
-      </span>
-      <span className={styles.sidebarItemLabel}>{item.label}</span>
-    </Link>
+    <li>
+      <Link
+        href={item.href}
+        className={styles.sidebarItem}
+        aria-current={isCurrent ? "page" : undefined}
+        aria-label={item.label}
+        title={item.description}
+      >
+        <span className={styles.sidebarItemIcon} aria-hidden="true">
+          <Icon aria-hidden="true" />
+        </span>
+        <span className={styles.sidebarItemLabel}>{item.label}</span>
+      </Link>
+    </li>
   );
 }
 
@@ -69,7 +73,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
       aria-label="Dashboard navigation"
     >
       <div className={styles.sidebarInner}>
-        {/* Dashboard home link */}
+        {/* Dashboard home link — standalone, not part of a section list */}
         <Link
           href="/dashboard"
           className={styles.sidebarHomeLink}
@@ -83,13 +87,18 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
         </Link>
 
         {nav.sections.map((section) => (
-          <div key={section.id} className={styles.sidebarSection} role="list" aria-label={section.label}>
-            <p className={styles.sidebarSectionLabel} aria-hidden="true">
+          <div key={section.id} className={styles.sidebarSection}>
+            <p className={styles.sidebarSectionLabel} id={`sidebar-section-${section.id}`}>
               {section.label}
             </p>
-            {section.items.map((item) => (
-              <SidebarNavItem key={item.id} item={item} />
-            ))}
+            <ul
+              className={styles.sidebarSectionList}
+              aria-labelledby={`sidebar-section-${section.id}`}
+            >
+              {section.items.map((item) => (
+                <SidebarNavItem key={item.id} item={item} />
+              ))}
+            </ul>
           </div>
         ))}
       </div>

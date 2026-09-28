@@ -62,6 +62,10 @@
   color: var(--ochre);
 }
 
+.headerBrandText {
+  display: inline;
+}
+
 .headerBrandMark {
   width: 26px;
   height: 26px;
@@ -180,8 +184,41 @@
   flex: none;
 }
 
+.headerLinkText {
+  display: inline;
+}
+
 .signOutButton {
   composes: headerLink;
+}
+
+.signOutButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signOutButton:disabled:hover {
+  color: var(--limestone);
+  background: transparent;
+  border-color: rgba(251, 248, 241, 0.2);
+}
+
+.signOutError {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding: 8px 16px;
+  background: var(--iron);
+  color: var(--limestone);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-align: center;
+  border-bottom: 2px solid var(--carbon);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  z-index: 50;
 }
 
 /* ============================================================
@@ -282,6 +319,14 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
+}
+
+.sidebarSectionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebarItem {
@@ -768,6 +813,8 @@
 }
 
 .mobileNavBody {
+  list-style: none;
+  margin: 0;
   padding: 16px 0;
 }
 
@@ -866,7 +913,7 @@
   }
 }
 
-/* Mobile: ≤760px — hide sidebar, show mobile trigger */
+/* Mobile: ≤760px — hide sidebar, show mobile trigger, optimize header down to 320px */
 @media (max-width: 760px) {
   .dashboardBody {
     grid-template-columns: 1fr;
@@ -876,8 +923,47 @@
     display: none;
   }
 
+  .header {
+    padding: 0 8px;
+    gap: 8px;
+  }
+
   .mobileNavTrigger {
     display: inline-flex;
+    padding: 0;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+
+  .headerBrandText {
+    display: none;
+  }
+
+  .headerSep {
+    display: none;
+  }
+
+  .headerUser {
+    display: none;
+  }
+
+  .headerLinkText {
+    display: none;
+  }
+
+  .headerLink {
+    padding: 0;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+
+  .headerActions {
+    gap: 6px;
+    margin-left: auto;
   }
 
   .mainInner {

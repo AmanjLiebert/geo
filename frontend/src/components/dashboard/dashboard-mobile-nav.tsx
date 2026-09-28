@@ -6,6 +6,7 @@ import Link from "@/components/safe-link";
 import { LayoutDashboard, FileText, BookOpen, Newspaper, Globe, Users, X } from "lucide-react";
 import type { ApplicationRole } from "@/lib/auth-api";
 import { getDashboardNavigation, type NavItem } from "./dashboard-nav-config";
+import { MOBILE_DRAWER_ID } from "./dashboard-header";
 import styles from "./dashboard.module.css";
 
 const ITEM_ICONS: Record<string, typeof LayoutDashboard> = {
@@ -20,34 +21,39 @@ function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }
   const Icon = ITEM_ICONS[item.id] ?? FileText;
   const pathname = usePathname();
 
+  // Coming-next: render as <li> containing a non-interactive span.
   if (!item.href) {
     return (
-      <span
-        className={`${styles.mobileNavItem} ${styles.mobileNavItemComingSoon}`}
-        aria-label={`${item.label} — coming next`}
-        aria-disabled="true"
-      >
-        <span className={styles.mobileNavItemIcon} aria-hidden="true">
-          <Icon aria-hidden="true" />
+      <li>
+        <span
+          className={`${styles.mobileNavItem} ${styles.mobileNavItemComingSoon}`}
+          aria-label={`${item.label} — coming next`}
+          aria-disabled="true"
+        >
+          <span className={styles.mobileNavItemIcon} aria-hidden="true">
+            <Icon aria-hidden="true" />
+          </span>
+          <span>{item.label}</span>
         </span>
-        <span>{item.label}</span>
-      </span>
+      </li>
     );
   }
 
   const isCurrent = pathname === item.href || pathname.startsWith(`${item.href}/`);
   return (
-    <Link
-      href={item.href}
-      className={styles.mobileNavItem}
-      aria-current={isCurrent ? "page" : undefined}
-      onClick={onClose}
-    >
-      <span className={styles.mobileNavItemIcon} aria-hidden="true">
-        <Icon aria-hidden="true" />
-      </span>
-      <span>{item.label}</span>
-    </Link>
+    <li>
+      <Link
+        href={item.href}
+        className={styles.mobileNavItem}
+        aria-current={isCurrent ? "page" : undefined}
+        onClick={onClose}
+      >
+        <span className={styles.mobileNavItemIcon} aria-hidden="true">
+          <Icon aria-hidden="true" />
+        </span>
+        <span>{item.label}</span>
+      </Link>
+    </li>
   );
 }
 
@@ -55,55 +61,84 @@ type DashboardMobileNavProps = {
   role: ApplicationRole;
   isOpen: boolean;
   onClose: () => void;
+  /** Ref to the header trigger button — focus restored here when drawer closes. */
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
 };
 
-export function DashboardMobileNav({ role, isOpen, onClose }: DashboardMobileNavProps) {
+export function DashboardMobileNav({ role, isOpen, onClose, triggerRef }: DashboardMobileNavProps) {
   const nav = getDashboardNavigation(role);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const wasOpen = useRef(false);
 
-  // Close on route change
+  // Close on route change (restores focus via the effect below).
   useEffect(() => {
     onClose();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  // Focus close button when drawer opens
+  // Restore focus to the trigger whenever the drawer closes.
+  useEffect(() => {
+    if (wasOpen.current && !isOpen) {
+      if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(() => {
+          triggerRef.current?.focus();
+        });
+      } else {
+        triggerRef.current?.focus();
+      }
+    }
+    wasOpen.current = isOpen;
+  }, [isOpen, triggerRef]);
+
+  // Focus the close button when the drawer opens.
   useEffect(() => {
     if (isOpen) {
       closeButtonRef.current?.focus();
     }
   }, [isOpen]);
 
-  // Escape key to close
+  // Escape key closes and restores focus (restoration handled by the effect above).
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Trap focus inside panel
+  // Focus trap inside the panel.
   useEffect(() => {
     if (!isOpen || !panelRef.current) return;
     const panel = panelRef.current;
-    const focusable = panel.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    );
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
+    const getFocusable = () =>
+      Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
       if (e.shiftKey) {
-        if (document.activeElement === first) {
+        if (document.activeElement === first || !panel.contains(document.activeElement)) {
           e.preventDefault();
           last?.focus();
         }
       } else {
-        if (document.activeElement === last) {
+        if (document.activeElement === last || !panel.contains(document.activeElement)) {
           e.preventDefault();
           first?.focus();
         }
@@ -119,12 +154,13 @@ export function DashboardMobileNav({ role, isOpen, onClose }: DashboardMobileNav
 
   return (
     <div
+      id={MOBILE_DRAWER_ID}
       className={styles.mobileOverlay}
       role="dialog"
       aria-modal="true"
       aria-label="Dashboard navigation"
       onClick={(e) => {
-        // Close when clicking the backdrop (outside the panel)
+        // Close when clicking the backdrop (outside the panel).
         if (e.target === e.currentTarget) onClose();
       }}
     >
@@ -142,29 +178,35 @@ export function DashboardMobileNav({ role, isOpen, onClose }: DashboardMobileNav
           </button>
         </div>
 
-        <div className={styles.mobileNavBody}>
-          {/* Home link */}
-          <Link
-            href="/dashboard"
-            className={styles.mobileNavItem}
-            aria-current={isDashboardHome ? "page" : undefined}
-            onClick={onClose}
-          >
-            <span className={styles.mobileNavItemIcon} aria-hidden="true">
-              <LayoutDashboard aria-hidden="true" />
-            </span>
-            <span>Home</span>
-          </Link>
+        <nav aria-label="Dashboard mobile navigation">
+          {/* Home item rendered outside the section lists */}
+          <ul className={styles.mobileNavBody}>
+            <li>
+              <Link
+                href="/dashboard"
+                className={styles.mobileNavItem}
+                aria-current={isDashboardHome ? "page" : undefined}
+                onClick={onClose}
+              >
+                <span className={styles.mobileNavItemIcon} aria-hidden="true">
+                  <LayoutDashboard aria-hidden="true" />
+                </span>
+                <span>Home</span>
+              </Link>
+            </li>
+          </ul>
 
           {nav.sections.map((section) => (
-            <div key={section.id} role="list">
-              <p className={styles.mobileSectionLabel}>{section.label}</p>
-              {section.items.map((item) => (
-                <MobileNavItem key={item.id} item={item} onClose={onClose} />
-              ))}
+            <div key={section.id}>
+              <p className={styles.mobileSectionLabel} id={`mobile-section-${section.id}`}>{section.label}</p>
+              <ul className={styles.mobileNavBody} aria-labelledby={`mobile-section-${section.id}`}>
+                {section.items.map((item) => (
+                  <MobileNavItem key={item.id} item={item} onClose={onClose} />
+                ))}
+              </ul>
             </div>
           ))}
-        </div>
+        </nav>
       </div>
     </div>
   );

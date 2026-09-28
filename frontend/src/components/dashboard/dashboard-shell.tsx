@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import Link from "@/components/safe-link";
 import { LogIn, Home, Lock } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
@@ -100,10 +100,15 @@ function DashboardVisitorAccess() {
 
 function DashboardLayout({ role, children }: { role: "teacher" | "admin"; children: ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className={styles.dashboardRoot}>
-      <DashboardHeader onMenuOpen={() => setMobileNavOpen(true)} />
+      <DashboardHeader
+        menuOpen={mobileNavOpen}
+        onMenuOpen={() => setMobileNavOpen((prev) => !prev)}
+        triggerRef={triggerRef}
+      />
 
       <div className={styles.dashboardBody}>
         <DashboardSidebar role={role} />
@@ -119,6 +124,7 @@ function DashboardLayout({ role, children }: { role: "teacher" | "admin"; childr
         role={role}
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
+        triggerRef={triggerRef}
       />
     </div>
   );
