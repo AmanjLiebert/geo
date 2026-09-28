@@ -50,10 +50,16 @@ describe("getDashboardNavigation", () => {
       expect(sections).not.toContain("operational");
     });
 
-    it("receives Records and Research items", () => {
-      const ids = allItemIds("teacher");
-      expect(ids).toContain("records");
-      expect(ids).toContain("research");
+    it("receives Records and Research items with active dashboard routes", () => {
+      const nav = getDashboardNavigation("teacher");
+      const scientificSection = nav.sections.find((s) => s.id === "scientific");
+      expect(scientificSection).toBeDefined();
+
+      const recordsItem = scientificSection!.items.find((i) => i.id === "records");
+      expect(recordsItem?.href).toBe("/dashboard/records");
+
+      const researchItem = scientificSection!.items.find((i) => i.id === "research");
+      expect(researchItem?.href).toBe("/dashboard/research");
     });
 
     it("does not receive operational items (News, Site pages, Users)", () => {
@@ -79,23 +85,27 @@ describe("getDashboardNavigation", () => {
       expect(sections).toContain("operational");
     });
 
-    it("receives Records and Research in the scientific section", () => {
+    it("receives Records and Research with active dashboard routes in scientific section", () => {
       const nav = getDashboardNavigation("admin");
       const scientificSection = nav.sections.find((s) => s.id === "scientific");
       expect(scientificSection).toBeDefined();
-      const itemIds = scientificSection!.items.map((i) => i.id);
-      expect(itemIds).toContain("records");
-      expect(itemIds).toContain("research");
+
+      const recordsItem = scientificSection!.items.find((i) => i.id === "records");
+      expect(recordsItem?.href).toBe("/dashboard/records");
+
+      const researchItem = scientificSection!.items.find((i) => i.id === "research");
+      expect(researchItem?.href).toBe("/dashboard/research");
     });
 
-    it("receives News, Site pages, and Users in the operational section", () => {
+    it("receives News, Site pages, and Users as non-interactive coming-next items", () => {
       const nav = getDashboardNavigation("admin");
       const operationalSection = nav.sections.find((s) => s.id === "operational");
       expect(operationalSection).toBeDefined();
-      const itemIds = operationalSection!.items.map((i) => i.id);
-      expect(itemIds).toContain("news");
-      expect(itemIds).toContain("site-pages");
-      expect(itemIds).toContain("users");
+
+      for (const item of operationalSection!.items) {
+        expect(["news", "site-pages", "users"]).toContain(item.id);
+        expect(item.href).toBeUndefined();
+      }
     });
 
     it("shares the exact same scientific section as teacher (no extra record items for admin)", () => {

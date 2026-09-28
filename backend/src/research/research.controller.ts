@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { Permission } from '../identity/access-control';
 import { CurrentAuth, HighRiskAction, RequirePermissions } from '../identity/access.decorators';
@@ -19,6 +20,7 @@ import {
   CreateResearchDto,
   UpsertResearchTranslationDto,
 } from './dto/research.dto';
+import { ResearchListQueryDto } from './dto/research-list-query.dto';
 import { ResearchService } from './research.service';
 
 @Controller('research')
@@ -28,8 +30,12 @@ export class ResearchController {
 
   @Get()
   @Header('Cache-Control', 'private, no-store')
-  list() {
-    return this.research.list();
+  list(@Query() query: ResearchListQueryDto) {
+    return this.research.list(
+      parseInteger(query.limit, 50),
+      parseInteger(query.offset, 0),
+      query.status,
+    );
   }
 
   @Post()
@@ -98,4 +104,10 @@ export class ResearchController {
   archive(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) id: string) {
     return this.research.archive(auth.user.id, id);
   }
+}
+
+function parseInteger(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }

@@ -42,15 +42,13 @@ const SCIENTIFIC_SECTION: NavSection = {
     {
       id: "records",
       label: "Records",
-      // Route does not exist in this shell release — rendered as coming next.
-      href: undefined,
+      href: "/dashboard/records",
       description: "Geological records: create, translate, review, and publish.",
     },
     {
       id: "research",
       label: "Research",
-      // Route does not exist in this shell release — rendered as coming next.
-      href: undefined,
+      href: "/dashboard/research",
       description: "Research publications, documents, and references.",
     },
   ],

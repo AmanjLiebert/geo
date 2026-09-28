@@ -20,12 +20,37 @@ interface ResearchRow {
   status: string;
 }
 
+interface ResearchPublicationRow {
+  id: string;
+  stable_id: string;
+  slug: string | null;
+  status: string;
+  publication_year: number | null;
+  doi: string | null;
+  rights_statement: string | null;
+  owner_user_id: string;
+  published_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+  title: string | null;
+}
+
+interface CountRow {
+  total: string;
+}
+
 @Injectable()
 export class ResearchService {
   constructor(private readonly dataSource: DataSource) {}
 
-  async list() {
-    const rows = await this.dataSource.query(
+  async list(limit = 50, offset = 0, status?: string) {
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const safeOffset = Math.max(offset, 0);
+    const values: unknown[] = [safeLimit, safeOffset];
+    const statusClause = status ? `WHERE p.status = $3` : '';
+    if (status) values.push(status);
+
+    const rows = (await this.dataSource.query(
       `SELECT p.id, p.stable_id, p.slug, p.status, p.publication_year, p.doi,
         p.rights_statement, p.owner_user_id, p.published_at, p.created_at, p.updated_at,
         t.title
@@ -33,9 +58,37 @@ export class ResearchService {
        LEFT JOIN LATERAL (
          SELECT title FROM research_translations WHERE research_publication_id = p.id
          ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, locale LIMIT 1
-       ) t ON true ORDER BY p.updated_at DESC`,
-    );
-    return { items: rows };
+       ) t ON true
+       ${statusClause}
+       ORDER BY p.updated_at DESC, p.id
+       LIMIT $1 OFFSET $2`,
+      values,
+    )) as unknown as ResearchPublicationRow[];
+
+    const countRows = (await this.dataSource.query(
+      `SELECT COUNT(*)::text AS total FROM research_publications p ${status ? 'WHERE p.status = $1' : ''}`,
+      status ? [status] : [],
+    )) as unknown as CountRow[];
+
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        stableId: row.stable_id,
+        slug: row.slug,
+        status: row.status,
+        publicationYear: row.publication_year,
+        doi: row.doi,
+        rightsStatement: row.rights_statement,
+        ownerUserId: row.owner_user_id,
+        publishedAt: row.published_at ? new Date(row.published_at).toISOString() : null,
+        createdAt: new Date(row.created_at).toISOString(),
+        updatedAt: new Date(row.updated_at).toISOString(),
+        title: row.title,
+      })),
+      total: Number(countRows[0]?.total ?? 0),
+      limit: safeLimit,
+      offset: safeOffset,
+    };
   }
 
   async get(id: string) {
