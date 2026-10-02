@@ -319,7 +319,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         </div>
         <p className={styles.subtitle}>
           {mode === "create"
-            ? "Choose a scientific category and record type to generate the approved data-entry template. Save as a draft at any stage of completion."
+            ? "Choose a scientific category and record type to open the data-entry form. You can save the record as a draft from that form."
             : "Update scientific attributes and identifier slug for this draft record."}
         </p>
       </header>

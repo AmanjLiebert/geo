@@ -162,7 +162,7 @@ export function RecordStructureSelector({
             <div className={styles.bannerContent}>
               <span className={styles.bannerTitle}>No categories available</span>
               <p className={styles.bannerText}>
-                No active categories are currently configured in the database.
+                Record creation is not available yet. Please contact the project team.
               </p>
             </div>
           </div>
