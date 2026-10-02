@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Header, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Header, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { Permission } from '../identity/access-control';
 import { CurrentAuth, HighRiskAction, RequirePermissions } from '../identity/access.decorators';
 import { AuthContext } from '../identity/auth-context';
@@ -7,6 +7,7 @@ import { CreateLocationDto } from './dto/location.dto';
 import { CreateRelationshipDto } from './dto/relationship.dto';
 import { ScientificTrustService } from './scientific-trust.service';
 import { CreateMapLayerDto } from './dto/map-layer.dto';
+import { ReferenceListQueryDto } from './dto/reference-list-query.dto';
 
 @Controller()
 @RequirePermissions(Permission.MANAGE_SCIENTIFIC_CONTENT)
@@ -16,6 +17,18 @@ export class ScientificTrustController {
   @Post('references')
   createReference(@CurrentAuth() auth: AuthContext, @Body() input: CreateReferenceDto) {
     return this.trust.createReference(auth.user.id, input);
+  }
+
+  @Get('references')
+  @Header('Cache-Control', 'private, no-store')
+  listReferences(@Query() query: ReferenceListQueryDto) {
+    return this.trust.listReferences(query.limit ?? 50, query.offset ?? 0, query.q);
+  }
+
+  @Get('references/:id')
+  @Header('Cache-Control', 'private, no-store')
+  getReference(@Param('id', ParseUUIDPipe) id: string) {
+    return this.trust.getReference(id);
   }
 
   @Post('references/:id/verify')
@@ -31,6 +44,12 @@ export class ScientificTrustController {
     @Body() input: AddEvidenceDto,
   ) {
     return this.trust.addEvidence(auth.user.id, id, input);
+  }
+
+  @Get('records/:id/evidence')
+  @Header('Cache-Control', 'private, no-store')
+  listEvidence(@Param('id', ParseUUIDPipe) id: string) {
+    return this.trust.listEvidence(id);
   }
 
   @Post('records/:id/locations')
@@ -55,6 +74,12 @@ export class ScientificTrustController {
     @Body() input: CreateRelationshipDto,
   ) {
     return this.trust.addRelationship(auth.user.id, id, input);
+  }
+
+  @Get('records/:id/relationships')
+  @Header('Cache-Control', 'private, no-store')
+  listRelationships(@Param('id', ParseUUIDPipe) id: string) {
+    return this.trust.listRelationships(id);
   }
 
   @Get('records/:id/publication-check')

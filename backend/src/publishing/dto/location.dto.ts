@@ -1,5 +1,15 @@
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateLocationDto {
   @IsOptional()
@@ -54,6 +64,6 @@ export class CreateLocationDto {
   sensitivityReason?: string;
 
   @IsOptional()
-  @IsString()
+  @IsDateString()
   embargoUntil?: string;
 }

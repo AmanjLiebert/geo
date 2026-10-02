@@ -73,7 +73,7 @@ export class CreateReferenceDto {
 }
 
 export class AddEvidenceDto {
-  @IsString()
+  @IsUUID()
   referenceId!: string;
 
   @IsString()

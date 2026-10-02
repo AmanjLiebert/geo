@@ -1,4 +1,14 @@
-import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateMediaUploadDto {
   @IsString()
@@ -30,7 +40,7 @@ export class CreateMediaUploadDto {
 }
 
 export class AttachMediaDto {
-  @IsString()
+  @IsUUID()
   mediaAssetId!: string;
 
   @IsString()

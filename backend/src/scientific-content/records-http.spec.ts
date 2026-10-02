@@ -15,6 +15,10 @@ import { SecurityAuditService } from '../identity/security-audit.service';
 import { SessionService } from '../identity/session.service';
 import { ResearchController } from '../research/research.controller';
 import { ResearchService } from '../research/research.service';
+import { ScientificTrustController } from '../publishing/scientific-trust.controller';
+import { ScientificTrustService } from '../publishing/scientific-trust.service';
+import { MediaController } from '../media/media.controller';
+import { MediaService } from '../media/media.service';
 import { RecordsController } from './records.controller';
 import { RecordsService } from './records.service';
 import { ScientificStructureController } from './scientific-structure.controller';
@@ -37,6 +41,16 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
   };
 
   const mockResearchService = { list: vi.fn() };
+  const mockTrustService = {
+    listReferences: vi.fn(),
+    getReference: vi.fn(),
+    listEvidence: vi.fn(),
+    listLocations: vi.fn(),
+    listRelationships: vi.fn(),
+    addEvidence: vi.fn(),
+    addLocation: vi.fn(),
+  };
+  const mockMediaService = { listRecordAttachments: vi.fn(), attachToRecord: vi.fn() };
 
   const mockScientificStructureService = {
     listCategories: vi.fn(),
@@ -105,10 +119,18 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      controllers: [RecordsController, ScientificStructureController, ResearchController],
+      controllers: [
+        RecordsController,
+        ScientificStructureController,
+        ResearchController,
+        ScientificTrustController,
+        MediaController,
+      ],
       providers: [
         { provide: RecordsService, useValue: mockRecordsService },
         { provide: ResearchService, useValue: mockResearchService },
+        { provide: ScientificTrustService, useValue: mockTrustService },
+        { provide: MediaService, useValue: mockMediaService },
         { provide: ScientificStructureService, useValue: mockScientificStructureService },
         { provide: SessionService, useValue: mockSessionService },
         { provide: SecurityAuditService, useValue: mockSecurityAuditService },
@@ -143,6 +165,20 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     mockRecordsService.list.mockResolvedValue(emptyList);
     mockResearchService.list.mockResolvedValue(emptyList);
     mockScientificStructureService.listStructureRequests.mockResolvedValue(emptyList);
+    mockTrustService.listEvidence.mockResolvedValue({ items: [] });
+    mockTrustService.listReferences.mockResolvedValue({
+      items: [],
+      total: 0,
+      limit: 50,
+      offset: 0,
+    });
+    mockTrustService.getReference.mockResolvedValue({
+      id: validRecordId,
+      title: 'Sample reference',
+    });
+    mockTrustService.listLocations.mockResolvedValue({ items: [] });
+    mockTrustService.listRelationships.mockResolvedValue({ items: [] });
+    mockMediaService.listRecordAttachments.mockResolvedValue({ items: [] });
     mockRecordsService.get.mockResolvedValue({
       id: validRecordId,
       stableId: 'stable-1',
@@ -291,6 +327,116 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       });
       expect(response.statusCode).toBe(200);
       expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, 'draft');
+    });
+  });
+
+  describe('Record attachment reads', () => {
+    const paths = [
+      `/api/v1/records/${validRecordId}/evidence`,
+      `/api/v1/records/${validRecordId}/locations`,
+      `/api/v1/records/${validRecordId}/relationships`,
+      `/api/v1/media/records/${validRecordId}/attachments`,
+    ];
+
+    it.each(paths)('allows teachers and admins to read %s privately', async (path) => {
+      for (const session of ['teacher-session', 'admin-session']) {
+        const response = await app.inject({
+          method: 'GET',
+          url: path,
+          cookies: { gk_session: session },
+        });
+        expect(response.statusCode).toBe(200);
+        expect(response.headers['cache-control']).toBe('private, no-store');
+        expect(response.json()).toEqual({ items: [] });
+      }
+    });
+
+    it.each(paths)('denies signed-out and visitor access to %s', async (path) => {
+      const signedOut = await app.inject({ method: 'GET', url: path });
+      const visitor = await app.inject({
+        method: 'GET',
+        url: path,
+        cookies: { gk_session: 'visitor-session' },
+      });
+      expect(signedOut.statusCode).toBe(401);
+      expect(visitor.statusCode).toBe(403);
+    });
+
+    it('rejects malformed reference and media IDs before the service runs', async () => {
+      const request = {
+        method: 'POST' as const,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+      };
+      const evidence = await app.inject({
+        ...request,
+        url: `/api/v1/records/${validRecordId}/evidence`,
+        payload: { referenceId: 'invalid', evidenceKind: 'field_observation' },
+      });
+      const media = await app.inject({
+        ...request,
+        url: `/api/v1/media/records/${validRecordId}/attachments`,
+        payload: { mediaAssetId: 'invalid', purpose: 'field photo' },
+      });
+      expect(evidence.statusCode).toBe(400);
+      expect(media.statusCode).toBe(400);
+      expect(mockTrustService.addEvidence).not.toHaveBeenCalled();
+      expect(mockMediaService.attachToRecord).not.toHaveBeenCalled();
+    });
+
+    it('rejects malformed embargo dates before storing a location', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/records/${validRecordId}/locations`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: {
+          exactLatitude: 36,
+          exactLongitude: 44,
+          visibility: 'embargoed',
+          sensitivityReason: 'Protected site',
+          embargoUntil: 'tomorrow-ish',
+        },
+      });
+      expect(response.statusCode).toBe(400);
+      expect(mockTrustService.addLocation).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Reference lookup', () => {
+    it('allows teachers to search with bounded pagination', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/references?q=fossil&limit=20&offset=5',
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['cache-control']).toBe('private, no-store');
+      expect(mockTrustService.listReferences).toHaveBeenCalledWith(20, 5, 'fossil');
+    });
+
+    it('rejects malformed and excessive reference searches', async () => {
+      for (const query of ['limit=20abc', 'offset=-1', `q=${'x'.repeat(121)}`, 'q=a&q=b']) {
+        const response = await app.inject({
+          method: 'GET',
+          url: `/api/v1/references?${query}`,
+          cookies: { gk_session: 'teacher-session' },
+        });
+        expect(response.statusCode, query).toBe(400);
+      }
+    });
+
+    it('does not expose references to visitors or signed-out users', async () => {
+      for (const url of ['/api/v1/references', `/api/v1/references/${validRecordId}`]) {
+        const signedOut = await app.inject({ method: 'GET', url });
+        const visitor = await app.inject({
+          method: 'GET',
+          url,
+          cookies: { gk_session: 'visitor-session' },
+        });
+        expect(signedOut.statusCode).toBe(401);
+        expect(visitor.statusCode).toBe(403);
+      }
     });
   });
 

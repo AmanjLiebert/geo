@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { DataSource, EntityManager } from 'typeorm';
+import { MAX_LIST_LIMIT, MAX_LIST_OFFSET } from '../common/dto/pagination-query.dto';
 import { AddEvidenceDto, CreateReferenceDto } from './dto/reference.dto';
 import { CreateLocationDto } from './dto/location.dto';
 import { CreateRelationshipDto } from './dto/relationship.dto';
@@ -59,6 +60,30 @@ export class ScientificTrustService {
     return this.getReference(id);
   }
 
+  async listReferences(limit: number, offset: number, search?: string) {
+    limit = Math.min(Math.max(limit, 1), MAX_LIST_LIMIT);
+    offset = Math.min(Math.max(offset, 0), MAX_LIST_OFFSET);
+    const term = search?.trim() || null;
+    const filter = term
+      ? `WHERE POSITION(lower($3) IN lower(title)) > 0
+         OR POSITION(lower($3) IN lower(COALESCE(identifier, ''))) > 0`
+      : '';
+    const params = term ? [limit, offset, term] : [limit, offset];
+    const rows = (await this.dataSource.query(
+      `SELECT id, source_type AS "sourceType", title, publication_year AS "publicationYear",
+         identifier, verification_status AS "verificationStatus", updated_at AS "updatedAt"
+       FROM scientific_references ${filter}
+       ORDER BY updated_at DESC, id LIMIT $1 OFFSET $2`,
+      params,
+    )) as unknown as Record<string, unknown>[];
+    const counts = (await this.dataSource.query(
+      `SELECT count(*)::int AS total FROM scientific_references
+       ${term ? filter.replaceAll('$3', '$1') : ''}`,
+      term ? [term] : [],
+    )) as unknown as Array<{ total: number }>;
+    return { items: rows, total: counts[0]?.total ?? 0, limit, offset };
+  }
+
   async verifyReference(actorUserId: string, referenceId: string) {
     const references = (await this.dataSource.query(
       `SELECT created_by_user_id FROM scientific_references WHERE id = $1`,
@@ -82,24 +107,42 @@ export class ScientificTrustService {
     if (input.claimKey && input.fieldKey) {
       throw new BadRequestException('Evidence may target a claim or a field, not both.');
     }
-    await this.assertRecordExists(this.dataSource, recordId);
     const id = randomUUID();
     try {
-      await this.dataSource.query(
-        `INSERT INTO record_evidence (
+      await this.dataSource.transaction(async (manager) => {
+        const record = await this.assertRecordEditable(manager, recordId);
+        if (input.fieldKey) {
+          const fields = record.template_version_id
+            ? ((await manager.query(
+                `SELECT stable_key FROM field_definitions
+                 WHERE template_version_id = $1 AND stable_key = $2`,
+                [record.template_version_id, input.fieldKey.trim()],
+              )) as unknown as Array<{ stable_key: string }>)
+            : [];
+          if (!fields[0])
+            throw new BadRequestException('The selected scientific field is invalid.');
+        }
+        const references = (await manager.query(
+          `SELECT id FROM scientific_references WHERE id = $1`,
+          [input.referenceId],
+        )) as unknown as IdRow[];
+        if (!references[0]) throw new NotFoundException('Reference not found.');
+        await manager.query(
+          `INSERT INTO record_evidence (
           id, record_id, reference_id, evidence_kind, claim_key, field_key, notes, created_by_user_id
         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [
-          id,
-          recordId,
-          input.referenceId,
-          input.evidenceKind.trim(),
-          input.claimKey?.trim() || null,
-          input.fieldKey?.trim() || null,
-          input.notes?.trim() || null,
-          actorUserId,
-        ],
-      );
+          [
+            id,
+            recordId,
+            input.referenceId,
+            input.evidenceKind.trim(),
+            input.claimKey?.trim() || null,
+            input.fieldKey?.trim() || null,
+            input.notes?.trim() || null,
+            actorUserId,
+          ],
+        );
+      });
     } catch (error) {
       if (isUniqueViolation(error))
         throw new ConflictException('That evidence link already exists.');
@@ -108,14 +151,29 @@ export class ScientificTrustService {
     return { id, recordId, ...input };
   }
 
+  async listEvidence(recordId: string) {
+    await this.assertRecordExists(this.dataSource, recordId);
+    const rows = (await this.dataSource.query(
+      `SELECT e.id, e.reference_id AS "referenceId", e.evidence_kind AS "evidenceKind",
+         e.claim_key AS "claimKey", e.field_key AS "fieldKey", e.notes, e.created_at AS "createdAt",
+         r.title AS "referenceTitle", r.source_type AS "sourceType",
+         r.verification_status AS "verificationStatus"
+       FROM record_evidence e JOIN scientific_references r ON r.id = e.reference_id
+       WHERE e.record_id = $1 ORDER BY e.created_at, e.id`,
+      [recordId],
+    )) as unknown as Record<string, unknown>[];
+    return { items: rows };
+  }
+
   async addLocation(actorUserId: string, recordId: string, input: CreateLocationDto) {
     this.validateLocationPolicy(input);
-    await this.assertRecordExists(this.dataSource, recordId);
     const id = randomUUID();
     const hasPublicPoint =
       input.publicLatitude !== undefined && input.publicLongitude !== undefined;
-    await this.dataSource.query(
-      `INSERT INTO record_locations (
+    await this.dataSource.transaction(async (manager) => {
+      await this.assertRecordEditable(manager, recordId);
+      await manager.query(
+        `INSERT INTO record_locations (
         id, record_id, label, exact_geometry, public_geometry, visibility,
         sensitivity_reason, public_precision_metres, region_label, embargo_until, owner_user_id
       ) VALUES (
@@ -123,23 +181,24 @@ export class ScientificTrustService {
         CASE WHEN $6::boolean THEN ST_SetSRID(ST_MakePoint($7,$8),4326) ELSE NULL END,
         $9,$10,$11,$12,$13,$14
       )`,
-      [
-        id,
-        recordId,
-        input.label?.trim() || null,
-        input.exactLongitude,
-        input.exactLatitude,
-        hasPublicPoint,
-        input.publicLongitude ?? 0,
-        input.publicLatitude ?? 0,
-        input.visibility,
-        input.sensitivityReason?.trim() || null,
-        input.publicPrecisionMetres ?? null,
-        input.regionLabel?.trim() || null,
-        input.embargoUntil ? new Date(input.embargoUntil) : null,
-        actorUserId,
-      ],
-    );
+        [
+          id,
+          recordId,
+          input.label?.trim() || null,
+          input.exactLongitude,
+          input.exactLatitude,
+          hasPublicPoint,
+          input.publicLongitude ?? 0,
+          input.publicLatitude ?? 0,
+          input.visibility,
+          input.sensitivityReason?.trim() || null,
+          input.publicPrecisionMetres ?? null,
+          input.regionLabel?.trim() || null,
+          input.embargoUntil ? new Date(input.embargoUntil) : null,
+          actorUserId,
+        ],
+      );
+    });
     return { id, recordId, visibility: input.visibility };
   }
 
@@ -159,30 +218,44 @@ export class ScientificTrustService {
   }
 
   async addRelationship(actorUserId: string, recordId: string, input: CreateRelationshipDto) {
-    await this.assertRecordExists(this.dataSource, recordId);
-    await this.assertTargetExists(input.targetType, input.targetId);
     const id = randomUUID();
     try {
-      await this.dataSource.query(
-        `INSERT INTO content_relationships (
+      await this.dataSource.transaction(async (manager) => {
+        await this.assertRecordEditable(manager, recordId);
+        await this.assertTargetExists(manager, input.targetType, input.targetId);
+        await manager.query(
+          `INSERT INTO content_relationships (
           id, source_type, source_id, target_type, target_id, relationship_type, notes, created_by_user_id
         ) VALUES ($1,'record',$2,$3,$4,$5,$6,$7)`,
-        [
-          id,
-          recordId,
-          input.targetType,
-          input.targetId,
-          input.relationshipType,
-          input.notes ?? null,
-          actorUserId,
-        ],
-      );
+          [
+            id,
+            recordId,
+            input.targetType,
+            input.targetId,
+            input.relationshipType,
+            input.notes ?? null,
+            actorUserId,
+          ],
+        );
+      });
     } catch (error) {
       if (isUniqueViolation(error))
         throw new ConflictException('That relationship already exists.');
       throw error;
     }
     return { id, sourceType: 'record', sourceId: recordId, ...input };
+  }
+
+  async listRelationships(recordId: string) {
+    await this.assertRecordExists(this.dataSource, recordId);
+    const rows = (await this.dataSource.query(
+      `SELECT id, target_type AS "targetType", target_id AS "targetId",
+         relationship_type AS "relationshipType", notes, created_at AS "createdAt"
+       FROM content_relationships
+       WHERE source_type = 'record' AND source_id = $1 ORDER BY created_at, id`,
+      [recordId],
+    )) as unknown as Record<string, unknown>[];
+    return { items: rows };
   }
 
   async createMapLayer(actorUserId: string, input: CreateMapLayerDto) {
@@ -314,7 +387,7 @@ export class ScientificTrustService {
     return { valid: issues.length === 0, issues };
   }
 
-  private async getReference(id: string) {
+  async getReference(id: string) {
     const rows = (await this.dataSource.query(
       `SELECT id, source_type, authors, title, publication, publication_year, identifier,
         pages_or_figure, source_url, rights_statement, verification_status, created_at, updated_at
@@ -332,9 +405,25 @@ export class ScientificTrustService {
     if (!rows[0]) throw new NotFoundException('Scientific record not found.');
   }
 
-  private async assertTargetExists(type: 'record' | 'research', id: string) {
+  private async assertRecordEditable(executor: EntityManager, id: string) {
+    const rows = (await executor.query(
+      `SELECT status, template_version_id FROM scientific_records WHERE id = $1 FOR UPDATE`,
+      [id],
+    )) as unknown as Array<{ status: string; template_version_id: string | null }>;
+    if (!rows[0]) throw new NotFoundException('Scientific record not found.');
+    if (rows[0].status === 'published' || rows[0].status === 'archived') {
+      throw new ConflictException('This record cannot be edited in its current state.');
+    }
+    return rows[0];
+  }
+
+  private async assertTargetExists(
+    executor: DataSource | EntityManager,
+    type: 'record' | 'research',
+    id: string,
+  ) {
     const table = type === 'record' ? 'scientific_records' : 'research_publications';
-    const rows = (await this.dataSource.query(`SELECT id FROM ${table} WHERE id = $1`, [
+    const rows = (await executor.query(`SELECT id FROM ${table} WHERE id = $1`, [
       id,
     ])) as unknown as IdRow[];
     if (!rows[0]) throw new NotFoundException('Relationship target not found.');

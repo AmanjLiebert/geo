@@ -1,4 +1,4 @@
-import { Body, Controller, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Header, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { Permission } from '../identity/access-control';
 import { CurrentAuth, RequirePermissions } from '../identity/access.decorators';
 import { AuthContext } from '../identity/auth-context';
@@ -32,5 +32,11 @@ export class MediaController {
     @Body() input: AttachMediaDto,
   ) {
     return this.media.attachToRecord(auth.user.id, recordId, input);
+  }
+
+  @Get('records/:recordId/attachments')
+  @Header('Cache-Control', 'private, no-store')
+  listRecordAttachments(@Param('recordId', ParseUUIDPipe) recordId: string) {
+    return this.media.listRecordAttachments(recordId);
   }
 }

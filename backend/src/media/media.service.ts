@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
@@ -146,18 +147,41 @@ export class MediaService {
     if (media.processing_status === 'rejected' || media.processing_status === 'archived') {
       throw new BadRequestException('Rejected or archived media cannot be attached.');
     }
+    await this.dataSource.transaction(async (manager) => {
+      const records = (await manager.query(
+        `SELECT status FROM scientific_records WHERE id = $1 FOR UPDATE`,
+        [recordId],
+      )) as unknown as Array<{ status: string }>;
+      if (!records[0]) throw new NotFoundException('Scientific record not found.');
+      if (records[0].status === 'published' || records[0].status === 'archived') {
+        throw new ConflictException('This record cannot be edited in its current state.');
+      }
+      await manager.query(
+        `INSERT INTO record_media (record_id, media_asset_id, purpose)
+       VALUES ($1,$2,$3) ON CONFLICT (record_id, media_asset_id)
+       DO UPDATE SET purpose = EXCLUDED.purpose`,
+        [recordId, media.id, input.purpose.trim()],
+      );
+    });
+    return { recordId, mediaAssetId: media.id, purpose: input.purpose };
+  }
+
+  async listRecordAttachments(recordId: string) {
     const records = (await this.dataSource.query(
       `SELECT id FROM scientific_records WHERE id = $1`,
       [recordId],
     )) as unknown as Array<{ id: string }>;
     if (!records[0]) throw new NotFoundException('Scientific record not found.');
-    await this.dataSource.query(
-      `INSERT INTO record_media (record_id, media_asset_id, purpose)
-       VALUES ($1,$2,$3) ON CONFLICT (record_id, media_asset_id)
-       DO UPDATE SET purpose = EXCLUDED.purpose`,
-      [recordId, media.id, input.purpose.trim()],
-    );
-    return { recordId, mediaAssetId: media.id, purpose: input.purpose };
+    const rows = (await this.dataSource.query(
+      `SELECT m.id AS "mediaAssetId", rm.purpose, rm.position,
+         m.media_kind AS "mediaKind", m.processing_status AS "processingStatus",
+         m.original_filename AS "filename", m.rights_statement AS "rightsStatement",
+         m.licence, m.credit
+       FROM record_media rm JOIN media_assets m ON m.id = rm.media_asset_id
+       WHERE rm.record_id = $1 ORDER BY rm.position, m.created_at, m.id`,
+      [recordId],
+    )) as unknown as Record<string, unknown>[];
+    return { items: rows };
   }
 
   async viewerUrl(mediaAssetId: string) {
