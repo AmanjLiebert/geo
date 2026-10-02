@@ -63,6 +63,7 @@ export class ScientificTrustController {
 
   @Get('records/:id/locations')
   @Header('Cache-Control', 'private, no-store')
+  @RequirePermissions(Permission.MANAGE_SCIENTIFIC_CONTENT, Permission.READ_RESTRICTED_LOCATIONS)
   listLocations(@Param('id', ParseUUIDPipe) id: string) {
     return this.trust.listLocations(id, true);
   }
