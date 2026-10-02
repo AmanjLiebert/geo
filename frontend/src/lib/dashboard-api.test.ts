@@ -5,6 +5,7 @@ import {
   DashboardApiError,
   getActiveTemplate,
   getRecord,
+  getTemplateVersion,
   listCategoryRecordTypes,
   listDashboardNews,
   listDashboardPages,
@@ -945,6 +946,46 @@ describe("dashboard-api", () => {
         expect(apiErr.kind).toBe("validation");
         expect(apiErr.message).toContain("slug must match");
       }
+    });
+
+    it("loads pinned template version via getTemplateVersion", async () => {
+      const versionId = "77777777-7777-4777-8777-777777777777";
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: "tmpl-pinned",
+            stableKey: "fossil_specimen",
+            name: "Fossil Specimen",
+            version: { id: versionId, number: 1, status: "superseded" },
+            fields: [
+              {
+                id: "fld-1",
+                stableKey: "genus",
+                dataType: "text",
+                required: true,
+                validation: {},
+                unit: null,
+                searchable: true,
+                filterable: true,
+                position: 1,
+                status: "active",
+                label: "Genus",
+                helpText: null,
+                locale: "en",
+                translationAvailable: true,
+              },
+            ],
+          }),
+      } as Response);
+
+      const template = await getTemplateVersion(versionId);
+      expect(template.id).toBe("tmpl-pinned");
+      expect(template.version.id).toBe(versionId);
+      expect(template.version.number).toBe(1);
+      expect(template.fields).toHaveLength(1);
+      expect(template.fields[0].stableKey).toBe("genus");
     });
   });
 });

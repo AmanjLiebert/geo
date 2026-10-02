@@ -285,16 +285,21 @@ export default function DashboardRecordsPage() {
             const statusLabel = formatRecordStatus(record.status);
             const badgeClass = getStatusBadgeClass(record.status);
 
+            const isEditable =
+              record.status === "draft" || record.status === "unclassified_draft";
+            const editUrl = `/dashboard/records/edit?recordId=${encodeURIComponent(record.id)}`;
+
             return (
               <li key={record.id} className={styles.card}>
                 <div className={styles.cardHeader}>
                   <h2 className={styles.itemTitle}>
-                    <Link
-                      href={`/dashboard/records/${record.id}`}
-                      className={styles.itemLink}
-                    >
-                      {record.title ? record.title : "Untitled record"}
-                    </Link>
+                    {isEditable ? (
+                      <Link href={editUrl} className={styles.itemLink}>
+                        {record.title ? record.title : "Untitled record"}
+                      </Link>
+                    ) : (
+                      <span>{record.title ? record.title : "Untitled record"}</span>
+                    )}
                   </h2>
                   <div className={styles.badges}>
                     <span
@@ -319,14 +324,20 @@ export default function DashboardRecordsPage() {
                       {formatDate(record.updatedAt)}
                     </time>
                   </span>
-                  <Link
-                    href={`/dashboard/records/${record.id}`}
-                    className={styles.buttonGhost}
-                    style={{ marginLeft: "auto", minHeight: "36px", padding: "0 12px" }}
-                  >
-                    <Edit3 size={14} aria-hidden="true" />
-                    <span>Edit draft</span>
-                  </Link>
+                  {isEditable && (
+                    <Link
+                      href={editUrl}
+                      className={styles.buttonGhost}
+                      style={{ marginLeft: "auto", minHeight: "36px", padding: "0 12px" }}
+                    >
+                      <Edit3 size={14} aria-hidden="true" />
+                      <span>
+                        {record.status === "unclassified_draft"
+                          ? "Classify draft"
+                          : "Edit draft"}
+                      </span>
+                    </Link>
+                  )}
                 </div>
               </li>
             );

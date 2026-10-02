@@ -174,6 +174,38 @@ export class ScientificStructureService {
     };
   }
 
+  async getTemplateVersion(versionId: string, locale: string) {
+    const templateRows = (await this.dataSource.query(
+      `
+        SELECT tv.id AS version_id, tv.template_id, t.stable_key, t.name, tv.version, tv.status
+        FROM template_versions tv
+        JOIN record_templates t ON t.id = tv.template_id
+        WHERE tv.id = $1
+      `,
+      [versionId],
+    )) as unknown as Array<{
+      version_id: string;
+      template_id: string;
+      stable_key: string;
+      name: string;
+      version: number;
+      status: string;
+    }>;
+    const template = templateRows[0];
+    if (!template) {
+      throw new NotFoundException('Scientific template version was not found.');
+    }
+
+    const fields = await this.loadFields(template.version_id, locale);
+    return {
+      id: template.template_id,
+      stableKey: template.stable_key,
+      name: template.name,
+      version: { id: template.version_id, number: template.version, status: template.status },
+      fields: fields.map((field) => this.presentField(field, locale)),
+    };
+  }
+
   async previewMigration(
     fromVersionId: string,
     toVersionId: string,

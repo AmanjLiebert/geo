@@ -1321,6 +1321,44 @@ export async function getActiveTemplate(
 }
 
 /**
+ * Loads a pinned scientific template version by its ID.
+ */
+export async function getTemplateVersion(
+  versionId: string,
+  locale = "en",
+  signal?: AbortSignal,
+): Promise<ActiveScientificTemplate> {
+  const url = buildDashboardUrl(
+    `/api/v1/scientific-structure/template-versions/${encodeURIComponent(versionId)}`,
+    { locale },
+  );
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      signal,
+      headers: {
+        Accept: "application/json",
+      },
+    });
+    const rawData = await handleResponse<unknown>(response);
+    return validateActiveTemplateResponse(rawData);
+  } catch (error) {
+    if (error instanceof DashboardApiError) throw error;
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new DashboardApiError("Request was cancelled.", 0, "aborted");
+    }
+    throw new DashboardApiError(
+      "Unable to connect to the scientific service. Please check your network connection.",
+      0,
+      "network",
+    );
+  }
+}
+
+/**
  * Creates a new geological draft record.
  */
 export async function createRecord(

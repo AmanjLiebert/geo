@@ -210,6 +210,55 @@ describe("record-editor-utils", () => {
       expect(validateFieldInput(field, "42")).toBeNull();
     });
 
+    it("handles integer exponent notation, fractions, negative values, and unsafe integers", () => {
+      const field: TemplateField = {
+        id: "f2-reg",
+        stableKey: "depth",
+        dataType: "integer",
+        required: false,
+        validation: { minimum: -500, maximum: 5000 },
+        unit: "m",
+        searchable: false,
+        filterable: false,
+        position: 1,
+        status: "active",
+        label: "Depth",
+        helpText: null,
+        locale: "en",
+        translationAvailable: true,
+      };
+
+      // Exponent notation: whole number results
+      expect(validateFieldInput(field, "1e2")).toBeNull(); // 100
+      expect(validateFieldInput(field, "2.5e3")).toBeNull(); // 2500
+      expect(validateFieldInput(field, "-1e2")).toBeNull(); // -100
+
+      // Exponent notation: fractional result fails integer check
+      expect(validateFieldInput(field, "1e-2")).toBe("Please enter a valid whole number."); // 0.01
+
+      // Fractions are rejected
+      expect(validateFieldInput(field, "1/2")).toBe("Please enter a valid whole number.");
+      expect(validateFieldInput(field, "3/4")).toBe("Please enter a valid whole number.");
+      expect(validateFieldInput(field, "10/2")).toBe("Please enter a valid whole number.");
+
+      // Negative values
+      expect(validateFieldInput(field, "-250")).toBeNull();
+      expect(validateFieldInput(field, -250)).toBeNull();
+      expect(validateFieldInput(field, "-600")).toBe("Value must be at least -500.");
+      expect(validateFieldInput(field, "6000")).toBe("Value must be no more than 5000.");
+
+      // Unsafe integers (> Number.MAX_SAFE_INTEGER)
+      expect(validateFieldInput(field, "9007199254740992")).toBe(
+        "Value is outside the supported safe integer range.",
+      );
+      expect(validateFieldInput(field, "-9007199254740992")).toBe(
+        "Value is outside the supported safe integer range.",
+      );
+      expect(validateFieldInput(field, "1e25")).toBe(
+        "Value is outside the supported safe integer range.",
+      );
+    });
+
     it("validates decimal fields with finite number check, minimum, and maximum", () => {
       const field: TemplateField = {
         id: "f3",
@@ -235,6 +284,45 @@ describe("record-editor-utils", () => {
       expect(validateFieldInput(field, 6.5)).toBeNull();
       expect(validateFieldInput(field, "6.5")).toBeNull();
     });
+
+    it("handles decimal exponent notation, fractions, negative values, and bounds", () => {
+      const field: TemplateField = {
+        id: "f3-reg",
+        stableKey: "dip_angle",
+        dataType: "decimal",
+        required: false,
+        validation: { minimum: -90.0, maximum: 90.0 },
+        unit: "degrees",
+        searchable: false,
+        filterable: false,
+        position: 1,
+        status: "active",
+        label: "Dip Angle",
+        helpText: null,
+        locale: "en",
+        translationAvailable: true,
+      };
+
+      // Exponent notation: decimals
+      expect(validateFieldInput(field, "1e1")).toBeNull(); // 10
+      expect(validateFieldInput(field, "1.5e-1")).toBeNull(); // 0.15
+      expect(validateFieldInput(field, "-4.5e1")).toBeNull(); // -45
+
+      // Fractions are rejected
+      expect(validateFieldInput(field, "1/2")).toBe("Please enter a valid number.");
+      expect(validateFieldInput(field, "45/2")).toBe("Please enter a valid number.");
+
+      // Negative values
+      expect(validateFieldInput(field, "-45.5")).toBeNull();
+      expect(validateFieldInput(field, -45.5)).toBeNull();
+      expect(validateFieldInput(field, "-95.0")).toBe("Value must be at least -90.");
+      expect(validateFieldInput(field, "95.0")).toBe("Value must be no more than 90.");
+
+      // Infinity / NaN
+      expect(validateFieldInput(field, "Infinity")).toBe("Please enter a valid number.");
+      expect(validateFieldInput(field, "-Infinity")).toBe("Please enter a valid number.");
+    });
+
 
     it("validates boolean fields", () => {
       const field: TemplateField = {
@@ -386,8 +474,13 @@ describe("record-editor-utils", () => {
       expect(formatFieldValueForSubmit(textField, "  trimmed text  ")).toBe("trimmed text");
       expect(formatFieldValueForSubmit(textField, "")).toBeUndefined();
       expect(formatFieldValueForSubmit(intField, "42")).toBe(42);
+      expect(formatFieldValueForSubmit(intField, "1e2")).toBe(100); // Exponent converted to 100, not 1!
+      expect(formatFieldValueForSubmit(intField, "-50")).toBe(-50);
+      expect(formatFieldValueForSubmit(intField, "1/2")).toBeUndefined();
       expect(formatFieldValueForSubmit(intField, "")).toBeUndefined();
       expect(formatFieldValueForSubmit(decField, "3.1415")).toBe(3.1415);
+      expect(formatFieldValueForSubmit(decField, "1e-3")).toBe(0.001);
+      expect(formatFieldValueForSubmit(decField, "-2.5e2")).toBe(-250);
       expect(formatFieldValueForSubmit(boolField, true)).toBe(true);
       expect(formatFieldValueForSubmit(boolField, false)).toBe(false);
       expect(formatFieldValueForSubmit(multiField, ["a", "b"])).toEqual(["a", "b"]);

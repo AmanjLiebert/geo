@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, FileText, Lock, ShieldAlert } from "lucide-react";
 import Link from "@/components/safe-link";
 import {
   createRecord,
   getActiveTemplate,
   getRecord,
+  getTemplateVersion,
   listCategoryRecordTypes,
   listStructureCategories,
   updateRecord,
@@ -16,6 +17,7 @@ import {
   type CategoryRecordType,
   type ScientificRecordDetail,
   type StructureCategory,
+  type UpdateRecordPayload,
 } from "@/lib/dashboard-api";
 import { RecordStructureSelector } from "./record-structure-selector";
 import { RecordTemplateForm } from "./record-template-form";
@@ -27,22 +29,8 @@ type RecordEditorProps = {
   recordId?: string;
 };
 
-export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps) {
+export function RecordEditor({ mode, recordId }: RecordEditorProps) {
   const router = useRouter();
-  const routeParams = useParams<{ id: string }>();
-  const routeRecordId =
-    typeof routeParams?.id === "string"
-      ? routeParams.id
-      : Array.isArray(routeParams?.id)
-        ? routeParams.id[0]
-        : undefined;
-  const recordId =
-    propRecordId && propRecordId !== "draft"
-      ? propRecordId
-      : routeRecordId && routeRecordId !== "draft"
-        ? routeRecordId
-        : propRecordId;
-
 
   const [step, setStep] = useState<"structure" | "fields">(
     mode === "create" ? "structure" : "fields",
@@ -98,15 +86,35 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
         if (ignore) return;
         setCategories(catRes.items);
 
-        if (mode === "edit" && recordId) {
+        if (mode === "edit") {
+          if (!recordId) {
+            setLoading(false);
+            return;
+          }
+
           const record = await getRecord(recordId);
           if (ignore) return;
           setRecordDetail(record);
           setInitialAttributes(record.attributes ?? {});
           setInitialSlug(record.slug ?? "");
 
+          // Check if record is non-editable (published, archived, or in_review)
+          if (
+            record.status === "published" ||
+            record.status === "archived" ||
+            record.status === "in_review"
+          ) {
+            setLoading(false);
+            return;
+          }
+
           if (record.categoryId && record.recordTypeId) {
-            const tmpl = await getActiveTemplate(record.categoryId, record.recordTypeId);
+            let tmpl: ActiveScientificTemplate;
+            if (record.templateVersionId) {
+              tmpl = await getTemplateVersion(record.templateVersionId);
+            } else {
+              tmpl = await getActiveTemplate(record.categoryId, record.recordTypeId);
+            }
             if (ignore) return;
             setActiveTemplate(tmpl);
 
@@ -124,8 +132,11 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
             const rtRes = await listCategoryRecordTypes(record.categoryId);
             if (ignore) return;
             setRecordTypes(rtRes.items);
+            setStep("fields");
+          } else {
+            // Unclassified draft: open guided classification selector!
+            setStep("structure");
           }
-          setStep("fields");
         }
 
         setLoading(false);
@@ -147,6 +158,7 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
       ignore = true;
     };
   }, [mode, recordId]);
+
 
   // Handle classification confirmation from Step 1 & 2
   async function handleConfirmStructure(sel: StructureSelection) {
@@ -220,13 +232,24 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
 
         setIsDirty(false);
         setIsSaving(false);
-        // Navigate to the saved draft
-        router.push(`/dashboard/records/${newRecord.id}`);
+        // Navigate to the saved draft via query-parameter edit route
+        router.push(`/dashboard/records/edit?recordId=${encodeURIComponent(newRecord.id)}`);
       } else if (mode === "edit" && recordId) {
-        const updated = await updateRecord(recordId, {
+        const payload: UpdateRecordPayload = {
           slug: data.slug,
           attributes: data.attributes,
-        });
+        };
+
+        if (
+          recordDetail?.status === "unclassified_draft" &&
+          selection.categoryId &&
+          selection.recordTypeId
+        ) {
+          payload.categoryId = selection.categoryId;
+          payload.recordTypeId = selection.recordTypeId;
+        }
+
+        const updated = await updateRecord(recordId, payload);
 
         setIsDirty(false);
         setIsSaving(false);
@@ -259,6 +282,12 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
 
   const recordTypeName = selectedRt?.name ?? activeTemplate?.name ?? "Selected Record Type";
 
+  const isNonEditable =
+    recordDetail !== null &&
+    (recordDetail.status === "published" ||
+      recordDetail.status === "archived" ||
+      recordDetail.status === "in_review");
+
   return (
     <div className={styles.container}>
       {/* Page Header */}
@@ -272,14 +301,22 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
           </h1>
           {recordDetail && (
             <span className={styles.badge} aria-label={`Record status: ${recordDetail.status}`}>
-              {recordDetail.status === "draft" ? "Draft" : recordDetail.status}
+              {recordDetail.status === "unclassified_draft"
+                ? "Unclassified Draft"
+                : recordDetail.status === "draft"
+                  ? "Draft"
+                  : recordDetail.status === "published"
+                    ? "Published"
+                    : recordDetail.status === "archived"
+                      ? "Archived"
+                      : "In Review"}
             </span>
           )}
         </div>
         <p className={styles.subtitle}>
           {mode === "create"
             ? "Choose a scientific category and record type to generate the approved data-entry template. Save as a draft at any stage of completion."
-            : "Update scientific attributes and identifier slug for this draft record. Classification is locked after creation to preserve template integrity."}
+            : "Update scientific attributes and identifier slug for this draft record."}
         </p>
       </header>
 
@@ -339,8 +376,54 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
         </div>
       )}
 
-      {/* Step 1 & 2: Guided Structure Selection (Create mode only) */}
-      {!loading && !error && step === "structure" && (
+      {/* Missing record ID state in edit mode */}
+      {!loading && !error && mode === "edit" && !recordId && (
+        <div className={styles.bannerError} role="status">
+          <AlertTriangle className={styles.bannerIcon} aria-hidden="true" />
+          <div className={styles.bannerContent}>
+            <span className={styles.bannerTitle}>No record specified</span>
+            <p className={styles.bannerText}>
+              Select a draft record from the records list to edit its scientific details.
+            </p>
+            <div style={{ marginTop: "12px" }}>
+              <Link href="/dashboard/records" className={styles.button}>
+                Return to records list
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Non-editable record state for published, archived, or in-review records */}
+      {!loading && !error && isNonEditable && recordDetail && (
+        <div className={styles.bannerError} role="status">
+          <ShieldAlert className={styles.bannerIcon} aria-hidden="true" />
+          <div className={styles.bannerContent}>
+            <span className={styles.bannerTitle}>
+              {recordDetail.status === "published"
+                ? "This scientific record is published"
+                : recordDetail.status === "archived"
+                  ? "This scientific record is archived"
+                  : "This scientific record is in review"}
+            </span>
+            <p className={styles.bannerText}>
+              {recordDetail.status === "published"
+                ? "Published scientific records cannot be modified in the draft editor."
+                : recordDetail.status === "archived"
+                  ? "Archived records are preserved in read-only state and cannot be modified."
+                  : "Records currently under peer review cannot be modified as drafts."}
+            </p>
+            <div style={{ marginTop: "12px" }}>
+              <Link href="/dashboard/records" className={styles.button}>
+                Return to records list
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 1 & 2: Guided Structure Selection (Create mode or Unclassified draft) */}
+      {!loading && !error && !isNonEditable && step === "structure" && (
         <RecordStructureSelector
           categories={categories}
           initialSelection={selection}
@@ -349,7 +432,7 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
       )}
 
       {/* Step 3: Template form */}
-      {!loading && !error && step === "fields" && activeTemplate && (
+      {!loading && !error && !isNonEditable && step === "fields" && activeTemplate && (
         <RecordTemplateForm
           template={activeTemplate}
           categoryName={categoryName}
@@ -362,7 +445,11 @@ export function RecordEditor({ mode, recordId: propRecordId }: RecordEditorProps
           serverError={saveError}
           serverValidationIssues={saveValidationIssues}
           saveSuccessMessage={saveSuccessMessage}
-          onChangeClassification={mode === "create" ? handleChangeClassification : undefined}
+          onChangeClassification={
+            mode === "create" || recordDetail?.status === "unclassified_draft"
+              ? handleChangeClassification
+              : undefined
+          }
           onSubmit={handleFormSubmit}
           onCancel={handleCancel}
           onDirtyChange={setIsDirty}

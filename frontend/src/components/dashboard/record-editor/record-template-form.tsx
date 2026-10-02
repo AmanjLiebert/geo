@@ -133,13 +133,17 @@ export function RecordTemplateForm({
 
     if (hasClientErrors) return;
 
-    // Format attributes for API submission
-    const formattedAttributes: Record<string, unknown> = {};
+    // Format attributes for API submission, preserving existing deprecated attributes
+    const formattedAttributes: Record<string, unknown> = {
+      ...initialAttributes,
+    };
     for (const field of sortedFields) {
       const rawVal = attributes[field.stableKey];
       const formatted = formatFieldValueForSubmit(field, rawVal);
       if (formatted !== undefined) {
         formattedAttributes[field.stableKey] = formatted;
+      } else {
+        delete formattedAttributes[field.stableKey];
       }
     }
 

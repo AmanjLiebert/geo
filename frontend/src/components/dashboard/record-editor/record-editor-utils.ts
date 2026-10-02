@@ -6,6 +6,84 @@ import type {
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const numericPattern = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
+
+export type NumericParseResult =
+  | { success: true; value: number }
+  | { success: false; error: string };
+
+/**
+ * Parses and validates numeric inputs (both strings and numbers) consistently
+ * for integers and decimals, supporting exponents, negative values, and
+ * safe integer bounds while rejecting fractions, unsafe integers, and malformed strings.
+ */
+export function parseNumericValue(
+  rawValue: unknown,
+  type: "integer" | "decimal",
+): NumericParseResult {
+  if (rawValue === undefined || rawValue === null || rawValue === "") {
+    return {
+      success: false,
+      error:
+        type === "integer"
+          ? "Please enter a valid whole number."
+          : "Please enter a valid number.",
+    };
+  }
+
+  let num: number;
+
+  if (typeof rawValue === "number") {
+    num = rawValue;
+  } else if (typeof rawValue === "string") {
+    const trimmed = rawValue.trim();
+    if (trimmed === "" || !numericPattern.test(trimmed)) {
+      return {
+        success: false,
+        error:
+          type === "integer"
+            ? "Please enter a valid whole number."
+            : "Please enter a valid number.",
+      };
+    }
+    num = Number(trimmed);
+  } else {
+    return {
+      success: false,
+      error:
+        type === "integer"
+          ? "Please enter a valid whole number."
+          : "Please enter a valid number.",
+    };
+  }
+
+  if (Number.isNaN(num) || !Number.isFinite(num)) {
+    return {
+      success: false,
+      error:
+        type === "integer"
+          ? "Please enter a valid whole number."
+          : "Please enter a valid number.",
+    };
+  }
+
+  if (type === "integer") {
+    if (!Number.isInteger(num)) {
+      return {
+        success: false,
+        error: "Please enter a valid whole number.",
+      };
+    }
+    if (!Number.isSafeInteger(num)) {
+      return {
+        success: false,
+        error: "Value is outside the supported safe integer range.",
+      };
+    }
+  }
+
+  return { success: true, value: num };
+}
 
 /**
  * Builds a hierarchical tree from a flat list of scientific categories.
@@ -88,25 +166,13 @@ export function validateFieldInput(field: TemplateField, value: unknown): string
       return null;
     }
 
-    case "integer": {
-      const num = typeof value === "number" ? value : Number(value);
-      if (Number.isNaN(num) || !Number.isInteger(num)) {
-        return "Please enter a valid whole number.";
-      }
-      if (typeof rules.minimum === "number" && num < rules.minimum) {
-        return `Value must be at least ${rules.minimum}.`;
-      }
-      if (typeof rules.maximum === "number" && num > rules.maximum) {
-        return `Value must be no more than ${rules.maximum}.`;
-      }
-      return null;
-    }
-
+    case "integer":
     case "decimal": {
-      const num = typeof value === "number" ? value : Number(value);
-      if (Number.isNaN(num) || !Number.isFinite(num)) {
-        return "Please enter a valid number.";
+      const parsed = parseNumericValue(value, field.dataType);
+      if (!parsed.success) {
+        return parsed.error;
       }
+      const num = parsed.value;
       if (typeof rules.minimum === "number" && num < rules.minimum) {
         return `Value must be at least ${rules.minimum}.`;
       }
@@ -193,14 +259,10 @@ export function formatFieldValueForSubmit(field: TemplateField, rawValue: unknow
     case "date":
       return typeof rawValue === "string" ? rawValue.trim() : String(rawValue);
 
-    case "integer": {
-      const parsed = typeof rawValue === "number" ? rawValue : Number.parseInt(String(rawValue), 10);
-      return Number.isFinite(parsed) ? parsed : undefined;
-    }
-
+    case "integer":
     case "decimal": {
-      const parsed = typeof rawValue === "number" ? rawValue : Number.parseFloat(String(rawValue));
-      return Number.isFinite(parsed) ? parsed : undefined;
+      const parsed = parseNumericValue(rawValue, field.dataType);
+      return parsed.success ? parsed.value : undefined;
     }
 
     case "boolean":

@@ -255,3 +255,199 @@ describe('RecordsService.list', () => {
     expect(firstCallArgs?.[1]).toEqual([100, 0]);
   });
 });
+
+describe('RecordsService.update state enforcement and pinned template versions', () => {
+  it('rejects editing published records with ConflictException', async () => {
+    const queryMock = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-pub',
+            status: 'published',
+            category_id: 'cat-1',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+            attributes: {},
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await expect(service.update('actor-1', 'rec-pub', { slug: 'new-slug' })).rejects.toThrow(
+      /Published records require the Phase 4 revision workflow/,
+    );
+  });
+
+  it('rejects editing archived records with ConflictException', async () => {
+    const queryMock = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-arc',
+            status: 'archived',
+            category_id: 'cat-1',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+            attributes: {},
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await expect(service.update('actor-1', 'rec-arc', { slug: 'new-slug' })).rejects.toThrow(
+      /Restore the record before editing it/,
+    );
+  });
+
+  it('preserves pinned template version when editing existing classified record', async () => {
+    let capturedUpdateSql = '';
+    let capturedParams: unknown[] = [];
+
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-pinned',
+            status: 'draft',
+            category_id: 'cat-orig',
+            record_type_id: 'rt-orig',
+            template_version_id: 'tv-pinned-version-1',
+            attributes: { old_field: 'existing' },
+            slug: 'original-slug',
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      }
+      if (sql.includes('SELECT stable_key, data_type')) {
+        // Loads fields from pinned template version
+        expect(params?.[0]).toBe('tv-pinned-version-1');
+        return Promise.resolve([
+          {
+            stable_key: 'old_field',
+            data_type: 'text',
+            required: false,
+            validation: {},
+            status: 'active',
+          },
+        ]);
+      }
+      if (sql.includes('UPDATE scientific_records')) {
+        capturedUpdateSql = sql;
+        capturedParams = params;
+        return Promise.resolve([]);
+      }
+      if (sql.includes('record_translations')) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await service.update('actor-1', 'rec-pinned', {
+      attributes: { old_field: 'updated-val' },
+    });
+
+    expect(capturedUpdateSql).toContain('template_version_id = $6');
+    // Parameter 6 is template_version_id, should stay pinned to tv-pinned-version-1
+    expect(capturedParams[5]).toBe('tv-pinned-version-1');
+  });
+
+  it('classifies an unclassified draft to draft status when classification is provided', async () => {
+    let capturedUpdateSql = '';
+    let capturedParams: unknown[] = [];
+
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-unclass',
+            status: 'unclassified_draft',
+            category_id: null,
+            record_type_id: null,
+            template_version_id: null,
+            attributes: {},
+            slug: null,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      }
+      if (sql.includes('category_record_types')) {
+        return Promise.resolve([
+          {
+            category_id: 'cat-new',
+            record_type_id: 'rt-new',
+            template_version_id: 'tv-resolved-version',
+          },
+        ]);
+      }
+      if (sql.includes('SELECT stable_key, data_type')) {
+        return Promise.resolve([
+          {
+            stable_key: 'rock_type',
+            data_type: 'text',
+            required: false,
+            validation: {},
+            status: 'active',
+          },
+        ]);
+      }
+      if (sql.includes('UPDATE scientific_records')) {
+        capturedUpdateSql = sql;
+        capturedParams = params;
+        return Promise.resolve([]);
+      }
+      if (sql.includes('record_translations')) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await service.update('actor-1', 'rec-unclass', {
+      categoryId: 'cat-new',
+      recordTypeId: 'rt-new',
+      attributes: { rock_type: 'Limestone' },
+    });
+
+    expect(capturedUpdateSql).toContain('status = $3');
+    // Parameter 3 should now be 'draft' (classified)
+    expect(capturedParams[2]).toBe('draft');
+    expect(capturedParams[3]).toBe('cat-new');
+    expect(capturedParams[4]).toBe('rt-new');
+    expect(capturedParams[5]).toBe('tv-resolved-version');
+  });
+});

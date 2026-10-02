@@ -33,6 +33,15 @@ export class ScientificStructureController {
     return this.structure.getActiveTemplate(query.categoryId, query.recordTypeId, query.locale);
   }
 
+  @Get('template-versions/:versionId')
+  @Header('Cache-Control', 'private, no-store')
+  getTemplateVersion(
+    @Param('versionId', ParseUUIDPipe) versionId: string,
+    @Query() query: LocaleQueryDto,
+  ) {
+    return this.structure.getTemplateVersion(versionId, query.locale);
+  }
+
   @Post('template-migrations/preview')
   previewTemplateMigration(@Body() input: TemplateMigrationPreviewDto) {
     return this.structure.previewMigration(input.fromVersionId, input.toVersionId, input.mapping);

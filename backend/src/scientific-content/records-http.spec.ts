@@ -38,6 +38,7 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     listCategories: vi.fn(),
     listRecordTypes: vi.fn(),
     getActiveTemplate: vi.fn(),
+    getTemplateVersion: vi.fn(),
   };
 
   const mockSecurityAuditService = {
@@ -426,6 +427,70 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         cookies: { gk_session: 'teacher-session' },
       });
       expect(response.statusCode).toBe(400);
+    });
+
+    it('rejects non-uuid versionId for template-versions endpoint', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/scientific-structure/template-versions/not-a-uuid',
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('allows teacher to load pinned template version', async () => {
+      mockScientificStructureService.getTemplateVersion.mockResolvedValueOnce({
+        id: 'tmpl-1',
+        stableKey: 'carbonate_rock',
+        name: 'Carbonate Rock',
+        version: { id: validRecordId, number: 1, status: 'superseded' },
+        fields: [],
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `/api/v1/scientific-structure/template-versions/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(mockScientificStructureService.getTemplateVersion).toHaveBeenCalledWith(
+        validRecordId,
+        'en',
+      );
+    });
+
+    it('allows admin to load pinned template version', async () => {
+      mockScientificStructureService.getTemplateVersion.mockResolvedValueOnce({
+        id: 'tmpl-1',
+        stableKey: 'carbonate_rock',
+        name: 'Carbonate Rock',
+        version: { id: validRecordId, number: 1, status: 'superseded' },
+        fields: [],
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `/api/v1/scientific-structure/template-versions/${validRecordId}`,
+        cookies: { gk_session: 'admin-session' },
+      });
+      expect(response.statusCode).toBe(200);
+    });
+
+    it('denies visitor from loading pinned template version', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: `/api/v1/scientific-structure/template-versions/${validRecordId}`,
+        cookies: { gk_session: 'visitor-session' },
+      });
+      expect(response.statusCode).toBe(403);
+    });
+
+    it('denies unauthenticated request from loading pinned template version', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: `/api/v1/scientific-structure/template-versions/${validRecordId}`,
+      });
+      expect(response.statusCode).toBe(401);
     });
   });
 });
