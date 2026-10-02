@@ -1,11 +1,9 @@
 import { Transform } from 'class-transformer';
 import { IsObject, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 
-function normalizeOptionalSlug(value: unknown): string | null | undefined {
+function normalizeOptionalSlug(value: unknown): unknown {
   if (value === '') return null;
-  if (typeof value === 'string') return value;
-  if (value === null) return null;
-  return undefined;
+  return value;
 }
 
 export class UpdateRecordDto {

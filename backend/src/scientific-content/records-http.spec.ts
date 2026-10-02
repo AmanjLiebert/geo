@@ -379,6 +379,39 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       expect(response.statusCode).toBe(400);
     });
 
+    it('rejects numeric slug with 400 Bad Request on PATCH /api/v1/records/:id', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { slug: 42 },
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('rejects array slug with 400 Bad Request on PATCH /api/v1/records/:id', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { slug: ['a'] },
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('rejects object slug with 400 Bad Request on PATCH /api/v1/records/:id', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { slug: {} },
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
     it('returns 403 Forbidden for visitor on GET /api/v1/scientific-structure/categories', async () => {
       const response = await app.inject({
         method: 'GET',
