@@ -32,11 +32,7 @@ export class EditorialController {
   @RequirePermissions(Permission.MANAGE_NEWS)
   @Header('Cache-Control', 'private, no-store')
   listNews(@Query() query: EditorialListQueryDto) {
-    return this.editorial.listNews(
-      parseInteger(query.limit, 20),
-      parseInteger(query.offset, 0),
-      query.status,
-    );
+    return this.editorial.listNews(query.limit ?? 20, query.offset ?? 0, query.status);
   }
 
   @Post('news')
@@ -86,11 +82,7 @@ export class EditorialController {
   @RequirePermissions(Permission.MANAGE_SITE_CONTENT)
   @Header('Cache-Control', 'private, no-store')
   listPages(@Query() query: EditorialListQueryDto) {
-    return this.editorial.listPages(
-      parseInteger(query.limit, 20),
-      parseInteger(query.offset, 0),
-      query.status,
-    );
+    return this.editorial.listPages(query.limit ?? 20, query.offset ?? 0, query.status);
   }
 
   @Post('pages')
@@ -141,12 +133,6 @@ export class EditorialController {
   organization(@CurrentAuth() auth: AuthContext, @Body() input: UpsertOrganizationDto) {
     return this.editorial.upsertOrganization(auth.user.id, input);
   }
-}
-
-function parseInteger(value: string | undefined, fallback: number): number {
-  if (!value) return fallback;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function assertLocale(locale: string) {

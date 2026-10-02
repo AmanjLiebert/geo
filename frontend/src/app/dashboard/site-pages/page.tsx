@@ -151,7 +151,7 @@ export default function DashboardSitePagesPage() {
           <h1 className={styles.title}>Site pages</h1>
         </div>
         <p className={styles.subtitle}>
-          Manage institutional pages including about, mission, contact, privacy, and terms.
+          Browse and filter institutional pages including about, mission, contact, privacy, and terms.
         </p>
       </header>
 

@@ -150,7 +150,7 @@ export default function DashboardNewsPage() {
           <h1 className={styles.title}>News articles</h1>
         </div>
         <p className={styles.subtitle}>
-          Manage geological news articles, field discoveries, and institutional announcements.
+          Browse and filter geological news articles, field discoveries, and institutional announcements.
         </p>
       </header>
 
