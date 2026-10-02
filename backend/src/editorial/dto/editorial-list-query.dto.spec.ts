@@ -38,7 +38,7 @@ describe('editorial list query DTO validation', () => {
     });
 
     it('rejects malformed limit strings (e.g. 20abc, 1.5)', async () => {
-      for (const val of ['20abc', 'abc', '1.5', '2.0', '1e2']) {
+      for (const val of ['', '   ', null, '20abc', 'abc', '1.5', '2.0', '1e2']) {
         const dto = plainToInstance(EditorialListQueryDto, { limit: val });
         const errors = await validate(dto);
         expect(errors.some((e) => e.property === 'limit')).toBe(true);
@@ -78,7 +78,7 @@ describe('editorial list query DTO validation', () => {
     });
 
     it('rejects malformed offset strings (e.g. 20abc, 1.5)', async () => {
-      for (const val of ['20abc', 'abc', '1.5', '0.5']) {
+      for (const val of ['', '   ', null, '20abc', 'abc', '1.5', '0.5']) {
         const dto = plainToInstance(EditorialListQueryDto, { offset: val });
         const errors = await validate(dto);
         expect(errors.some((e) => e.property === 'offset')).toBe(true);

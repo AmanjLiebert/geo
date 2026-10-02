@@ -5,7 +5,7 @@ export const MAX_EDITORIAL_LIMIT = 100;
 export const MAX_EDITORIAL_OFFSET = 100_000;
 
 function parseQueryInteger(value: unknown): unknown {
-  if (value === undefined || value === null || value === '') {
+  if (value === undefined) {
     return undefined;
   }
   if (typeof value === 'number') {

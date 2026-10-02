@@ -194,6 +194,15 @@ describe('EditorialController HTTP requests and authorization', () => {
     });
 
     describe('query validation at request boundary', () => {
+      it('rejects an explicitly empty limit with 400 Bad Request', async () => {
+        const response = await app.inject({
+          method: 'GET',
+          url: '/api/v1/editorial/news?limit=',
+          cookies: { gk_session: 'admin-session' },
+        });
+        expect(response.statusCode).toBe(400);
+      });
+
       it('rejects malformed limit string (e.g. 20abc) with 400 Bad Request', async () => {
         const response = await app.inject({
           method: 'GET',
@@ -333,6 +342,15 @@ describe('EditorialController HTTP requests and authorization', () => {
     });
 
     describe('query validation at request boundary', () => {
+      it('rejects an explicitly empty offset with 400 Bad Request', async () => {
+        const response = await app.inject({
+          method: 'GET',
+          url: '/api/v1/editorial/pages?offset=',
+          cookies: { gk_session: 'admin-session' },
+        });
+        expect(response.statusCode).toBe(400);
+      });
+
       it('rejects malformed limit (20abc) with 400 Bad Request', async () => {
         const response = await app.inject({
           method: 'GET',
