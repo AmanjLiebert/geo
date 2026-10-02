@@ -450,4 +450,136 @@ describe('RecordsService.update state enforcement and pinned template versions',
     expect(capturedParams[4]).toBe('rt-new');
     expect(capturedParams[5]).toBe('tv-resolved-version');
   });
+
+  it('clears an optional slug to null in database when slug: null is passed', async () => {
+    let capturedParams: unknown[] = [];
+
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-slug-clear',
+            status: 'draft',
+            category_id: 'cat-1',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+            slug: 'existing-slug-value',
+            attributes: {},
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      }
+      if (sql.includes('SELECT stable_key, data_type')) {
+        return Promise.resolve([]);
+      }
+      if (sql.includes('UPDATE scientific_records')) {
+        capturedParams = params;
+        return Promise.resolve([]);
+      }
+      if (sql.includes('record_translations')) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await service.update('actor-1', 'rec-slug-clear', {
+      slug: null,
+      attributes: {},
+    });
+
+    // Parameter 2 is slug, should be explicitly null
+    expect(capturedParams[1]).toBeNull();
+  });
+
+  it('preserves existing slug when slug is omitted in update payload', async () => {
+    let capturedParams: unknown[] = [];
+
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-slug-preserve',
+            status: 'draft',
+            category_id: 'cat-1',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+            slug: 'existing-slug-preserved',
+            attributes: {},
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      }
+      if (sql.includes('SELECT stable_key, data_type')) {
+        return Promise.resolve([]);
+      }
+      if (sql.includes('UPDATE scientific_records')) {
+        capturedParams = params;
+        return Promise.resolve([]);
+      }
+      if (sql.includes('record_translations')) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await service.update('actor-1', 'rec-slug-preserve', {
+      attributes: {},
+    });
+
+    // Parameter 2 is slug, should stay existing-slug-preserved
+    expect(capturedParams[1]).toBe('existing-slug-preserved');
+  });
+
+  it('rejects reclassifying an already classified draft with BadRequestException', async () => {
+    const queryMock = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-already-classified',
+            status: 'draft',
+            category_id: 'cat-original',
+            record_type_id: 'rt-original',
+            template_version_id: 'tv-original',
+            attributes: {},
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await expect(
+      service.update('actor-1', 'rec-already-classified', {
+        categoryId: 'cat-new-forbidden',
+        recordTypeId: 'rt-new-forbidden',
+      }),
+    ).rejects.toThrow(/Reclassifying an already classified record is not permitted/);
+  });
 });

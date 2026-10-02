@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle2, ChevronRight, Edit3, Save } from "lucide-r
 import type { ActiveScientificTemplate } from "@/lib/dashboard-api";
 import {
   formatFieldValueForSubmit,
+  formatSlugForSubmit,
   sortTemplateFields,
   validateFieldInput,
   validateSlug,
@@ -24,7 +25,7 @@ type RecordTemplateFormProps = {
   serverValidationIssues?: Array<{ field?: string; message: string }>;
   saveSuccessMessage?: string | null;
   onChangeClassification?: () => void;
-  onSubmit: (data: { slug?: string; attributes: Record<string, unknown> }) => void;
+  onSubmit: (data: { slug?: string | null; attributes: Record<string, unknown> }) => void;
   onCancel: () => void;
   onDirtyChange?: (dirty: boolean) => void;
 };
@@ -147,9 +148,9 @@ export function RecordTemplateForm({
       }
     }
 
-    const trimmedSlug = slug.trim();
+    const finalSlug = formatSlugForSubmit(slug, mode);
     onSubmit({
-      slug: trimmedSlug || undefined,
+      slug: finalSlug,
       attributes: formattedAttributes,
     });
   }
@@ -174,7 +175,7 @@ export function RecordTemplateForm({
           <span className={styles.badgeAccent}>{recordTypeName}</span>
         </div>
 
-        {onChangeClassification && mode === "create" && (
+        {onChangeClassification && (
           <button
             type="button"
             className={styles.buttonGhost}

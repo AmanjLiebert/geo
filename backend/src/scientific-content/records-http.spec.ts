@@ -324,6 +324,61 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       });
     });
 
+    it('passes slug: null to service when slug is explicitly cleared on PATCH /api/v1/records/:id', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { slug: null, attributes: { formation: 'Shiranish' } },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(mockRecordsService.update).toHaveBeenCalledWith('teacher-1', validRecordId, {
+        slug: null,
+        attributes: { formation: 'Shiranish' },
+      });
+    });
+
+    it('passes slug: undefined when slug is omitted in PATCH /api/v1/records/:id payload', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { attributes: { formation: 'Shiranish' } },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(mockRecordsService.update).toHaveBeenCalledWith('teacher-1', validRecordId, {
+        attributes: { formation: 'Shiranish' },
+      });
+    });
+
+    it('transforms empty string slug to null on PATCH /api/v1/records/:id', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { slug: '', attributes: { formation: 'Shiranish' } },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(mockRecordsService.update).toHaveBeenCalledWith('teacher-1', validRecordId, {
+        slug: null,
+        attributes: { formation: 'Shiranish' },
+      });
+    });
+
+    it('rejects invalid slug format with 400 Bad Request on PATCH /api/v1/records/:id', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { slug: 'INVALID SLUG WITH SPACES' },
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
     it('returns 403 Forbidden for visitor on GET /api/v1/scientific-structure/categories', async () => {
       const response = await app.inject({
         method: 'GET',

@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import {
   buildCategoryTree,
+  canChangeClassification,
   formatFieldValueForSubmit,
+  formatSlugForSubmit,
   sortTemplateFields,
   validateFieldInput,
   validateSlug,
 } from "./record-editor-utils";
+import { RecordTemplateForm } from "./record-template-form";
 import type { StructureCategory, TemplateField } from "./record-editor-types";
 
 describe("record-editor-utils", () => {
@@ -484,6 +489,106 @@ describe("record-editor-utils", () => {
       expect(formatFieldValueForSubmit(boolField, true)).toBe(true);
       expect(formatFieldValueForSubmit(boolField, false)).toBe(false);
       expect(formatFieldValueForSubmit(multiField, ["a", "b"])).toEqual(["a", "b"]);
+    });
+  });
+
+  describe("canChangeClassification", () => {
+    it("permits changing classification in create mode regardless of status", () => {
+      expect(canChangeClassification("create")).toBe(true);
+      expect(canChangeClassification("create", undefined)).toBe(true);
+      expect(canChangeClassification("create", "unclassified_draft")).toBe(true);
+      expect(canChangeClassification("create", "draft")).toBe(true);
+    });
+
+    it("permits changing classification in edit mode ONLY for unclassified_draft", () => {
+      expect(canChangeClassification("edit", "unclassified_draft")).toBe(true);
+    });
+
+    it("strictly forbids changing classification for already classified draft in edit mode", () => {
+      expect(canChangeClassification("edit", "draft")).toBe(false);
+    });
+
+    it("strictly forbids changing classification for other terminal/review states in edit mode", () => {
+      expect(canChangeClassification("edit", "published")).toBe(false);
+      expect(canChangeClassification("edit", "archived")).toBe(false);
+      expect(canChangeClassification("edit", "in_review")).toBe(false);
+      expect(canChangeClassification("edit", null)).toBe(false);
+      expect(canChangeClassification("edit", undefined)).toBe(false);
+    });
+  });
+
+  describe("formatSlugForSubmit", () => {
+    it("formats non-empty slug by trimming in both create and edit modes", () => {
+      expect(formatSlugForSubmit("  rawandiz-chert  ", "create")).toBe("rawandiz-chert");
+      expect(formatSlugForSubmit("  rawandiz-chert  ", "edit")).toBe("rawandiz-chert");
+    });
+
+    it("returns null in edit mode when slug is cleared or empty to explicitly clear in database", () => {
+      expect(formatSlugForSubmit("", "edit")).toBeNull();
+      expect(formatSlugForSubmit("   ", "edit")).toBeNull();
+    });
+
+    it("returns undefined in create mode when slug is omitted or empty", () => {
+      expect(formatSlugForSubmit("", "create")).toBeUndefined();
+      expect(formatSlugForSubmit("   ", "create")).toBeUndefined();
+    });
+  });
+
+  describe("RecordTemplateForm button visibility", () => {
+    const mockTemplate = {
+      id: "tmpl-1",
+      stableKey: "carbonate_rock",
+      name: "Carbonate Rock",
+      version: { id: "tv-1", number: 1, status: "active" as const },
+      fields: [],
+    };
+
+    it("renders 'Change classification' button when onChangeClassification is provided in create mode", () => {
+      const html = renderToStaticMarkup(
+        createElement(RecordTemplateForm, {
+          template: mockTemplate,
+          categoryName: "Formations",
+          recordTypeName: "Rock Unit",
+          mode: "create",
+          isSaving: false,
+          onChangeClassification: () => {},
+          onSubmit: () => {},
+          onCancel: () => {},
+        }),
+      );
+      expect(html).toContain("Change classification");
+    });
+
+    it("renders 'Change classification' button when onChangeClassification is provided in edit mode (unclassified draft)", () => {
+      const html = renderToStaticMarkup(
+        createElement(RecordTemplateForm, {
+          template: mockTemplate,
+          categoryName: "Formations",
+          recordTypeName: "Rock Unit",
+          mode: "edit",
+          isSaving: false,
+          onChangeClassification: () => {},
+          onSubmit: () => {},
+          onCancel: () => {},
+        }),
+      );
+      expect(html).toContain("Change classification");
+    });
+
+    it("does NOT render 'Change classification' button when onChangeClassification is undefined (already classified draft in edit mode)", () => {
+      const html = renderToStaticMarkup(
+        createElement(RecordTemplateForm, {
+          template: mockTemplate,
+          categoryName: "Formations",
+          recordTypeName: "Rock Unit",
+          mode: "edit",
+          isSaving: false,
+          onChangeClassification: undefined,
+          onSubmit: () => {},
+          onCancel: () => {},
+        }),
+      );
+      expect(html).not.toContain("Change classification");
     });
   });
 });

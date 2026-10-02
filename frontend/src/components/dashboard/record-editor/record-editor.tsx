@@ -21,6 +21,7 @@ import {
 } from "@/lib/dashboard-api";
 import { RecordStructureSelector } from "./record-structure-selector";
 import { RecordTemplateForm } from "./record-template-form";
+import { canChangeClassification } from "./record-editor-utils";
 import type { RecordEditorMode, StructureSelection } from "./record-editor-types";
 import styles from "./record-editor.module.css";
 
@@ -207,7 +208,10 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
     router.push("/dashboard/records");
   }
 
-  async function handleFormSubmit(data: { slug?: string; attributes: Record<string, unknown> }) {
+  async function handleFormSubmit(data: {
+    slug?: string | null;
+    attributes: Record<string, unknown>;
+  }) {
     setIsSaving(true);
     setSaveError(null);
     setSaveValidationIssues([]);
@@ -226,7 +230,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         const newRecord = await createRecord({
           categoryId: selection.categoryId,
           recordTypeId: selection.recordTypeId,
-          slug: data.slug,
+          slug: data.slug ?? undefined,
           attributes: data.attributes,
         });
 
@@ -446,7 +450,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
           serverValidationIssues={saveValidationIssues}
           saveSuccessMessage={saveSuccessMessage}
           onChangeClassification={
-            mode === "create" || recordDetail?.status === "unclassified_draft"
+            canChangeClassification(mode, recordDetail?.status)
               ? handleChangeClassification
               : undefined
           }

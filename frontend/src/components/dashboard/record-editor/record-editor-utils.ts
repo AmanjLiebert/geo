@@ -280,3 +280,31 @@ export function isRealDate(value: string): boolean {
   const parsed = new Date(`${value}T00:00:00.000Z`);
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
+
+/**
+ * Determines whether classification can be changed from the fields step.
+ * Permitted when creating a new record or when classifying an unclassified draft.
+ * Never permitted for an already classified draft or other record states.
+ */
+export function canChangeClassification(
+  mode: "create" | "edit",
+  status?: string | null,
+): boolean {
+  if (mode === "create") return true;
+  return status === "unclassified_draft";
+}
+
+/**
+ * Formats a slug input for submission.
+ * - In edit mode, an empty/cleared slug is explicitly formatted as `null` to clear it in the database.
+ * - In create mode, an empty slug is formatted as `undefined` (omitted).
+ * - A non-empty slug is trimmed and returned.
+ */
+export function formatSlugForSubmit(
+  slug: string,
+  mode: "create" | "edit",
+): string | null | undefined {
+  const trimmed = slug.trim();
+  if (trimmed.length > 0) return trimmed;
+  return mode === "edit" ? null : undefined;
+}

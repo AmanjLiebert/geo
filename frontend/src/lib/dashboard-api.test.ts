@@ -988,4 +988,67 @@ describe("dashboard-api", () => {
       expect(template.fields[0].stableKey).toBe("genus");
     });
   });
+
+  describe("updateRecord", () => {
+    const recordId = "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d";
+    const sampleRecord = {
+      id: recordId,
+      stableId: "stable-1",
+      slug: null,
+      status: "draft",
+      categoryId: "11111111-1111-4111-8111-111111111111",
+      recordTypeId: "22222222-2222-4222-8222-222222222222",
+      templateVersionId: "33333333-3333-4333-8333-333333333333",
+      attributes: { sample: "value" },
+      ownerUserId: "usr-1",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      updatedAt: "2026-03-01T00:00:00.000Z",
+    };
+
+    it("sends slug: null in payload when slug is explicitly cleared", async () => {
+      let capturedBody: string | undefined;
+      vi.mocked(fetch).mockImplementationOnce((_url, init) => {
+        capturedBody = init?.body as string;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ "content-type": "application/json" }),
+          json: () => Promise.resolve(sampleRecord),
+        } as Response);
+      });
+
+      const result = await updateRecord(recordId, {
+        slug: null,
+        attributes: { sample: "value" },
+      });
+
+      expect(JSON.parse(capturedBody ?? "{}")).toEqual({
+        slug: null,
+        attributes: { sample: "value" },
+      });
+      expect(result.slug).toBeNull();
+    });
+
+    it("omits slug from payload when slug is undefined (omitted)", async () => {
+      let capturedBody: string | undefined;
+      vi.mocked(fetch).mockImplementationOnce((_url, init) => {
+        capturedBody = init?.body as string;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ "content-type": "application/json" }),
+          json: () => Promise.resolve({ ...sampleRecord, slug: "existing-slug" }),
+        } as Response);
+      });
+
+      const result = await updateRecord(recordId, {
+        attributes: { sample: "value" },
+      });
+
+      expect(JSON.parse(capturedBody ?? "{}")).toEqual({
+        attributes: { sample: "value" },
+      });
+      expect(result.slug).toBe("existing-slug");
+    });
+  });
 });

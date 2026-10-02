@@ -207,6 +207,11 @@ export class RecordsService {
         input.categoryId !== undefined || input.recordTypeId !== undefined;
       let classification: ClassificationRow | null;
       if (classificationChanged) {
+        if (current.status !== ScientificRecordStatus.UNCLASSIFIED_DRAFT) {
+          throw new BadRequestException(
+            'Reclassifying an already classified record is not permitted.',
+          );
+        }
         classification = await this.resolveClassification(
           manager,
           input.categoryId,
