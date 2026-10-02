@@ -1,4 +1,8 @@
-import type { ResearchStatus, ScientificRecordStatus } from "@/lib/dashboard-api";
+import type {
+  EditorialStatus,
+  ResearchStatus,
+  ScientificRecordStatus,
+} from "@/lib/dashboard-api";
 
 export function formatRecordStatus(status: ScientificRecordStatus): string {
   switch (status) {
@@ -26,6 +30,38 @@ export function formatResearchStatus(status: ResearchStatus): string {
     case "archived":
       return "Archived";
   }
+}
+
+export function formatEditorialStatus(status: EditorialStatus): string {
+  switch (status) {
+    case "draft":
+      return "Draft";
+    case "in_review":
+      return "In review";
+    case "published":
+      return "Published";
+    case "archived":
+      return "Archived";
+  }
+}
+
+export function formatPageType(pageType: string): string {
+  const map: Record<string, string> = {
+    about: "About",
+    mission: "Mission",
+    ownership: "Ownership",
+    contact: "Contact",
+    privacy: "Privacy",
+    terms: "Terms",
+  };
+  const key = pageType.trim().toLowerCase();
+  if (map[key]) return map[key];
+  if (!pageType.trim()) return "Page";
+  return pageType
+    .trim()
+    .split(/[_-]+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 export function formatDate(isoString: string | null | undefined): string {

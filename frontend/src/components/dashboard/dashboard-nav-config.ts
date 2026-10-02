@@ -61,13 +61,13 @@ const OPERATIONAL_SECTION: NavSection = {
     {
       id: "news",
       label: "News",
-      href: undefined,
+      href: "/dashboard/news",
       description: "Geological news articles: create, review, and publish.",
     },
     {
       id: "site-pages",
       label: "Site pages",
-      href: undefined,
+      href: "/dashboard/site-pages",
       description: "Managed pages: about, contact, privacy, and terms.",
     },
     {

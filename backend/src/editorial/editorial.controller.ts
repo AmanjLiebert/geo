@@ -2,10 +2,13 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
+  Header,
   Param,
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { Permission } from '../identity/access-control';
 import { CurrentAuth, HighRiskAction, RequirePermissions } from '../identity/access.decorators';
@@ -18,11 +21,23 @@ import {
   UpsertOrganizationDto,
   UpsertPageTranslationDto,
 } from './dto/editorial.dto';
+import { EditorialListQueryDto } from './dto/editorial-list-query.dto';
 import { EditorialService } from './editorial.service';
 
 @Controller('editorial')
 export class EditorialController {
   constructor(private readonly editorial: EditorialService) {}
+
+  @Get('news')
+  @RequirePermissions(Permission.MANAGE_NEWS)
+  @Header('Cache-Control', 'private, no-store')
+  listNews(@Query() query: EditorialListQueryDto) {
+    return this.editorial.listNews(
+      parseInteger(query.limit, 20),
+      parseInteger(query.offset, 0),
+      query.status,
+    );
+  }
 
   @Post('news')
   @RequirePermissions(Permission.MANAGE_NEWS)
@@ -65,6 +80,17 @@ export class EditorialController {
   @HighRiskAction()
   publishNews(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) id: string) {
     return this.editorial.publish('news', auth.user.id, id);
+  }
+
+  @Get('pages')
+  @RequirePermissions(Permission.MANAGE_SITE_CONTENT)
+  @Header('Cache-Control', 'private, no-store')
+  listPages(@Query() query: EditorialListQueryDto) {
+    return this.editorial.listPages(
+      parseInteger(query.limit, 20),
+      parseInteger(query.offset, 0),
+      query.status,
+    );
   }
 
   @Post('pages')
@@ -115,6 +141,12 @@ export class EditorialController {
   organization(@CurrentAuth() auth: AuthContext, @Body() input: UpsertOrganizationDto) {
     return this.editorial.upsertOrganization(auth.user.id, input);
   }
+}
+
+function parseInteger(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function assertLocale(locale: string) {

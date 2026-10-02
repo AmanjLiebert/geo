@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildDashboardUrl,
   DashboardApiError,
+  listDashboardNews,
+  listDashboardPages,
   listDashboardRecords,
   listDashboardResearch,
 } from "./dashboard-api";
@@ -357,6 +359,266 @@ describe("dashboard-api", () => {
 
       await expect(listDashboardResearch()).rejects.toThrow(
         "The scientific server returned an unparseable response.",
+      );
+    });
+  });
+
+  describe("listDashboardNews", () => {
+    it("fetches news items and parses minimal projection response", async () => {
+      const mockData = {
+        items: [
+          {
+            id: "news-1",
+            title: "New Discovery in Zagros",
+            slug: "new-discovery-in-zagros",
+            status: "published" as const,
+            publishedAt: "2026-02-01T12:00:00.000Z",
+            updatedAt: "2026-02-01T12:00:00.000Z",
+          },
+        ],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockData),
+      } as Response);
+
+      const result = await listDashboardNews({ limit: 20, offset: 0, status: "published" });
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const [url, init] = vi.mocked(fetch).mock.calls[0];
+      expect(url).toContain("/api/v1/editorial/news?limit=20&offset=0&status=published");
+      expect(init?.credentials).toBe("include");
+      expect(init?.cache).toBe("no-store");
+      expect(result.items[0]).toEqual({
+        id: "news-1",
+        title: "New Discovery in Zagros",
+        slug: "new-discovery-in-zagros",
+        status: "published",
+        publishedAt: "2026-02-01T12:00:00.000Z",
+        updatedAt: "2026-02-01T12:00:00.000Z",
+      });
+      expect(result.total).toBe(1);
+    });
+
+    it("handles genuine empty state from API", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ items: [], total: 0, limit: 20, offset: 0 }),
+      } as Response);
+
+      const result = await listDashboardNews();
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it("maps 403 status to forbidden error without leaking details", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: () => Promise.resolve({ error: "Missing MANAGE_NEWS permission" }),
+      } as Response);
+
+      try {
+        await listDashboardNews();
+        expect.fail("Should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(DashboardApiError);
+        const apiError = err as DashboardApiError;
+        expect(apiError.status).toBe(403);
+        expect(apiError.kind).toBe("forbidden");
+        expect(apiError.message).toContain("permission");
+      }
+    });
+
+    it("throws server error on malformed 200 response (invalid status)", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            items: [
+              {
+                id: "news-1",
+                title: "Bad Status",
+                slug: "bad-status",
+                status: "nonexistent_status",
+                publishedAt: null,
+                updatedAt: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+            total: 1,
+            limit: 20,
+            offset: 0,
+          }),
+      } as Response);
+
+      await expect(listDashboardNews()).rejects.toThrow(
+        "The editorial server returned an unparseable response.",
+      );
+    });
+
+    it("throws server error on malformed 200 response (invalid date)", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            items: [
+              {
+                id: "news-1",
+                title: "Bad Date",
+                slug: "bad-date",
+                status: "draft",
+                publishedAt: null,
+                updatedAt: "invalid-date",
+              },
+            ],
+            total: 1,
+            limit: 20,
+            offset: 0,
+          }),
+      } as Response);
+
+      await expect(listDashboardNews()).rejects.toThrow(
+        "The editorial server returned an unparseable response.",
+      );
+    });
+  });
+
+  describe("listDashboardPages", () => {
+    it("fetches managed pages and parses minimal projection response", async () => {
+      const mockData = {
+        items: [
+          {
+            id: "page-1",
+            pageType: "about",
+            title: "About Geo-Kurdistan",
+            status: "published" as const,
+            effectiveAt: "2026-01-01T00:00:00.000Z",
+            publishedAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ],
+        total: 1,
+        limit: 10,
+        offset: 0,
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockData),
+      } as Response);
+
+      const result = await listDashboardPages({ limit: 10, offset: 0, status: "published" });
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const [url, init] = vi.mocked(fetch).mock.calls[0];
+      expect(url).toContain("/api/v1/editorial/pages?limit=10&offset=0&status=published");
+      expect(init?.credentials).toBe("include");
+      expect(init?.cache).toBe("no-store");
+      expect(result.items[0]).toEqual({
+        id: "page-1",
+        pageType: "about",
+        title: "About Geo-Kurdistan",
+        status: "published",
+        effectiveAt: "2026-01-01T00:00:00.000Z",
+        publishedAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      });
+      expect(result.total).toBe(1);
+    });
+
+    it("handles genuine empty state from API", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ items: [], total: 0, limit: 10, offset: 0 }),
+      } as Response);
+
+      const result = await listDashboardPages();
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it("maps 403 status to forbidden error without leaking details", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: () => Promise.resolve({ error: "Missing MANAGE_SITE_CONTENT permission" }),
+      } as Response);
+
+      try {
+        await listDashboardPages();
+        expect.fail("Should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(DashboardApiError);
+        const apiError = err as DashboardApiError;
+        expect(apiError.status).toBe(403);
+        expect(apiError.kind).toBe("forbidden");
+        expect(apiError.message).toContain("permission");
+      }
+    });
+
+    it("throws server error on malformed 200 response (missing pageType)", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            items: [
+              {
+                id: "page-1",
+                pageType: "",
+                title: "Test Page",
+                status: "draft",
+                effectiveAt: null,
+                publishedAt: null,
+                updatedAt: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+            total: 1,
+            limit: 10,
+            offset: 0,
+          }),
+      } as Response);
+
+      await expect(listDashboardPages()).rejects.toThrow(
+        "The editorial server returned an unparseable response.",
+      );
+    });
+
+    it("throws server error on malformed 200 response (invalid date in effectiveAt)", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            items: [
+              {
+                id: "page-1",
+                pageType: "terms",
+                title: "Terms",
+                status: "draft",
+                effectiveAt: "not-a-date",
+                publishedAt: null,
+                updatedAt: "2026-01-01T00:00:00.000Z",
+              },
+            ],
+            total: 1,
+            limit: 10,
+            offset: 0,
+          }),
+      } as Response);
+
+      await expect(listDashboardPages()).rejects.toThrow(
+        "The editorial server returned an unparseable response.",
       );
     });
   });

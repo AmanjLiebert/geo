@@ -97,15 +97,19 @@ describe("getDashboardNavigation", () => {
       expect(researchItem?.href).toBe("/dashboard/research");
     });
 
-    it("receives News, Site pages, and Users as non-interactive coming-next items", () => {
+    it("receives News and Site pages with active dashboard routes, and Users as non-interactive coming-next item", () => {
       const nav = getDashboardNavigation("admin");
       const operationalSection = nav.sections.find((s) => s.id === "operational");
       expect(operationalSection).toBeDefined();
 
-      for (const item of operationalSection!.items) {
-        expect(["news", "site-pages", "users"]).toContain(item.id);
-        expect(item.href).toBeUndefined();
-      }
+      const newsItem = operationalSection!.items.find((i) => i.id === "news");
+      expect(newsItem?.href).toBe("/dashboard/news");
+
+      const sitePagesItem = operationalSection!.items.find((i) => i.id === "site-pages");
+      expect(sitePagesItem?.href).toBe("/dashboard/site-pages");
+
+      const usersItem = operationalSection!.items.find((i) => i.id === "users");
+      expect(usersItem?.href).toBeUndefined();
     });
 
     it("shares the exact same scientific section as teacher (no extra record items for admin)", () => {

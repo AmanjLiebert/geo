@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   calculatePagination,
   formatDate,
+  formatEditorialStatus,
+  formatPageType,
   formatRecordStatus,
   formatResearchStatus,
   getRecoveredOffset,
@@ -24,6 +26,32 @@ describe("dashboard-list-utils", () => {
       expect(formatResearchStatus("in_review")).toBe("In review");
       expect(formatResearchStatus("published")).toBe("Published");
       expect(formatResearchStatus("archived")).toBe("Archived");
+    });
+  });
+
+  describe("formatEditorialStatus", () => {
+    it("formats all editorial statuses in plain language", () => {
+      expect(formatEditorialStatus("draft")).toBe("Draft");
+      expect(formatEditorialStatus("in_review")).toBe("In review");
+      expect(formatEditorialStatus("published")).toBe("Published");
+      expect(formatEditorialStatus("archived")).toBe("Archived");
+    });
+  });
+
+  describe("formatPageType", () => {
+    it("formats known page types properly", () => {
+      expect(formatPageType("about")).toBe("About");
+      expect(formatPageType("mission")).toBe("Mission");
+      expect(formatPageType("ownership")).toBe("Ownership");
+      expect(formatPageType("contact")).toBe("Contact");
+      expect(formatPageType("privacy")).toBe("Privacy");
+      expect(formatPageType("terms")).toBe("Terms");
+    });
+
+    it("handles compound or unknown page types gracefully", () => {
+      expect(formatPageType("cookie_policy")).toBe("Cookie Policy");
+      expect(formatPageType("site-terms")).toBe("Site Terms");
+      expect(formatPageType("")).toBe("Page");
     });
   });
 

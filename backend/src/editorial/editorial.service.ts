@@ -17,9 +17,117 @@ import {
 
 type EditorialKind = 'news' | 'page';
 
+interface NewsListRow {
+  id: string;
+  slug: string | null;
+  status: string;
+  published_at: Date | string | null;
+  updated_at: Date | string;
+  title: string | null;
+}
+
+interface ManagedPageListRow {
+  id: string;
+  page_type: string;
+  status: string;
+  effective_at: Date | string | null;
+  published_at: Date | string | null;
+  updated_at: Date | string;
+  title: string | null;
+}
+
+interface CountRow {
+  total: string;
+}
+
 @Injectable()
 export class EditorialService {
   constructor(private readonly dataSource: DataSource) {}
+
+  async listNews(limit = 20, offset = 0, status?: string) {
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const safeOffset = Math.max(offset, 0);
+    const values: (number | string)[] = [safeLimit, safeOffset];
+    const statusClause = status ? `WHERE n.status = $3` : '';
+    if (status) values.push(status);
+
+    const rows = (await this.dataSource.query(
+      `SELECT n.id, n.slug, n.status, n.published_at, n.updated_at,
+        t.headline AS title
+       FROM news_articles n
+       LEFT JOIN LATERAL (
+         SELECT headline FROM news_translations
+         WHERE news_article_id = n.id
+         ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, locale LIMIT 1
+       ) t ON true
+       ${statusClause}
+       ORDER BY n.updated_at DESC, n.id
+       LIMIT $1 OFFSET $2`,
+      values,
+    )) as unknown as NewsListRow[];
+
+    const countRows = (await this.dataSource.query(
+      `SELECT COUNT(*)::text AS total FROM news_articles n ${status ? 'WHERE n.status = $1' : ''}`,
+      status ? [status] : [],
+    )) as unknown as CountRow[];
+
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        status: row.status,
+        publishedAt: row.published_at ? new Date(row.published_at).toISOString() : null,
+        updatedAt: new Date(row.updated_at).toISOString(),
+      })),
+      total: Number(countRows[0]?.total ?? 0),
+      limit: safeLimit,
+      offset: safeOffset,
+    };
+  }
+
+  async listPages(limit = 20, offset = 0, status?: string) {
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const safeOffset = Math.max(offset, 0);
+    const values: (number | string)[] = [safeLimit, safeOffset];
+    const statusClause = status ? `WHERE p.status = $3` : '';
+    if (status) values.push(status);
+
+    const rows = (await this.dataSource.query(
+      `SELECT p.id, p.page_type, p.status, p.effective_at, p.published_at, p.updated_at,
+        t.title
+       FROM managed_pages p
+       LEFT JOIN LATERAL (
+         SELECT title FROM managed_page_translations
+         WHERE managed_page_id = p.id
+         ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, locale LIMIT 1
+       ) t ON true
+       ${statusClause}
+       ORDER BY p.updated_at DESC, p.id
+       LIMIT $1 OFFSET $2`,
+      values,
+    )) as unknown as ManagedPageListRow[];
+
+    const countRows = (await this.dataSource.query(
+      `SELECT COUNT(*)::text AS total FROM managed_pages p ${status ? 'WHERE p.status = $1' : ''}`,
+      status ? [status] : [],
+    )) as unknown as CountRow[];
+
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        pageType: row.page_type,
+        title: row.title,
+        status: row.status,
+        effectiveAt: row.effective_at ? new Date(row.effective_at).toISOString() : null,
+        publishedAt: row.published_at ? new Date(row.published_at).toISOString() : null,
+        updatedAt: new Date(row.updated_at).toISOString(),
+      })),
+      total: Number(countRows[0]?.total ?? 0),
+      limit: safeLimit,
+      offset: safeOffset,
+    };
+  }
 
   async createNews(actorUserId: string, input: CreateNewsDto) {
     const id = randomUUID();
