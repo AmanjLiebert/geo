@@ -1,0 +1,645 @@
+/*
+ * record-editor.module.css
+ *
+ * Neo-scientific styling for the geological draft record editor.
+ * Adheres to Geo-Kurdistan visual tokens, 44px touch targets,
+ * hard-shadow card grammar, and 320px responsiveness.
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.titleMark {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--limestone);
+  background: var(--iron);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  box-shadow: 2px 2px 0 var(--carbon);
+}
+
+.titleMark svg {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  font-family: var(--sans);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--carbon);
+  line-height: 1.1;
+}
+
+.subtitle {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 720px;
+}
+
+/* Breadcrumb / active classification summary */
+.classificationSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--limestone);
+  border: var(--neo-border);
+  border-radius: var(--neo-radius);
+  box-shadow: 2px 2px 0 var(--carbon);
+}
+
+.summaryBadges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.summaryLabel {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--carbon);
+  background: var(--fossil);
+  border: 1.5px solid var(--carbon);
+  border-radius: 3px;
+}
+
+.badgePrimary {
+  composes: badge;
+  background: var(--ochre);
+}
+
+.badgeAccent {
+  composes: badge;
+  color: var(--limestone);
+  background: var(--shale);
+}
+
+/* Step container cards */
+.stepCard {
+  padding: 24px;
+  background: var(--limestone);
+  border: var(--neo-border);
+  border-radius: var(--neo-radius);
+  box-shadow: 2px 2px 0 var(--carbon);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stepHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 2px solid var(--fossil);
+  padding-bottom: 14px;
+}
+
+.stepNumber {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--iron);
+}
+
+.stepTitle {
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--carbon);
+}
+
+.stepDescription {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* Radio / selector option grids */
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.optionCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--fossil);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  min-height: var(--touch-target);
+}
+
+.optionCard:hover {
+  background: var(--limestone);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--carbon);
+}
+
+.optionCard:focus-visible {
+  outline: 3px solid var(--iron);
+  outline-offset: 2px;
+}
+
+.optionCardSelected {
+  composes: optionCard;
+  background: var(--limestone);
+  border-color: var(--carbon);
+  box-shadow: 4px 4px 0 var(--iron);
+}
+
+.optionCardSelected:hover {
+  box-shadow: 4px 4px 0 var(--iron);
+}
+
+.optionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.optionTitle {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--carbon);
+}
+
+.optionDescription {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.optionHint {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--iron);
+}
+
+/* Direct vs Subcategory branch chooser */
+.branchChooser {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: rgba(235, 229, 218, 0.45);
+  border: 2px dashed var(--carbon);
+  border-radius: var(--neo-radius);
+}
+
+.branchTitle {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--carbon);
+}
+
+/* Scientific form fields */
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.formGridFull {
+  grid-column: 1 / -1;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--carbon);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.requiredTag {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--iron);
+}
+
+.unitBadge {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  color: var(--carbon);
+  background: var(--ochre);
+  border: 1px solid var(--carbon);
+  border-radius: 2px;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: 8px 12px;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--carbon);
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: 3px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: 3px solid var(--iron);
+  outline-offset: 2px;
+}
+
+.inputError,
+.textareaError,
+.selectError {
+  border-color: var(--iron);
+  background: #fff8f6;
+}
+
+/* Checkbox toggle */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--touch-target);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxInput {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--iron);
+  cursor: pointer;
+}
+
+.checkboxText {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--carbon);
+}
+
+/* Multi-choice options fieldset */
+.fieldset {
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  padding: 14px 16px;
+  background: var(--limestone);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legend {
+  padding: 0 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--carbon);
+}
+
+.multiChoiceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+/* Field help and error copy */
+.fieldHelp {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.fieldError {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--iron);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Notification banners */
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border: var(--neo-border);
+  border-radius: var(--neo-radius);
+  box-shadow: 2px 2px 0 var(--carbon);
+}
+
+.bannerSuccess {
+  composes: banner;
+  background: #eef7f2;
+  border-color: var(--shale);
+  color: var(--carbon);
+}
+
+.bannerError {
+  composes: banner;
+  background: #fdf3f0;
+  border-color: var(--iron);
+  color: var(--carbon);
+}
+
+.bannerIcon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 2px;
+}
+
+.bannerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.bannerTitle {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bannerText {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.errorList {
+  margin: 6px 0 0 16px;
+  padding: 0;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Actions bar */
+.actionsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding-top: 10px;
+  border-top: 2px solid var(--fossil);
+}
+
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+.button {
+  min-height: var(--touch-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--limestone);
+  background: var(--carbon);
+  border: 2px solid var(--carbon);
+  border-radius: 3px;
+  box-shadow: 2px 2px 0 var(--carbon);
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--iron);
+  border-color: var(--iron);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--carbon);
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--iron);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.buttonPrimary {
+  composes: button;
+  background: var(--iron);
+  border-color: var(--iron);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: var(--carbon);
+  border-color: var(--carbon);
+}
+
+.buttonSecondary {
+  composes: button;
+  color: var(--carbon);
+  background: var(--fossil);
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  color: var(--limestone);
+  background: var(--carbon);
+}
+
+.buttonGhost {
+  composes: button;
+  color: var(--carbon);
+  background: transparent;
+  border-color: var(--carbon);
+}
+
+.buttonGhost:hover:not(:disabled) {
+  color: var(--limestone);
+  background: var(--carbon);
+}
+
+/* Loading state */
+.loadingState {
+  padding: 32px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--limestone);
+  border: var(--neo-border);
+  border-radius: var(--neo-radius);
+}
+
+.loadingDot {
+  width: 8px;
+  height: 8px;
+  background: var(--iron);
+  border: 1px solid var(--carbon);
+  border-radius: 50%;
+  animation: pulseDot 1.2s ease-in-out infinite;
+}
+
+.loadingDot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loadingDot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulseDot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingDot { animation: none; opacity: 0.6; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 760px) {
+  .stepCard {
+    padding: 16px;
+  }
+
+  .optionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .classificationSummary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actionsBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actionGroup {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .button {
+    width: 100%;
+  }
+}

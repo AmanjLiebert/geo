@@ -57,6 +57,7 @@ describe("getDashboardNavigation", () => {
 
       const recordsItem = scientificSection!.items.find((i) => i.id === "records");
       expect(recordsItem?.href).toBe("/dashboard/records");
+      expect(recordsItem?.description).toBe("Geological records: view, create, and edit draft records.");
 
       const researchItem = scientificSection!.items.find((i) => i.id === "research");
       expect(researchItem?.href).toBe("/dashboard/research");

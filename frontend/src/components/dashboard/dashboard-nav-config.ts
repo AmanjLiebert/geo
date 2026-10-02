@@ -43,7 +43,7 @@ const SCIENTIFIC_SECTION: NavSection = {
       id: "records",
       label: "Records",
       href: "/dashboard/records",
-      description: "Geological records: create, translate, review, and publish.",
+      description: "Geological records: view, create, and edit draft records.",
     },
     {
       id: "research",

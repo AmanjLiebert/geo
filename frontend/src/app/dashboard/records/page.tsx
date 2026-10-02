@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "@/components/safe-link";
-import { FileText, RotateCcw, AlertTriangle, Lock, ShieldAlert, Clock } from "lucide-react";
+import {
+  FileText,
+  RotateCcw,
+  AlertTriangle,
+  Lock,
+  ShieldAlert,
+  Clock,
+  Plus,
+  Edit3,
+} from "lucide-react";
 import {
   listDashboardRecords,
   DashboardApiError,
@@ -108,15 +117,21 @@ export default function DashboardRecordsPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.titleRow}>
-          <div className={styles.titleMark} aria-hidden="true">
-            <FileText />
+        <div className={styles.headerMain}>
+          <div className={styles.titleRow}>
+            <div className={styles.titleMark} aria-hidden="true">
+              <FileText />
+            </div>
+            <h1 className={styles.title}>Scientific records</h1>
           </div>
-          <h1 className={styles.title}>Scientific records</h1>
+          <Link href="/dashboard/records/new" className={styles.buttonPrimary}>
+            <Plus size={16} aria-hidden="true" />
+            <span>Add record</span>
+          </Link>
         </div>
         <p className={styles.subtitle}>
-          Browse and review geological records across all stages of publication.
-          Classification and evidence determine readiness for public dissemination.
+          Browse, create, and edit geological draft records. Classification and scientific
+          attributes determine readiness for future publication.
         </p>
       </header>
 
@@ -240,11 +255,16 @@ export default function DashboardRecordsPage() {
           </h2>
           <p className={styles.emptyStateText}>
             {statusFilter === "all"
-              ? "No records yet. Records will appear here once they are added."
+              ? "No records yet. Add a record to begin documenting geological observations."
               : `No records currently match the "${formatRecordStatus(statusFilter)}" filter.`}
           </p>
-          {statusFilter !== "all" && (
-            <div className={styles.actionRow}>
+          <div className={styles.actionRow}>
+            {statusFilter === "all" ? (
+              <Link href="/dashboard/records/new" className={styles.buttonPrimary}>
+                <Plus size={16} aria-hidden="true" />
+                <span>Add record</span>
+              </Link>
+            ) : (
               <button
                 type="button"
                 onClick={() => handleFilterChange("all")}
@@ -252,8 +272,8 @@ export default function DashboardRecordsPage() {
               >
                 Clear status filter
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
@@ -269,7 +289,12 @@ export default function DashboardRecordsPage() {
               <li key={record.id} className={styles.card}>
                 <div className={styles.cardHeader}>
                   <h2 className={styles.itemTitle}>
-                    {record.title ? record.title : "Untitled record"}
+                    <Link
+                      href={`/dashboard/records/${record.id}`}
+                      className={styles.itemLink}
+                    >
+                      {record.title ? record.title : "Untitled record"}
+                    </Link>
                   </h2>
                   <div className={styles.badges}>
                     <span
@@ -294,6 +319,14 @@ export default function DashboardRecordsPage() {
                       {formatDate(record.updatedAt)}
                     </time>
                   </span>
+                  <Link
+                    href={`/dashboard/records/${record.id}`}
+                    className={styles.buttonGhost}
+                    style={{ marginLeft: "auto", minHeight: "36px", padding: "0 12px" }}
+                  >
+                    <Edit3 size={14} aria-hidden="true" />
+                    <span>Edit draft</span>
+                  </Link>
                 </div>
               </li>
             );

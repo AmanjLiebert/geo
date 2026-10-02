@@ -1,11 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildDashboardUrl,
+  createRecord,
   DashboardApiError,
+  getActiveTemplate,
+  getRecord,
+  listCategoryRecordTypes,
   listDashboardNews,
   listDashboardPages,
   listDashboardRecords,
   listDashboardResearch,
+  listStructureCategories,
+  updateRecord,
+  validateActiveTemplateResponse,
+  validateCategoryListResponse,
+  validateRecordDetailResponse,
+  validateRecordTypeListResponse,
 } from "./dashboard-api";
 
 describe("dashboard-api", () => {
@@ -620,6 +630,321 @@ describe("dashboard-api", () => {
       await expect(listDashboardPages()).rejects.toThrow(
         "The editorial server returned an unparseable response.",
       );
+    });
+  });
+
+  describe("listStructureCategories", () => {
+    it("fetches categories and validates runtime shape", async () => {
+      const mockCategories = {
+        items: [
+          {
+            id: "cat-1",
+            parentId: null,
+            stableKey: "fossils",
+            slug: "fossils",
+            recordsAllowed: false,
+            position: 1,
+            name: "Fossils",
+            description: "Fossil specimens",
+            locale: "en",
+            translationAvailable: true,
+          },
+          {
+            id: "cat-2",
+            parentId: "cat-1",
+            stableKey: "invertebrates",
+            slug: "invertebrates",
+            recordsAllowed: true,
+            position: 1,
+            name: "Invertebrate fossils",
+            description: null,
+            locale: "en",
+            translationAvailable: true,
+          },
+        ],
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockCategories),
+      } as Response);
+
+      const result = await listStructureCategories("en");
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].id).toBe("cat-1");
+      expect(result.items[0].parentId).toBeNull();
+      expect(result.items[0].recordsAllowed).toBe(false);
+      expect(result.items[1].parentId).toBe("cat-1");
+      expect(result.items[1].recordsAllowed).toBe(true);
+    });
+
+    it("rejects malformed categories response", () => {
+      expect(() => validateCategoryListResponse({ items: "not-an-array" })).toThrow(
+        DashboardApiError,
+      );
+      expect(() =>
+        validateCategoryListResponse({
+          items: [{ id: "cat-1", stableKey: "k" }],
+        }),
+      ).toThrow(DashboardApiError);
+    });
+  });
+
+  describe("listCategoryRecordTypes", () => {
+    it("fetches record types for a specified category", async () => {
+      const mockTypes = {
+        items: [
+          {
+            id: "rt-1",
+            stableKey: "specimen",
+            position: 1,
+            name: "Physical Specimen",
+            description: "Physical geological specimen",
+            activeTemplateVersionId: "tv-1",
+            locale: "en",
+            translationAvailable: true,
+          },
+        ],
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockTypes),
+      } as Response);
+
+      const result = await listCategoryRecordTypes("cat-1", "en");
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe("rt-1");
+      expect(result.items[0].name).toBe("Physical Specimen");
+      expect(result.items[0].activeTemplateVersionId).toBe("tv-1");
+    });
+
+    it("rejects malformed record types response", () => {
+      expect(() => validateRecordTypeListResponse({ items: [{ invalid: true }] })).toThrow(
+        DashboardApiError,
+      );
+    });
+  });
+
+  describe("getActiveTemplate", () => {
+    it("fetches active template with all field data types and definitions", async () => {
+      const mockTemplate = {
+        id: "tmpl-1",
+        stableKey: "specimen-template",
+        name: "Specimen Template",
+        version: { id: "tv-1", number: 1, status: "active" },
+        fields: [
+          {
+            id: "f-1",
+            stableKey: "formation",
+            dataType: "text",
+            required: true,
+            validation: { minLength: 2, maxLength: 100 },
+            unit: null,
+            searchable: true,
+            filterable: true,
+            position: 1,
+            status: "active",
+            label: "Formation",
+            helpText: "Stratigraphic unit",
+            locale: "en",
+            translationAvailable: true,
+          },
+          {
+            id: "f-2",
+            stableKey: "age_ma",
+            dataType: "decimal",
+            required: false,
+            validation: { minimum: 0 },
+            unit: "Ma",
+            searchable: false,
+            filterable: true,
+            position: 2,
+            status: "active",
+            label: "Age",
+            helpText: "Age in millions of years",
+            locale: "en",
+            translationAvailable: true,
+          },
+        ],
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockTemplate),
+      } as Response);
+
+      const result = await getActiveTemplate("cat-1", "rt-1", "en");
+      expect(result.id).toBe("tmpl-1");
+      expect(result.fields).toHaveLength(2);
+      expect(result.fields[0].dataType).toBe("text");
+      expect(result.fields[0].required).toBe(true);
+      expect(result.fields[1].unit).toBe("Ma");
+    });
+
+    it("rejects invalid field data type in template response", () => {
+      const invalidTemplate = {
+        id: "tmpl-1",
+        stableKey: "k",
+        name: "Name",
+        version: { id: "v1", number: 1, status: "active" },
+        fields: [
+          {
+            id: "f-1",
+            stableKey: "f",
+            dataType: "invalid_type",
+            required: false,
+            validation: {},
+            unit: null,
+            searchable: false,
+            filterable: false,
+            position: 1,
+            status: "active",
+            label: "Label",
+            helpText: null,
+            locale: "en",
+            translationAvailable: true,
+          },
+        ],
+      };
+      expect(() => validateActiveTemplateResponse(invalidTemplate)).toThrow(DashboardApiError);
+    });
+  });
+
+  describe("createRecord, getRecord, and updateRecord", () => {
+    const validRecordDetail = {
+      id: "rec-1",
+      stableId: "stab-1",
+      slug: "my-draft-specimen",
+      status: "draft",
+      categoryId: "cat-1",
+      recordTypeId: "rt-1",
+      templateVersionId: "tv-1",
+      attributes: { formation: "Bekhme", age_ma: 68.5 },
+      ownerUserId: "user-1",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      updatedAt: "2026-03-01T00:00:00.000Z",
+      translations: [],
+    };
+
+    it("validates record detail response and rejects malformed responses", () => {
+      const valid = validateRecordDetailResponse(validRecordDetail);
+      expect(valid.id).toBe("rec-1");
+      expect(valid.status).toBe("draft");
+
+      expect(() => validateRecordDetailResponse(null)).toThrow(DashboardApiError);
+      expect(() => validateRecordDetailResponse({ id: "rec-1" })).toThrow(DashboardApiError);
+    });
+
+    it("creates a draft record via POST /api/v1/records", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: () => Promise.resolve(validRecordDetail),
+      } as Response);
+
+      const result = await createRecord({
+        categoryId: "cat-1",
+        recordTypeId: "rt-1",
+        slug: "my-draft-specimen",
+        attributes: { formation: "Bekhme" },
+      });
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const [url, init] = vi.mocked(fetch).mock.calls[0];
+      expect(url).toContain("/api/v1/records");
+      expect(init?.method).toBe("POST");
+      expect(result.id).toBe("rec-1");
+      expect(result.status).toBe("draft");
+      expect(result.attributes.formation).toBe("Bekhme");
+    });
+
+    it("retrieves a draft record by ID via GET /api/v1/records/:id", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(validRecordDetail),
+      } as Response);
+
+      const result = await getRecord("rec-1");
+      expect(result.id).toBe("rec-1");
+      expect(result.slug).toBe("my-draft-specimen");
+      expect(result.attributes.age_ma).toBe(68.5);
+    });
+
+    it("updates a draft record via PATCH /api/v1/records/:id", async () => {
+      const updatedDetail = {
+        ...validRecordDetail,
+        attributes: { formation: "Shiranish", age_ma: 70 },
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(updatedDetail),
+      } as Response);
+
+      const result = await updateRecord("rec-1", {
+        attributes: { formation: "Shiranish", age_ma: 70 },
+      });
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const [url, init] = vi.mocked(fetch).mock.calls[0];
+      expect(url).toContain("/api/v1/records/rec-1");
+      expect(init?.method).toBe("PATCH");
+      expect(result.attributes.formation).toBe("Shiranish");
+    });
+
+    it("parses 400 validation error with field-level issues", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: () =>
+          Promise.resolve({
+            message: "Record attributes are invalid.",
+            issues: [
+              { field: "formation", code: "minLength", message: "Use at least 2 characters." },
+            ],
+          }),
+      } as Response);
+
+      try {
+        await createRecord({ attributes: { formation: "A" } });
+        expect.fail("Should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(DashboardApiError);
+        const apiErr = err as DashboardApiError;
+        expect(apiErr.kind).toBe("validation");
+        expect(apiErr.status).toBe(400);
+        expect(apiErr.message).toBe("Record attributes are invalid.");
+        expect(apiErr.issues).toHaveLength(1);
+        expect(apiErr.issues[0].field).toBe("formation");
+        expect(apiErr.issues[0].message).toBe("Use at least 2 characters.");
+      }
+    });
+
+    it("parses 400 class-validator array messages", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: () =>
+          Promise.resolve({
+            message: ["slug must match /^[a-z0-9]+(?:-[a-z0-9]+)*$/"],
+          }),
+      } as Response);
+
+      try {
+        await createRecord({ slug: "Invalid Slug" });
+        expect.fail("Should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(DashboardApiError);
+        const apiErr = err as DashboardApiError;
+        expect(apiErr.kind).toBe("validation");
+        expect(apiErr.message).toContain("slug must match");
+      }
     });
   });
 });

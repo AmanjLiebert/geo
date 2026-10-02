@@ -16,7 +16,15 @@
 .header {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+.headerMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .titleRow {
@@ -382,6 +390,32 @@
   color: var(--limestone);
   background: var(--carbon);
   border-color: var(--carbon);
+}
+
+.buttonPrimary {
+  composes: button;
+  background: var(--iron);
+  border-color: var(--iron);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: var(--carbon);
+  border-color: var(--carbon);
+}
+
+.itemLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.itemLink:hover {
+  color: var(--iron);
+  text-decoration: underline;
+}
+
+.itemLink:focus-visible {
+  outline: 3px solid var(--iron);
+  outline-offset: 2px;
 }
 
 /* Loading skeleton */
