@@ -12,9 +12,7 @@ If documents conflict, `PLAN.md` wins for delivery scope and `MAP.md` wins for s
 
 ## Current phase
 
-The visitor showcase remains the frontend baseline. Phase 2 — identity, three-role authorization, and visitor accounts — is the active code phase. The Phase 1 Docker/PostgreSQL/queue/backup/restore rehearsal is still required before production sign-off. Do not begin Phase 3 content work until both the Phase 1 operational gate and Phase 2 identity gate pass.
-
-Current work must follow the active phase in `PLAN.md`. Do not jump ahead to AI, payments, or advanced infrastructure before the earlier phase completion gates pass.
+The visitor showcase remains the frontend baseline. Phase 5 — the protected administration dashboard — is the active implementation phase, building on the completed Phase 1–4 foundational, identity, scientific-content, and publishing/media rehearsals. Current work must follow the active phase in `PLAN.md`. Do not jump ahead to AI, payments, or advanced infrastructure before the earlier phase completion gates pass.
 
 ## Product rules
 
