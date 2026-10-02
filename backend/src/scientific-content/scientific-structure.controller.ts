@@ -2,6 +2,7 @@ import { Body, Controller, Get, Header, Param, ParseUUIDPipe, Post, Query } from
 import { Permission } from '../identity/access-control';
 import { CurrentAuth, RequirePermissions } from '../identity/access.decorators';
 import { AuthContext } from '../identity/auth-context';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CreateStructureRequestDto } from './dto/create-structure-request.dto';
 import { ActiveTemplateQueryDto, LocaleQueryDto } from './dto/structure-query.dto';
 import { TemplateMigrationPreviewDto } from './dto/template-migration-preview.dto';
@@ -49,8 +50,8 @@ export class ScientificStructureController {
 
   @Get('requests')
   @Header('Cache-Control', 'private, no-store')
-  listStructureRequests(@Query('limit') limit?: string, @Query('offset') offset?: string) {
-    return this.structure.listStructureRequests(parseInteger(limit, 50), parseInteger(offset, 0));
+  listStructureRequests(@Query() query: PaginationQueryDto) {
+    return this.structure.listStructureRequests(query.limit ?? 50, query.offset ?? 0);
   }
 
   @Post('requests')
@@ -60,10 +61,4 @@ export class ScientificStructureController {
   ) {
     return this.structure.createStructureRequest(auth.user.id, input);
   }
-}
-
-function parseInteger(value: string | undefined, fallback: number): number {
-  if (!value) return fallback;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : fallback;
 }

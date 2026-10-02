@@ -28,11 +28,7 @@ export class RecordsController {
   @Get()
   @Header('Cache-Control', 'private, no-store')
   list(@Query() query: RecordListQueryDto) {
-    return this.records.list(
-      parseInteger(query.limit, 50),
-      parseInteger(query.offset, 0),
-      query.status,
-    );
+    return this.records.list(query.limit ?? 50, query.offset ?? 0, query.status);
   }
 
   @Post()
@@ -109,10 +105,4 @@ export class RecordsController {
   revisions(@Param('id', ParseUUIDPipe) recordId: string) {
     return this.records.revisions(recordId);
   }
-}
-
-function parseInteger(value: string | undefined, fallback: number): number {
-  if (!value) return fallback;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : fallback;
 }

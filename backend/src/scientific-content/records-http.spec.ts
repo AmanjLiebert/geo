@@ -13,6 +13,8 @@ import { AuthContext } from '../identity/auth-context';
 import { hashToken } from '../identity/identity.utils';
 import { SecurityAuditService } from '../identity/security-audit.service';
 import { SessionService } from '../identity/session.service';
+import { ResearchController } from '../research/research.controller';
+import { ResearchService } from '../research/research.service';
 import { RecordsController } from './records.controller';
 import { RecordsService } from './records.service';
 import { ScientificStructureController } from './scientific-structure.controller';
@@ -34,11 +36,14 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     update: vi.fn(),
   };
 
+  const mockResearchService = { list: vi.fn() };
+
   const mockScientificStructureService = {
     listCategories: vi.fn(),
     listRecordTypes: vi.fn(),
     getActiveTemplate: vi.fn(),
     getTemplateVersion: vi.fn(),
+    listStructureRequests: vi.fn(),
   };
 
   const mockSecurityAuditService = {
@@ -100,9 +105,10 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      controllers: [RecordsController, ScientificStructureController],
+      controllers: [RecordsController, ScientificStructureController, ResearchController],
       providers: [
         { provide: RecordsService, useValue: mockRecordsService },
+        { provide: ResearchService, useValue: mockResearchService },
         { provide: ScientificStructureService, useValue: mockScientificStructureService },
         { provide: SessionService, useValue: mockSessionService },
         { provide: SecurityAuditService, useValue: mockSecurityAuditService },
@@ -133,6 +139,10 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
 
   beforeEach(() => {
     vi.clearAllMocks();
+    const emptyList = { items: [], total: 0, limit: 50, offset: 0 };
+    mockRecordsService.list.mockResolvedValue(emptyList);
+    mockResearchService.list.mockResolvedValue(emptyList);
+    mockScientificStructureService.listStructureRequests.mockResolvedValue(emptyList);
     mockRecordsService.get.mockResolvedValue({
       id: validRecordId,
       stableId: 'stable-1',
@@ -211,6 +221,76 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       name: 'Fossil Occurrence',
       version: { id: 'tv-1', number: 1, status: 'active' },
       fields: [],
+    });
+  });
+
+  describe('List query boundaries', () => {
+    const paths = ['/api/v1/records', '/api/v1/research', '/api/v1/scientific-structure/requests'];
+
+    it.each(paths)('rejects malformed pagination on %s', async (path) => {
+      for (const query of [
+        'limit=20abc',
+        'limit=1.5',
+        'limit=1e2',
+        'limit=0',
+        'limit=101',
+        'offset=-1',
+        'offset=100001',
+        'offset=20abc',
+        'limit=1&limit=2',
+      ]) {
+        const response = await app.inject({
+          method: 'GET',
+          url: `${path}?${query}`,
+          cookies: { gk_session: 'teacher-session' },
+        });
+        expect(response.statusCode, `${path}?${query}`).toBe(400);
+      }
+    });
+
+    it.each([
+      ['/api/v1/records', mockRecordsService.list],
+      ['/api/v1/research', mockResearchService.list],
+      [
+        '/api/v1/scientific-structure/requests',
+        mockScientificStructureService.listStructureRequests,
+      ],
+    ])('passes validated pagination to %s', async (path, list) => {
+      const response = await app.inject({
+        method: 'GET',
+        url: `${path}?limit=25&offset=10`,
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(list).toHaveBeenCalledWith(
+        25,
+        10,
+        ...(path === '/api/v1/scientific-structure/requests' ? [] : [undefined]),
+      );
+    });
+
+    it.each(paths)('denies visitor list access on %s', async (path) => {
+      const response = await app.inject({
+        method: 'GET',
+        url: path,
+        cookies: { gk_session: 'visitor-session' },
+      });
+      expect(response.statusCode).toBe(403);
+    });
+
+    it.each(paths)('requires a session on %s', async (path) => {
+      const response = await app.inject({ method: 'GET', url: path });
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('uses defaults and retains the record status filter', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/records?status=draft',
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, 'draft');
     });
   });
 
