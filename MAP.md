@@ -1,5 +1,9 @@
 # Geo-Kurdistan System Map
 
+## Approved category-management change
+
+Teachers and admins can manage category/subcategory drafts through protected NestJS endpoints. PostgreSQL retains stable category identity, unpublished state, private image association, and automatic history. Existing seeded structure is preserved. New categories receive the shared General geological record pairing; custom scientific templates remain a separate controlled concern. Public discovery later reads only published, active structure and records from NestJS, never dashboard data or mock files. The ordered gates are in `PLAN.md`; the earlier migration-only dashboard prohibition below is superseded for categories/subcategories, not for arbitrary template editing.
+
 This document defines system boundaries, data ownership, permissions, and workflows. Use `PLAN.md` for delivery order. The existing frontend and its visual design remain the baseline.
 
 ## 1. System map
@@ -211,6 +215,8 @@ Record
 
 The record type is first-class data. It must not be stored only as an unrestricted string or confused with a subcategory.
 
+The starter structure is seeded through reviewed migrations while the geological collection may remain empty. Teachers and admins create category/subcategory drafts through NestJS; later gates add editing and archive/restore. Stable keys and used template versions retain their meaning. Custom type/template changes remain controlled maintenance. Archived choices disappear from new-record selection but remain resolvable for historical records. A correction must not silently rewrite an existing record's classification. Category moves reject cycles and archived parents; active category/type pairings require a matching active template version.
+
 ## 5. Identity and permission map
 
 ```text
@@ -379,6 +385,8 @@ Scientific entity — one stable identity
 ├── Kurdish translation      draft/reviewed/published
 └── Arabic translation       draft/reviewed/published
 ```
+
+The current dashboard authors English content only. Other locale rows and controls remain future capabilities; scientific identity, evidence, relations, and geometry are already shared so additional languages will not duplicate records.
 
 - Locale values use BCP 47 language tags and are configured rather than hardcoded.
 - Each translation records source language, translator, reviewer, and status.

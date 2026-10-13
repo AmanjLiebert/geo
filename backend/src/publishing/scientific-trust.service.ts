@@ -142,6 +142,17 @@ export class ScientificTrustService {
             actorUserId,
           ],
         );
+        await this.touchAndAudit(
+          manager,
+          actorUserId,
+          recordId,
+          'scientific-record.evidence-added',
+          {
+            evidenceId: id,
+            referenceId: input.referenceId,
+            fieldKey: input.fieldKey ?? null,
+          },
+        );
       });
     } catch (error) {
       if (isUniqueViolation(error))
@@ -198,6 +209,10 @@ export class ScientificTrustService {
           actorUserId,
         ],
       );
+      await this.touchAndAudit(manager, actorUserId, recordId, 'scientific-record.location-added', {
+        locationId: id,
+        visibility: input.visibility,
+      });
     });
     return { id, recordId, visibility: input.visibility };
   }
@@ -237,6 +252,18 @@ export class ScientificTrustService {
             actorUserId,
           ],
         );
+        await this.touchAndAudit(
+          manager,
+          actorUserId,
+          recordId,
+          'scientific-record.relationship-added',
+          {
+            relationshipId: id,
+            targetType: input.targetType,
+            targetId: input.targetId,
+            relationshipType: input.relationshipType,
+          },
+        );
       });
     } catch (error) {
       if (isUniqueViolation(error))
@@ -249,10 +276,20 @@ export class ScientificTrustService {
   async listRelationships(recordId: string) {
     await this.assertRecordExists(this.dataSource, recordId);
     const rows = (await this.dataSource.query(
-      `SELECT id, target_type AS "targetType", target_id AS "targetId",
-         relationship_type AS "relationshipType", notes, created_at AS "createdAt"
-       FROM content_relationships
-       WHERE source_type = 'record' AND source_id = $1 ORDER BY created_at, id`,
+      `SELECT rel.id, rel.target_type AS "targetType", rel.target_id AS "targetId",
+         rel.relationship_type AS "relationshipType", rel.notes,
+         rel.created_at AS "createdAt", COALESCE(record_title.title, research_title.title) AS "targetTitle"
+       FROM content_relationships rel
+       LEFT JOIN LATERAL (
+         SELECT title FROM record_translations WHERE record_id = rel.target_id
+         ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, updated_at DESC LIMIT 1
+       ) record_title ON rel.target_type = 'record'
+       LEFT JOIN LATERAL (
+         SELECT title FROM research_translations WHERE research_publication_id = rel.target_id
+         ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, updated_at DESC LIMIT 1
+       ) research_title ON rel.target_type = 'research'
+       WHERE rel.source_type = 'record' AND rel.source_id = $1
+       ORDER BY rel.created_at, rel.id`,
       [recordId],
     )) as unknown as Record<string, unknown>[];
     return { items: rows };
@@ -317,6 +354,21 @@ export class ScientificTrustService {
         code: 'required',
         message: 'Complete classification is required.',
       });
+    }
+    if (record.category_id) {
+      const categoryRows = (await this.dataSource.query(
+        `SELECT 1 FROM categories c LEFT JOIN categories p ON p.id = c.parent_id
+         WHERE c.id = $1 AND c.status = 'active' AND c.publication_status = 'published'
+           AND (p.id IS NULL OR (p.status = 'active' AND p.publication_status = 'published'))`,
+        [record.category_id],
+      )) as unknown as Array<Record<string, unknown>>;
+      if (!categoryRows[0]) {
+        issues.push({
+          field: 'category',
+          code: 'unpublished',
+          message: 'Publish the category before publishing this record.',
+        });
+      }
     }
     if (reviewerUserId && reviewerUserId === record.owner_user_id) {
       issues.push({
@@ -405,6 +457,23 @@ export class ScientificTrustService {
     if (!rows[0]) throw new NotFoundException('Scientific record not found.');
   }
 
+  private async touchAndAudit(
+    manager: EntityManager,
+    actorUserId: string,
+    recordId: string,
+    action: string,
+    metadata: Record<string, unknown>,
+  ) {
+    await manager.query(`UPDATE scientific_records SET updated_at = now() WHERE id = $1`, [
+      recordId,
+    ]);
+    await manager.query(
+      `INSERT INTO content_audit_events (actor_user_id, action, target_type, target_id, metadata)
+       VALUES ($1, $2, 'scientific-record', $3, $4::jsonb)`,
+      [actorUserId, action, recordId, JSON.stringify(metadata)],
+    );
+  }
+
   private async assertRecordEditable(executor: EntityManager, id: string) {
     const rows = (await executor.query(
       `SELECT status, template_version_id FROM scientific_records WHERE id = $1 FOR UPDATE`,
@@ -434,6 +503,12 @@ export class ScientificTrustService {
       (input.publicLatitude === undefined) === (input.publicLongitude === undefined);
     if (!publicCoordinatesTogether)
       throw new BadRequestException('Public latitude and longitude must be provided together.');
+    if (
+      ['restricted', 'embargoed'].includes(input.visibility) &&
+      input.publicLatitude !== undefined
+    ) {
+      throw new BadRequestException('Restricted locations cannot have public coordinates.');
+    }
     if (
       ['public', 'approximate'].includes(input.visibility) &&
       input.publicLatitude === undefined

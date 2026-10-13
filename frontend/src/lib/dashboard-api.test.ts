@@ -37,7 +37,9 @@ describe("dashboard-api", () => {
         empty: "",
         notDefined: undefined,
       });
-      expect(url).toContain("/api/v1/records?limit=20&offset=0&status=published");
+      expect(url).toContain(
+        "/api/v1/records?limit=20&offset=0&status=published",
+      );
       expect(url).not.toContain("empty");
       expect(url).not.toContain("notDefined");
     });
@@ -71,11 +73,17 @@ describe("dashboard-api", () => {
         json: () => Promise.resolve(mockData),
       } as Response);
 
-      const result = await listDashboardRecords({ limit: 20, offset: 0, status: "published" });
+      const result = await listDashboardRecords({
+        limit: 20,
+        offset: 0,
+        status: "published",
+      });
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [url, init] = vi.mocked(fetch).mock.calls[0];
-      expect(url).toContain("/api/v1/records?limit=20&offset=0&status=published");
+      expect(url).toContain(
+        "/api/v1/records?limit=20&offset=0&status=published",
+      );
       expect(init?.credentials).toBe("include");
       expect(init?.cache).toBe("no-store");
       expect(result).toEqual(mockData);
@@ -105,7 +113,8 @@ describe("dashboard-api", () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: false,
         status: 403,
-        json: () => Promise.resolve({ internalRole: "visitor", needed: "teacher" }),
+        json: () =>
+          Promise.resolve({ internalRole: "visitor", needed: "teacher" }),
       } as Response);
 
       try {
@@ -154,7 +163,10 @@ describe("dashboard-api", () => {
     });
 
     it("handles AbortSignal cancellation", async () => {
-      const abortError = new DOMException("The operation was aborted.", "AbortError");
+      const abortError = new DOMException(
+        "The operation was aborted.",
+        "AbortError",
+      );
       vi.mocked(fetch).mockRejectedValueOnce(abortError);
 
       try {
@@ -183,7 +195,8 @@ describe("dashboard-api", () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ total: -1, limit: 20, offset: 0, items: [] }),
+        json: () =>
+          Promise.resolve({ total: -1, limit: 20, offset: 0, items: [] }),
       } as Response);
 
       await expect(listDashboardRecords()).rejects.toThrow(
@@ -293,7 +306,8 @@ describe("dashboard-api", () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ items: [], total: 0, limit: 20, offset: 0 }),
+        json: () =>
+          Promise.resolve({ items: [], total: 0, limit: 20, offset: 0 }),
       } as Response);
 
       const result = await listDashboardResearch();
@@ -398,11 +412,17 @@ describe("dashboard-api", () => {
         json: () => Promise.resolve(mockData),
       } as Response);
 
-      const result = await listDashboardNews({ limit: 20, offset: 0, status: "published" });
+      const result = await listDashboardNews({
+        limit: 20,
+        offset: 0,
+        status: "published",
+      });
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [url, init] = vi.mocked(fetch).mock.calls[0];
-      expect(url).toContain("/api/v1/editorial/news?limit=20&offset=0&status=published");
+      expect(url).toContain(
+        "/api/v1/editorial/news?limit=20&offset=0&status=published",
+      );
       expect(init?.credentials).toBe("include");
       expect(init?.cache).toBe("no-store");
       expect(result.items[0]).toEqual({
@@ -420,7 +440,8 @@ describe("dashboard-api", () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ items: [], total: 0, limit: 20, offset: 0 }),
+        json: () =>
+          Promise.resolve({ items: [], total: 0, limit: 20, offset: 0 }),
       } as Response);
 
       const result = await listDashboardNews();
@@ -432,7 +453,8 @@ describe("dashboard-api", () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: false,
         status: 403,
-        json: () => Promise.resolve({ error: "Missing MANAGE_NEWS permission" }),
+        json: () =>
+          Promise.resolve({ error: "Missing MANAGE_NEWS permission" }),
       } as Response);
 
       try {
@@ -527,11 +549,17 @@ describe("dashboard-api", () => {
         json: () => Promise.resolve(mockData),
       } as Response);
 
-      const result = await listDashboardPages({ limit: 10, offset: 0, status: "published" });
+      const result = await listDashboardPages({
+        limit: 10,
+        offset: 0,
+        status: "published",
+      });
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [url, init] = vi.mocked(fetch).mock.calls[0];
-      expect(url).toContain("/api/v1/editorial/pages?limit=10&offset=0&status=published");
+      expect(url).toContain(
+        "/api/v1/editorial/pages?limit=10&offset=0&status=published",
+      );
       expect(init?.credentials).toBe("include");
       expect(init?.cache).toBe("no-store");
       expect(result.items[0]).toEqual({
@@ -550,7 +578,8 @@ describe("dashboard-api", () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ items: [], total: 0, limit: 10, offset: 0 }),
+        json: () =>
+          Promise.resolve({ items: [], total: 0, limit: 10, offset: 0 }),
       } as Response);
 
       const result = await listDashboardPages();
@@ -562,7 +591,8 @@ describe("dashboard-api", () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: false,
         status: 403,
-        json: () => Promise.resolve({ error: "Missing MANAGE_SITE_CONTENT permission" }),
+        json: () =>
+          Promise.resolve({ error: "Missing MANAGE_SITE_CONTENT permission" }),
       } as Response);
 
       try {
@@ -681,9 +711,9 @@ describe("dashboard-api", () => {
     });
 
     it("rejects malformed categories response", () => {
-      expect(() => validateCategoryListResponse({ items: "not-an-array" })).toThrow(
-        DashboardApiError,
-      );
+      expect(() =>
+        validateCategoryListResponse({ items: "not-an-array" }),
+      ).toThrow(DashboardApiError);
       expect(() =>
         validateCategoryListResponse({
           items: [{ id: "cat-1", stableKey: "k" }],
@@ -723,9 +753,9 @@ describe("dashboard-api", () => {
     });
 
     it("rejects malformed record types response", () => {
-      expect(() => validateRecordTypeListResponse({ items: [{ invalid: true }] })).toThrow(
-        DashboardApiError,
-      );
+      expect(() =>
+        validateRecordTypeListResponse({ items: [{ invalid: true }] }),
+      ).toThrow(DashboardApiError);
     });
   });
 
@@ -811,7 +841,9 @@ describe("dashboard-api", () => {
           },
         ],
       };
-      expect(() => validateActiveTemplateResponse(invalidTemplate)).toThrow(DashboardApiError);
+      expect(() => validateActiveTemplateResponse(invalidTemplate)).toThrow(
+        DashboardApiError,
+      );
     });
   });
 
@@ -836,8 +868,12 @@ describe("dashboard-api", () => {
       expect(valid.id).toBe("rec-1");
       expect(valid.status).toBe("draft");
 
-      expect(() => validateRecordDetailResponse(null)).toThrow(DashboardApiError);
-      expect(() => validateRecordDetailResponse({ id: "rec-1" })).toThrow(DashboardApiError);
+      expect(() => validateRecordDetailResponse(null)).toThrow(
+        DashboardApiError,
+      );
+      expect(() => validateRecordDetailResponse({ id: "rec-1" })).toThrow(
+        DashboardApiError,
+      );
     });
 
     it("creates a draft record via POST /api/v1/records", async () => {
@@ -907,7 +943,11 @@ describe("dashboard-api", () => {
           Promise.resolve({
             message: "Record attributes are invalid.",
             issues: [
-              { field: "formation", code: "minLength", message: "Use at least 2 characters." },
+              {
+                field: "formation",
+                code: "minLength",
+                message: "Use at least 2 characters.",
+              },
             ],
           }),
       } as Response);
@@ -946,6 +986,42 @@ describe("dashboard-api", () => {
         expect(apiErr.kind).toBe("validation");
         expect(apiErr.message).toContain("slug must match");
       }
+    });
+
+    it("explains a duplicate record identifier without exposing server details", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            detail:
+              "That identifier is already in use. Choose another or leave it blank.",
+          }),
+      } as Response);
+
+      await expect(
+        createRecord({ slug: "existing-record" }),
+      ).rejects.toMatchObject({
+        status: 409,
+        kind: "conflict",
+        message:
+          "That identifier is already in use. Choose another or leave it blank.",
+      });
+    });
+
+    it("does not display arbitrary conflict response details", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () => Promise.resolve({ detail: "private database detail" }),
+      } as Response);
+
+      const rejected = createRecord({ slug: "existing-record" });
+      await expect(rejected).rejects.toMatchObject({
+        status: 409,
+        kind: "conflict",
+      });
+      await expect(rejected).rejects.not.toThrow("private database detail");
     });
 
     it("loads pinned template version via getTemplateVersion", async () => {
@@ -1037,7 +1113,8 @@ describe("dashboard-api", () => {
           ok: true,
           status: 200,
           headers: new Headers({ "content-type": "application/json" }),
-          json: () => Promise.resolve({ ...sampleRecord, slug: "existing-slug" }),
+          json: () =>
+            Promise.resolve({ ...sampleRecord, slug: "existing-slug" }),
         } as Response);
       });
 

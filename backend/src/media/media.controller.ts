@@ -11,21 +11,25 @@ export class MediaController {
   constructor(private readonly media: MediaService) {}
 
   @Post('uploads')
+  @Header('Cache-Control', 'private, no-store')
   initiate(@CurrentAuth() auth: AuthContext, @Body() input: CreateMediaUploadDto) {
     return this.media.initiate(auth.user.id, input);
   }
 
   @Post(':id/confirm')
+  @Header('Cache-Control', 'private, no-store')
   confirm(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) id: string) {
     return this.media.confirm(auth.user.id, id);
   }
 
   @Post(':id/view')
+  @Header('Cache-Control', 'private, no-store')
   viewer(@Param('id', ParseUUIDPipe) id: string) {
     return this.media.viewerUrl(id);
   }
 
   @Post('records/:recordId/attachments')
+  @Header('Cache-Control', 'private, no-store')
   attachToRecord(
     @CurrentAuth() auth: AuthContext,
     @Param('recordId', ParseUUIDPipe) recordId: string,

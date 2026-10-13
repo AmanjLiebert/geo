@@ -4,6 +4,7 @@ import { CurrentAuth, RequirePermissions } from '../identity/access.decorators';
 import { AuthContext } from '../identity/auth-context';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CreateStructureRequestDto } from './dto/create-structure-request.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
 import { ActiveTemplateQueryDto, LocaleQueryDto } from './dto/structure-query.dto';
 import { TemplateMigrationPreviewDto } from './dto/template-migration-preview.dto';
 import { ScientificStructureService } from './scientific-structure.service';
@@ -17,6 +18,12 @@ export class ScientificStructureController {
   @Header('Cache-Control', 'private, no-store')
   listCategories(@Query() query: LocaleQueryDto) {
     return this.structure.listCategories(query.locale);
+  }
+
+  @Post('categories')
+  @Header('Cache-Control', 'private, no-store')
+  createCategory(@CurrentAuth() auth: AuthContext, @Body() input: CreateCategoryDto) {
+    return this.structure.createCategory(auth.user.id, input);
   }
 
   @Get('categories/:categoryId/record-types')

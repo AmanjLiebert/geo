@@ -175,7 +175,10 @@
   border-radius: var(--neo-radius);
   cursor: pointer;
   text-align: left;
-  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
   min-height: var(--touch-target);
 }
 
@@ -321,7 +324,9 @@
   background: var(--limestone);
   border: 2px solid var(--carbon);
   border-radius: 3px;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .textarea {
@@ -511,7 +516,10 @@
   box-shadow: 2px 2px 0 var(--carbon);
   cursor: pointer;
   text-decoration: none;
-  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .button:hover:not(:disabled) {
@@ -602,12 +610,23 @@
 }
 
 @keyframes pulseDot {
-  0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
-  40% { opacity: 1; transform: scale(1); }
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loadingDot { animation: none; opacity: 0.6; }
+  .loadingDot {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 /* Responsive adjustments */
@@ -642,4 +661,104 @@
   .button {
     width: 100%;
   }
+}
+
+.detailList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detailListItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-width: 0;
+  padding: 12px;
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  overflow-wrap: anywhere;
+}
+
+.detailListItem small {
+  color: var(--ink-soft);
+}
+
+.viewerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: rgba(20, 26, 23, 0.8);
+}
+
+.viewerPanel {
+  width: min(960px, 100%);
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--limestone);
+  border: var(--neo-border);
+  border-radius: var(--neo-radius);
+}
+
+.viewerHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  overflow-wrap: anywhere;
+}
+
+.viewerPages {
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.viewerImage {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.detailDisclosure {
+  border-top: 2px solid var(--fossil);
+  padding-top: 14px;
+}
+
+.detailDisclosure summary {
+  min-height: var(--touch-target);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--carbon);
+  gap: 8px;
+}
+
+.detailDisclosure summary::before {
+  content: "+";
+  font-size: 18px;
+}
+.detailDisclosure[open] summary::before {
+  content: "−";
+}
+
+.detailDisclosure[open] .formSection {
+  margin-top: 16px;
 }

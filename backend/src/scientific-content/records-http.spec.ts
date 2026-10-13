@@ -38,6 +38,7 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     create: vi.fn(),
     get: vi.fn(),
     update: vi.fn(),
+    upsertTranslation: vi.fn(),
   };
 
   const mockResearchService = { list: vi.fn() };
@@ -49,11 +50,19 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     listRelationships: vi.fn(),
     addEvidence: vi.fn(),
     addLocation: vi.fn(),
+    addRelationship: vi.fn(),
+    createReference: vi.fn(),
   };
-  const mockMediaService = { listRecordAttachments: vi.fn(), attachToRecord: vi.fn() };
+  const mockMediaService = {
+    listRecordAttachments: vi.fn(),
+    attachToRecord: vi.fn(),
+    initiate: vi.fn(),
+    confirm: vi.fn(),
+  };
 
   const mockScientificStructureService = {
     listCategories: vi.fn(),
+    createCategory: vi.fn(),
     listRecordTypes: vi.fn(),
     getActiveTemplate: vi.fn(),
     getTemplateVersion: vi.fn(),
@@ -165,6 +174,10 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     mockRecordsService.list.mockResolvedValue(emptyList);
     mockResearchService.list.mockResolvedValue(emptyList);
     mockScientificStructureService.listStructureRequests.mockResolvedValue(emptyList);
+    mockScientificStructureService.createCategory.mockResolvedValue({
+      id: validCategoryId,
+      publicationStatus: 'draft',
+    });
     mockTrustService.listEvidence.mockResolvedValue({ items: [] });
     mockTrustService.listReferences.mockResolvedValue({
       items: [],
@@ -179,6 +192,11 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     mockTrustService.listLocations.mockResolvedValue({ items: [] });
     mockTrustService.listRelationships.mockResolvedValue({ items: [] });
     mockMediaService.listRecordAttachments.mockResolvedValue({ items: [] });
+    mockRecordsService.upsertTranslation.mockResolvedValue({ id: validRecordId });
+    mockTrustService.addRelationship.mockResolvedValue({ id: validRecordId });
+    mockTrustService.createReference.mockResolvedValue({ id: validRecordId });
+    mockTrustService.addLocation.mockResolvedValue({ id: validRecordId });
+    mockMediaService.initiate.mockResolvedValue({ mediaAssetId: validRecordId });
     mockRecordsService.get.mockResolvedValue({
       id: validRecordId,
       stableId: 'stable-1',
@@ -400,6 +418,100 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       });
       expect(response.statusCode).toBe(400);
       expect(mockTrustService.addLocation).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Saved-record detail writes', () => {
+    const routes = [
+      {
+        method: 'PUT' as const,
+        url: `/api/v1/records/${validRecordId}/translations/en`,
+        payload: { title: 'Fossil occurrence', summary: '', description: '' },
+      },
+      {
+        method: 'POST' as const,
+        url: `/api/v1/records/${validRecordId}/relationships`,
+        payload: {
+          targetType: 'record',
+          targetId: validCategoryId,
+          relationshipType: 'related_to',
+        },
+      },
+      {
+        method: 'POST' as const,
+        url: '/api/v1/references',
+        payload: {
+          sourceType: 'journal',
+          authors: [{ name: 'Researcher' }],
+          title: 'Study',
+          identifier: 'doi:example',
+        },
+      },
+      {
+        method: 'POST' as const,
+        url: `/api/v1/records/${validRecordId}/locations`,
+        payload: {
+          exactLatitude: 36,
+          exactLongitude: 44,
+          visibility: 'restricted',
+          sensitivityReason: 'Protected site',
+        },
+      },
+      {
+        method: 'POST' as const,
+        url: '/api/v1/media/uploads',
+        payload: {
+          filename: 'field.png',
+          contentType: 'image/png',
+          byteSize: 100,
+          rightsStatement: 'Author owned',
+        },
+      },
+    ];
+
+    it.each(routes)('enforces role and CSRF checks on $url', async (route) => {
+      const signedOut = await app.inject({
+        method: route.method,
+        url: route.url,
+        payload: route.payload,
+      });
+      const visitor = await app.inject({
+        method: route.method,
+        url: route.url,
+        payload: route.payload,
+        cookies: { gk_session: 'visitor-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+      });
+      const missingCsrf = await app.inject({
+        method: route.method,
+        url: route.url,
+        payload: route.payload,
+        cookies: { gk_session: 'teacher-session' },
+      });
+      const teacher = await app.inject({
+        method: route.method,
+        url: route.url,
+        payload: route.payload,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+      });
+      const admin = await app.inject({
+        method: route.method,
+        url: route.url,
+        payload: route.payload,
+        cookies: { gk_session: 'admin-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+      });
+      expect(signedOut.statusCode).toBe(401);
+      expect(visitor.statusCode).toBe(403);
+      expect(missingCsrf.statusCode).toBe(403);
+      expect(teacher.statusCode).toBeGreaterThanOrEqual(200);
+      expect(teacher.statusCode).toBeLessThan(300);
+      expect(admin.statusCode).toBeGreaterThanOrEqual(200);
+      expect(admin.statusCode).toBeLessThan(300);
+      if (route.url === '/api/v1/media/uploads') {
+        expect(teacher.headers['cache-control']).toBe('private, no-store');
+      }
     });
   });
 
@@ -805,6 +917,74 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         url: `/api/v1/scientific-structure/template-versions/${validRecordId}`,
       });
       expect(response.statusCode).toBe(401);
+    });
+  });
+  describe('category creation boundary', () => {
+    const payload = {
+      title: 'New category',
+      summary: 'A geological subject',
+      description: 'A collection of geological observations.',
+    };
+
+    it.each(['teacher-session', 'admin-session'])(
+      'allows %s to create an unpublished category',
+      async (session) => {
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/v1/scientific-structure/categories',
+          cookies: { gk_session: session, gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+          payload,
+        });
+        expect(response.statusCode).toBe(201);
+        expect(response.body).toContain('"publicationStatus":"draft"');
+        expect(mockScientificStructureService.createCategory).toHaveBeenCalledWith(
+          expect.any(String),
+          payload,
+        );
+      },
+    );
+
+    it('denies visitors, signed-out users, and requests without CSRF', async () => {
+      const visitor = await app.inject({
+        method: 'POST',
+        url: '/api/v1/scientific-structure/categories',
+        cookies: { gk_session: 'visitor-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload,
+      });
+      const signedOut = await app.inject({
+        method: 'POST',
+        url: '/api/v1/scientific-structure/categories',
+        payload,
+      });
+      const noCsrf = await app.inject({
+        method: 'POST',
+        url: '/api/v1/scientific-structure/categories',
+        cookies: { gk_session: 'teacher-session' },
+        payload,
+      });
+      expect(visitor.statusCode).toBe(403);
+      expect(signedOut.statusCode).toBe(401);
+      expect(noCsrf.statusCode).toBe(403);
+      expect(mockScientificStructureService.createCategory).not.toHaveBeenCalled();
+    });
+
+    it('rejects missing content and unknown properties', async () => {
+      for (const invalid of [
+        { ...payload, summary: '' },
+        { ...payload, role: 'admin' },
+        { ...payload, parentId: 'not-a-uuid' },
+      ]) {
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/v1/scientific-structure/categories',
+          cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+          payload: invalid,
+        });
+        expect(response.statusCode).toBe(400);
+      }
     });
   });
 });

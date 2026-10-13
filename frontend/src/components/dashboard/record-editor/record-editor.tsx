@@ -21,8 +21,16 @@ import {
 } from "@/lib/dashboard-api";
 import { RecordStructureSelector } from "./record-structure-selector";
 import { RecordTemplateForm } from "./record-template-form";
+import { RecordEnglishDetails } from "./record-english-details";
+import { RecordRelationships } from "./record-relationships";
+import { RecordMedia } from "./record-media";
+import { RecordEvidence } from "./record-evidence";
+import { RecordLocations } from "./record-locations";
 import { canChangeClassification } from "./record-editor-utils";
-import type { RecordEditorMode, StructureSelection } from "./record-editor-types";
+import type {
+  RecordEditorMode,
+  StructureSelection,
+} from "./record-editor-types";
 import styles from "./record-editor.module.css";
 
 type RecordEditorProps = {
@@ -39,8 +47,10 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
 
   const [categories, setCategories] = useState<StructureCategory[]>([]);
   const [recordTypes, setRecordTypes] = useState<CategoryRecordType[]>([]);
-  const [activeTemplate, setActiveTemplate] = useState<ActiveScientificTemplate | null>(null);
-  const [recordDetail, setRecordDetail] = useState<ScientificRecordDetail | null>(null);
+  const [activeTemplate, setActiveTemplate] =
+    useState<ActiveScientificTemplate | null>(null);
+  const [recordDetail, setRecordDetail] =
+    useState<ScientificRecordDetail | null>(null);
 
   const [selection, setSelection] = useState<StructureSelection>({
     parentCategoryId: null,
@@ -49,7 +59,9 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
     recordTypeId: null,
   });
 
-  const [initialAttributes, setInitialAttributes] = useState<Record<string, unknown>>({});
+  const [initialAttributes, setInitialAttributes] = useState<
+    Record<string, unknown>
+  >({});
   const [initialSlug, setInitialSlug] = useState<string>("");
 
   const [loading, setLoading] = useState(true);
@@ -60,14 +72,17 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
   const [saveValidationIssues, setSaveValidationIssues] = useState<
     Array<{ field?: string; message: string }>
   >([]);
-  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(
+    null,
+  );
 
   const [isDirty, setIsDirty] = useState(false);
+  const [englishDetailsDirty, setEnglishDetailsDirty] = useState(false);
 
   // Warn on navigation or tab close if form has unsaved edits
   useEffect(() => {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
-      if (isDirty) {
+      if (isDirty || englishDetailsDirty) {
         e.preventDefault();
       }
     }
@@ -75,7 +90,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [isDirty]);
+  }, [isDirty, englishDetailsDirty]);
 
   // Initial data loading
   useEffect(() => {
@@ -114,13 +129,18 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
             if (record.templateVersionId) {
               tmpl = await getTemplateVersion(record.templateVersionId);
             } else {
-              tmpl = await getActiveTemplate(record.categoryId, record.recordTypeId);
+              tmpl = await getActiveTemplate(
+                record.categoryId,
+                record.recordTypeId,
+              );
             }
             if (ignore) return;
             setActiveTemplate(tmpl);
 
             // Determine if category is root or child
-            const categoryObj = catRes.items.find((c) => c.id === record.categoryId);
+            const categoryObj = catRes.items.find(
+              (c) => c.id === record.categoryId,
+            );
             const parentId = categoryObj?.parentId ?? null;
 
             setSelection({
@@ -146,7 +166,11 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
           setError(
             err instanceof DashboardApiError
               ? err
-              : new DashboardApiError("Could not load scientific data.", 0, "server"),
+              : new DashboardApiError(
+                  "Could not load scientific data.",
+                  0,
+                  "server",
+                ),
           );
           setLoading(false);
         }
@@ -159,7 +183,6 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       ignore = true;
     };
   }, [mode, recordId]);
-
 
   // Handle classification confirmation from Step 1 & 2
   async function handleConfirmStructure(sel: StructureSelection) {
@@ -181,14 +204,18 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       setError(
         err instanceof DashboardApiError
           ? err
-          : new DashboardApiError("Failed to load active template.", 0, "server"),
+          : new DashboardApiError(
+              "Failed to load active template.",
+              0,
+              "server",
+            ),
       );
       setLoading(false);
     }
   }
 
   function handleChangeClassification() {
-    if (isDirty) {
+    if (isDirty || englishDetailsDirty) {
       const confirmed = window.confirm(
         "You have unsaved changes in this record. Changing classification may reset attribute fields. Continue?",
       );
@@ -199,7 +226,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
   }
 
   function handleCancel() {
-    if (isDirty) {
+    if (isDirty || englishDetailsDirty) {
       const confirmed = window.confirm(
         "You have unsaved changes. Are you sure you want to return to the records list?",
       );
@@ -237,7 +264,9 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         setIsDirty(false);
         setIsSaving(false);
         // Navigate to the saved draft via query-parameter edit route
-        router.push(`/dashboard/records/edit?recordId=${encodeURIComponent(newRecord.id)}`);
+        router.push(
+          `/dashboard/records/edit?recordId=${encodeURIComponent(newRecord.id)}`,
+        );
       } else if (mode === "edit" && recordId) {
         const payload: UpdateRecordPayload = {
           slug: data.slug,
@@ -260,7 +289,9 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         setRecordDetail(updated);
         setInitialAttributes(updated.attributes ?? {});
         setInitialSlug(updated.slug ?? "");
-        setSaveSuccessMessage(`Draft saved successfully at ${new Date().toLocaleTimeString()}.`);
+        setSaveSuccessMessage(
+          `Draft saved successfully at ${new Date().toLocaleTimeString()}.`,
+        );
       }
     } catch (err) {
       setIsSaving(false);
@@ -268,23 +299,30 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         setSaveError(err.message);
         setSaveValidationIssues(err.issues);
       } else {
-        setSaveError(err instanceof Error ? err.message : "Failed to save draft record.");
+        setSaveError(
+          err instanceof Error ? err.message : "Failed to save draft record.",
+        );
       }
     }
   }
 
   // Find readable names for active selection
   const selectedCat = categories.find((c) => c.id === selection.categoryId);
-  const selectedParentCat = categories.find((c) => c.id === selection.parentCategoryId);
+  const selectedParentCat = categories.find(
+    (c) => c.id === selection.parentCategoryId,
+  );
   const selectedRt = recordTypes.find((rt) => rt.id === selection.recordTypeId);
 
   const categoryName = selection.isDirectAttachment
-    ? selectedCat?.name ?? "Selected Category"
-    : selectedParentCat?.name ?? "Selected Category";
+    ? (selectedCat?.name ?? "Selected Category")
+    : (selectedParentCat?.name ?? "Selected Category");
 
-  const subcategoryName = selection.isDirectAttachment ? null : selectedCat?.name ?? null;
+  const subcategoryName = selection.isDirectAttachment
+    ? null
+    : (selectedCat?.name ?? null);
 
-  const recordTypeName = selectedRt?.name ?? activeTemplate?.name ?? "Selected Record Type";
+  const recordTypeName =
+    selectedRt?.name ?? activeTemplate?.name ?? "Selected Record Type";
 
   const isNonEditable =
     recordDetail !== null &&
@@ -304,7 +342,10 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
             {mode === "create" ? "Add scientific record" : "Edit draft record"}
           </h1>
           {recordDetail && (
-            <span className={styles.badge} aria-label={`Record status: ${recordDetail.status}`}>
+            <span
+              className={styles.badge}
+              aria-label={`Record status: ${recordDetail.status}`}
+            >
               {recordDetail.status === "unclassified_draft"
                 ? "Unclassified Draft"
                 : recordDetail.status === "draft"
@@ -320,7 +361,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         <p className={styles.subtitle}>
           {mode === "create"
             ? "Choose a scientific category and record type to open the data-entry form. You can save the record as a draft from that form."
-            : "Update scientific attributes and identifier slug for this draft record."}
+            : "Update the scientific fields and supporting details for this draft record."}
         </p>
       </header>
 
@@ -367,7 +408,9 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
             <>
               <AlertTriangle className={styles.bannerIcon} aria-hidden="true" />
               <div className={styles.bannerContent}>
-                <span className={styles.bannerTitle}>Could not load scientific data</span>
+                <span className={styles.bannerTitle}>
+                  Could not load scientific data
+                </span>
                 <p className={styles.bannerText}>{error.message}</p>
                 <div style={{ marginTop: "12px" }}>
                   <Link href="/dashboard/records" className={styles.button}>
@@ -387,7 +430,8 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
           <div className={styles.bannerContent}>
             <span className={styles.bannerTitle}>No record specified</span>
             <p className={styles.bannerText}>
-              Select a draft record from the records list to edit its scientific details.
+              Select a draft record from the records list to edit its scientific
+              details.
             </p>
             <div style={{ marginTop: "12px" }}>
               <Link href="/dashboard/records" className={styles.button}>
@@ -436,29 +480,59 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       )}
 
       {/* Step 3: Template form */}
-      {!loading && !error && !isNonEditable && step === "fields" && activeTemplate && (
-        <RecordTemplateForm
-          template={activeTemplate}
-          categoryName={categoryName}
-          subcategoryName={subcategoryName}
-          recordTypeName={recordTypeName}
-          initialSlug={initialSlug}
-          initialAttributes={initialAttributes}
-          mode={mode}
-          isSaving={isSaving}
-          serverError={saveError}
-          serverValidationIssues={saveValidationIssues}
-          saveSuccessMessage={saveSuccessMessage}
-          onChangeClassification={
-            canChangeClassification(mode, recordDetail?.status)
-              ? handleChangeClassification
-              : undefined
-          }
-          onSubmit={handleFormSubmit}
-          onCancel={handleCancel}
-          onDirtyChange={setIsDirty}
-        />
-      )}
+      {!loading &&
+        !error &&
+        !isNonEditable &&
+        step === "fields" &&
+        activeTemplate && (
+          <RecordTemplateForm
+            template={activeTemplate}
+            categoryName={categoryName}
+            subcategoryName={subcategoryName}
+            recordTypeName={recordTypeName}
+            initialSlug={initialSlug}
+            initialAttributes={initialAttributes}
+            mode={mode}
+            isSaving={isSaving}
+            serverError={saveError}
+            serverValidationIssues={saveValidationIssues}
+            saveSuccessMessage={saveSuccessMessage}
+            onChangeClassification={
+              canChangeClassification(mode, recordDetail?.status)
+                ? handleChangeClassification
+                : undefined
+            }
+            onSubmit={handleFormSubmit}
+            onCancel={handleCancel}
+            onDirtyChange={setIsDirty}
+          />
+        )}
+      {!loading &&
+        !error &&
+        !isNonEditable &&
+        mode === "edit" &&
+        recordDetail && (
+          <RecordEnglishDetails
+            record={recordDetail}
+            onSaved={setRecordDetail}
+            onDirtyChange={setEnglishDetailsDirty}
+          />
+        )}
+      {!loading &&
+        !error &&
+        !isNonEditable &&
+        mode === "edit" &&
+        recordDetail?.status === "draft" && (
+          <>
+            <RecordEvidence
+              recordId={recordDetail.id}
+              fields={activeTemplate?.fields ?? []}
+            />
+            <RecordLocations recordId={recordDetail.id} />
+            <RecordRelationships recordId={recordDetail.id} />
+            <RecordMedia recordId={recordDetail.id} />
+          </>
+        )}
     </div>
   );
 }

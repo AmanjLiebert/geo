@@ -1,5 +1,9 @@
 # Geo-Kurdistan Design Context
 
+## Approved category-management change
+
+The teacher/admin scientific workspace now includes simple category and subcategory creation, followed in later gates by editing and archive/restore. New branches begin unpublished and receive a General geological record choice automatically. The earlier prohibition on category creation in the dashboard is superseded; custom scientific-field-template editing remains unavailable. Keep the established visual language, plain labels, accessible image upload, and an obvious unpublished state. Public Explore must eventually show only published database content, never showcase records presented as real.
+
 ## Product and audience
 
 Geo-Kurdistan is a public geological knowledge platform used by visitors, students, and geology teachers to browse and manage collections, records, places, evidence, reviewed research, geological news, and trusted information about the organization that publishes the site. The existing frontend establishes the visual baseline for the production platform and must be extended rather than redesigned.
@@ -65,18 +69,19 @@ The record editor follows the scientific decision sequence:
 3. Choose a subcategory when that category requires one.
 4. Choose a record type.
 5. Complete the scientific form generated automatically from the active template.
-6. Add translations, evidence/references, location visibility, media, and relationships in guided sections.
+6. Add English record details, evidence/references, location visibility, media, and relationships in guided sections. Multilingual authoring comes later.
 7. Validate, review, and publish.
 
 The interface must:
 
 - Show the chosen category, subcategory, and record type together; do not ask the teacher to choose or understand a template version.
 - Explain the difference between subcategory and record type in plain language.
-- Never offer unrestricted category creation inside a record form.
+- Offer category creation in a separate guided dashboard screen, not inside the record form.
 - Keep advanced sections collapsed until relevant while preserving a clear completion summary.
 - Display field-level errors beside fields and provide a linked page-level summary.
 - Show autosave, unsaved, saved, conflict, and offline/error states clearly.
 - Use archive and restore as the normal removal workflow.
+- Keep completion and visibility separate: a draft may be incomplete, a complete item may remain unpublished by choice, and publishing or unpublishing is always an explicit action. Explain missing title, description, approved image, evidence, or location/review requirement beside the relevant action.
 
 ## Roles and permissions
 
@@ -85,7 +90,7 @@ The interface must:
 - A teacher manages geological records and research, including translations, evidence, locations, media, review, publication, archive, and restore.
 - An admin can do everything a teacher can and receives a small additional area for user activation/invitations, news, managed pages, organization information, and an optional future shop.
 - Teacher and admin use the same scientific workspace. Do not duplicate or complicate the record flow for admin.
-- Taxonomy, record-type, template, custom-role, raw-audit-log, and technical-setting interfaces are not part of the routine client dashboard.
+- Category/subcategory creation and later editing/archive are routine teacher/admin dashboard actions. Custom record-type, template, custom-role, raw-audit-log, and technical-setting interfaces are not.
 - Hide irrelevant unavailable actions when that improves clarity, but explain a disabled action when the user reasonably expects access.
 - Never rely on interface visibility as authorization; API denial states must be clear and non-destructive.
 - Privileged actions such as publishing, role promotion, and restricted-location access require explicit confirmation and produce automatic audit history behind the scenes.
@@ -105,6 +110,7 @@ Templates drive the form but are not edited by teachers or admins in routine use
 
 ## Multilingual and bidirectional design
 
+- The current authoring interface is English-only. Keep the underlying locale-aware model and direction-ready layouts, but do not show unused language controls or promise translations before that work is approved.
 - Treat English, Kurdish, and Arabic as translations of one entity.
 - Use configured BCP 47 locale tags; do not encode language assumptions in component names or database identifiers.
 - Give each translation a visible status: missing, draft, in review, or published.

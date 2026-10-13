@@ -162,6 +162,14 @@ export class MediaService {
        DO UPDATE SET purpose = EXCLUDED.purpose`,
         [recordId, media.id, input.purpose.trim()],
       );
+      await manager.query(`UPDATE scientific_records SET updated_at = now() WHERE id = $1`, [
+        recordId,
+      ]);
+      await manager.query(
+        `INSERT INTO content_audit_events (actor_user_id, action, target_type, target_id, metadata)
+         VALUES ($1, 'scientific-record.media-attached', 'scientific-record', $2, $3::jsonb)`,
+        [actorUserId, recordId, JSON.stringify({ mediaAssetId: media.id })],
+      );
     });
     return { recordId, mediaAssetId: media.id, purpose: input.purpose };
   }

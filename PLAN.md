@@ -1,5 +1,19 @@
 # Geo-Kurdistan Delivery Plan
 
+## Active delivery change — category-to-public-content sequence
+
+The client approved dashboard management of categories and subcategories for both teachers and admins. This section supersedes earlier statements in this document that routine users cannot manage taxonomy. Existing seeded categories and all records remain intact. Record-type and scientific-field-template editing is still deferred; new branches use a shared General geological record type. Implement one numbered step, verify its gate, and stop before the next step:
+
+1. **Create:** protected creation of unpublished categories/subcategories with English title, summary, description, optional private image, and parent; automatic General geological record pairing. Gate: teacher/admin create and list, visitor denied, existing structure unchanged.
+2. **Edit:** draft revisions of content, image, and order with stable identity and safe hierarchy checks. Gate: public content does not change before publication.
+3. **Archive/restore:** confirmed subtree archive, never hard delete; preserve records and history and hide archived branches publicly. Gate: populated and empty branches recover safely.
+4. **Record entry:** general record form with details, evidence, protected location, relationships, and media under new branches. Gate: drafts reopen and specialist types remain available.
+5. **Review/publish:** complete simple dashboard publication actions without bypassing independent review, evidence, media, or location policy. Saving incomplete drafts remains possible. A complete item stays unpublished until a teacher or admin explicitly publishes it; they can later unpublish it without erasing the work. Categories require an English title, summary, description, and approved rights-cleared image; records require their core English details, an approved rights-cleared image, and the evidence, location, and review checks applicable to their type. Gate: only complete, intentionally published content can become public.
+6. **Real Explore:** replace mock geological collections/records in Explore and its detail pages with minimal published API projections; run Next.js dynamically on the existing server for new routes without rebuild. Gate: publish/edit/archive and empty states are reflected correctly.
+7. **End-to-end handoff:** role, security, responsive, direct-link, archive/restore, and empty-state checks; remove misleading showcase claims on converted pages.
+
+Phase 5 dashboard work remains active. Only step 1 is authorized in the first implementation task; later steps require their own completion checks. “Visitor posts” means published geological records, not news or visitor submissions. New category creation supports two hierarchy levels initially. Existing records are not removed or silently reclassified.
+
 ## 1. Purpose
 
 This is the single execution plan for Geo-Kurdistan. The existing Next.js frontend remains the approved visual and interaction baseline; this plan does not authorize a redesign.
@@ -29,9 +43,9 @@ Current execution status: **The Phase 1 foundation, Phase 2 identity, Phase 3 co
 | Media | Private object storage with ownership, rights, and metadata in PostgreSQL |
 | Authentication | Managed identity provider supporting Google and phone sign-in; anonymous browsing remains available |
 | Authorization | NestJS is the authority; exactly three fixed role bundles (`visitor`, `teacher`, `admin`), deny by default, with object-level checks |
-| Administration | Teachers manage all scientific content. Admins have the same scientific capabilities plus simple operational management. No routine role edits taxonomy, templates, role definitions, or technical settings in the dashboard |
+| Administration | Teachers and admins manage categories/subcategories and scientific content. Admins additionally manage simple operations. Neither routine role edits custom templates, role definitions, or technical settings in the dashboard |
 | Visitor accounts | Registered visitors can sign in, sign out, and save or remove geological records from a private watch-later list |
-| Protected content | Images and research documents are viewable through controlled online delivery; originals and direct storage URLs remain private and no download action is offered |
+| Protected content | Images, videos, and research documents are viewable through controlled online delivery; originals and direct storage URLs remain private and no download or bulk-export action is offered |
 | AI | External model API first, behind a provider interface; application-owned RAG and evaluation layer |
 | Deployment | One paid compute server initially, running one frontend, one backend, one PostgreSQL database, and one worker behind a reverse proxy; no microservices initially |
 | Operations | Off-server backups, external identity, private object storage, and optional CDN/WAF remain separate trust and recovery boundaries even when compute uses one server |
@@ -57,7 +71,7 @@ Category, record type, and template answer different questions:
 | --- | --- | --- |
 | Category | What scientific subject does this belong to? | Fossils |
 | Subcategory | Which narrower subject branch? | Invertebrate fossils |
-| Record type | What kind of object or evidence is being recorded? | Occurrence, specimen, general reference |
+| Record type | What kind of object or evidence is being recorded? | Unit profile, occurrence, specimen |
 | Template version | Which scientific fields and validation rules apply? | Fossil Occurrence Template v2 |
 
 Rules:
@@ -68,9 +82,9 @@ Rules:
 4. `recordsAllowed` decides whether records may attach directly to a category or must use a descendant.
 5. A record stores the category it actually belongs to, its record type, and the template version used to validate it.
 6. Draft records may be unclassified. Published records require an active publishable category, allowed record type, valid template version, and required evidence.
-7. Teachers and admins choose existing scientific structure while editing; they do not create categories, record types, templates, or fields inside the record form.
+7. Teachers and admins choose existing scientific structure inside the record form; category/subcategory creation uses a separate simple dashboard screen.
 8. The normal creation path is: **Add record → category → subcategory when required → record type → generated form**. The system selects the active template automatically.
-9. Taxonomy, record types, and templates are centrally prepared and changed only through reviewed, versioned maintenance and database migrations; they are not exposed as ordinary dashboard management.
+9. Teachers and admins manage category/subcategory content through validated, audited dashboard workflows. Custom record types, templates, and field definitions remain controlled maintenance.
 10. Missing scientific structure is recorded as a request for later reviewed maintenance instead of being invented during data entry.
 11. Labels are translatable; identifiers and stable keys are not derived from translated text.
 12. Archiving or moving scientific structure must not erase records, revisions, translations, or history.
@@ -79,16 +93,48 @@ Example:
 
 ```text
 Fossils                                      recordsAllowed: false
-└── Invertebrate fossils                     recordsAllowed: true
-    ├── General Reference                    template: Fossil Reference v1
-    ├── Fossil Occurrence                    template: Fossil Occurrence v2
-    └── Physical Specimen                    template: Fossil Specimen v1
+└── Invertebrate body fossils                recordsAllowed: true
+    ├── Fossil occurrence                    template: Fossil Occurrence v2
+    └── Fossil specimen                      template: Fossil Specimen v1
 
-Geological formations                       recordsAllowed: true
-└── Formation Reference                      template: Formation Reference v1
+Stratigraphy and geological units           recordsAllowed: false
+└── Lithostratigraphic units                 recordsAllowed: true
+    └── Geologic unit profile                template: Geologic Unit Profile v1
 ```
 
 Record type is not a substitute for subcategory. Subcategories organize the subject; record types describe the nature of the stored evidence.
+
+### Proposed starter taxonomy and allowed record types — scientific review required
+
+This is a **proposed starter menu**, not a claim of final geological approval. Its structure is seeded by a versioned backend migration so teachers can use it in development, but the scientific names, pairings, fields, evidence policies, and Kurdish/Arabic translations need geology-reviewer approval before production publication. It keeps the first dashboard manageable while representing kinds of material documented in the Kurdistan Region. For this starter menu, all six top-level categories are collection headings (`recordsAllowed: false`) and the listed subcategories accept records (`recordsAllowed: true`). The platform still supports direct records on a parent category if a later reviewed structure needs them. A teacher must explicitly select the subcategory; the interface must not silently choose the first child.
+
+| Category | Subcategory | Allowed record types | Characteristic information in the type-specific form |
+| --- | --- | --- | --- |
+| Stratigraphy and geological units | Lithostratigraphic units | Geologic unit profile; Unit occurrence | Formal/source name and rank, age, lithology, defining source; for an occurrence, exposure and observed contact/location |
+| Stratigraphy and geological units | Stratigraphic sections | Measured section | Section locality, measured thickness, interval/layer descriptions, measurement method, source |
+| Rocks and minerals | Sedimentary rocks | Rock material profile; Rock specimen; Outcrop observation | Rock name, texture/composition and identification basis; specimen provenance or outcrop location when applicable |
+| Rocks and minerals | Igneous and metamorphic rocks | Rock material profile; Rock specimen; Outcrop observation | Rock name, texture/composition, metamorphic or igneous interpretation and identification basis |
+| Rocks and minerals | Minerals | Mineral profile; Mineral specimen; Mineral occurrence | Mineral identification and evidence; specimen collection details or occurrence host rock and locality when applicable |
+| Fossils | Invertebrate body fossils | Fossil occurrence; Fossil specimen | Identification and confidence, host unit and age, locality policy; specimen repository/catalogue when applicable |
+| Fossils | Vertebrate body fossils | Fossil occurrence; Fossil specimen | Same fossil evidence, with extra location-sensitivity review before public display |
+| Fossils | Microfossils | Fossil occurrence; Fossil specimen | Assemblage/taxon, sampled interval and preparation or slide details, host unit and age |
+| Fossils | Trace fossils | Fossil occurrence; Fossil specimen | Trace identification, host bed/unit, interpretation and documentation of the observed or collected material |
+| Structural geology | Folds | Mapped structural feature; Structural measurement | Feature geometry, orientation, observed versus interpreted status, source; measurement method and values when applicable |
+| Structural geology | Faults and shear zones | Mapped structural feature; Structural measurement | Fault/shear evidence, geometry, sense of movement and confidence where known; measurement values when applicable |
+| Structural geology | Joints and fractures | Mapped structural feature; Structural measurement | Fracture set, orientation, spacing/condition and observation locality, where measured |
+| Hydrogeology | Springs | Water-point profile; Water observation | Site and public-location policy, aquifer/host unit if known; dated discharge or chemistry observation with method and units |
+| Hydrogeology | Wells | Water-point profile; Water observation | Site, well construction/interval if known, aquifer; dated level or quality observation with method and units |
+| Hydrogeology | Aquifers | Aquifer profile | Named/defined aquifer, constituent units, extent, hydraulic evidence and supporting source |
+| Surface geology and landforms | Quaternary and other surficial deposits | Surficial unit profile; Outcrop observation | Deposit material, landform/context, relative or measured age, mapped extent or exposure, source |
+| Surface geology and landforms | Karst and erosional landforms | Landform profile; Outcrop observation | Feature type, morphology, host rock, process interpretation, public-location policy and source |
+
+These are **permitted category/type pairings**, not one record for every row and not a claim that each feature exists at a particular Kurdistan locality. Reused types such as `Outcrop observation` may share a stable type identity but use a different approved template for each allowed pairing. The type describes what one record represents: a named scientific entity, a specific observed occurrence, a held specimen, or a dated measurement. Do not create a vague `General Reference` geological record merely to store a citation; external works belong in References, and managed publications belong in Research. Geological maps belong to Map Layers with source, scale, coordinate system, rights, and version; they are not a generic record type. Cross-disciplinary facts are linked rather than copied (for example, a fossil occurrence may link to a geologic unit, specimen, section, and reference).
+
+Before production publication, geology reviewers must confirm the seeded scientific menu and its evidence and location policies. Teachers and admins may add category/subcategory drafts through the dashboard; custom type/template corrections still use reviewed maintenance. Never edit the already-applied starter migration. Production may still start with **zero geological records**. Images and videos are attachable to every type. At least one approved, rights-cleared image is required for category and record publication; video and any additional image requirements remain type/evidence-policy decisions. Drafts may omit them.
+
+Maintenance contract: stable keys and template versions preserve meaning and must not be renamed or overwritten. Category/subcategory content is managed in validated, audited dashboard workflows; custom type and template changes require reviewed migrations. Archive instead of hard-deleting used structure, preserve records and history, and reject hierarchy cycles. Public URLs must remain stable when labels change. Each delivery gate is tested before the next workflow is added.
+
+The subject areas are grounded in the [Iraq Geological Survey map and formation overview](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/263), [Kurdistan biostratigraphy and fossil evidence](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/476), [Kurdistan folds and fractures study](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/497), [Kurdistan mineral-resource survey](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/241), [Kurdistan spring/aquifer research](https://www.mdpi.com/94668), and [Kurdistan geomorphology study](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/394). The **menu and pairings are our design proposal**, not a taxonomy published or endorsed by those sources.
 
 ## 4. Record and template strategy
 
@@ -119,7 +165,7 @@ Do not create one table per provisional category. Do not put every possible scie
 
 One geological entity has one stable record identity and any number of translations.
 
-- Initial supported locales are configured data, expected to include English, Arabic, and the confirmed Kurdish locale or locales.
+- Initial authoring uses English (`en`) only. Kurdish and Arabic locales can be configured later after language scope, terminology, and review workflow are approved; they do not create duplicate geological records.
 - Use BCP 47 language tags and store source language explicitly.
 - Record, category, record-type, field-label, relationship-label, and research translations are separate from scientific identifiers.
 - Each translation has its own draft, review, and publication status, translator, reviewer, and timestamps.
@@ -135,7 +181,7 @@ A reference may contain authors, title, publication or institution, year, identi
 
 Minimum evidence is configured by record type:
 
-- General reference: at least one traceable scientific or institutional source.
+- Scientific profile (for example, a geologic unit or mineral profile): at least one traceable scientific or institutional source.
 - Occurrence: observer, observation date, protected location information, field notes or image evidence, and reviewer/source attribution.
 - Physical specimen: institution or collection, catalogue number when available, collector/provenance, locality policy, scale image, and identification authority.
 - Formation or formal unit: authoritative stratigraphic source and review of name, rank, age, and geographic use.
@@ -157,12 +203,15 @@ Research publications remain separate from geological records and ordinary refer
 
 ### Online-only media and research access
 
-- Original images and research documents remain private in object storage; public pages never expose permanent storage keys or direct original-file URLs.
-- The application provides an online image/document viewer using public-safe derivatives, page images/tiles, or short-lived authorized delivery as appropriate.
-- Viewer responses use short-lived access, inline disposition, strict caching rules, rate limits, and rights checks. The interface does not provide a download button or bulk-export action.
+- Original images, videos, and research documents remain private in object storage; public pages never expose permanent storage keys or direct original-file URLs.
+- Every geological record may have images and videos attached. Drafts may have neither; publication-time media requirements are defined by record type and evidence policy, not a universal requirement to attach both.
+- The application provides online image, video, and document viewers using approved derivatives, video playback renditions, document pages/tiles, or short-lived authorized delivery as appropriate.
+- Viewer responses use short-lived access, inline disposition, strict caching rules, rate limits, and rights checks. Video playback supports seeking through authorized byte-range or segment requests without exposing an unrestricted original-file endpoint. The interface does not provide a download button or bulk-export action.
 - Teachers and admins upload and manage files through protected workflows, but routine roles receive no unrestricted original-file export capability.
 - Resized or watermarked public image derivatives may be used when rights policy requires them.
-- This policy deters ordinary downloading and prevents accidental original-file exposure; it cannot guarantee prevention of screenshots or copying content already rendered on a user's device.
+- This policy prevents authorized UI/API paths from offering original-file downloads and deters ordinary saving; it cannot prevent screenshots, screen recording, or copying content already delivered to a user's device. Do not claim DRM or absolute download prevention.
+
+Video is **not** part of the completed Phase 4 image/PDF processing rehearsal. Before video upload or playback is enabled, add a reviewed schema migration and a bounded media pipeline: narrow accepted formats/codecs and size/duration limits; private upload and quarantine; signature, metadata, malware, and rights checks; retry-safe processing into approved playback renditions and poster frames; worker CPU/disk/concurrency limits; cleanup and recovery; and publication approval of the resulting asset. Test staff-only upload/management, public/private viewing decisions, range or segment access, rejection, and the absence of direct original-file delivery. Keep video unavailable in production until this gate passes.
 
 ### Geography
 
@@ -375,7 +424,7 @@ Initial roles:
 - `teacher` — has visitor capabilities and can create, edit, translate, validate, review, publish, archive, and restore geological records and research, including their evidence, locations, relationships, and media.
 - `admin` — has every teacher capability plus simple operational management for teacher/visitor accounts, news, managed site pages and organization information, and an optional future shop.
 
-Anonymous browsing is public access, not a fourth role. Taxonomy, record types, templates, role definitions, raw audit logs, and technical security settings are not routine dashboard capabilities for any of the three roles.
+Anonymous browsing is public access, not a fourth role. Category/subcategory management is available to teachers and admins; custom record types, templates, role definitions, raw audit logs, and technical security settings are not routine dashboard capabilities.
 
 Completion gate:
 
@@ -442,8 +491,8 @@ Build in this order:
 1. Sign-in and protected dashboard shell.
 2. Role-appropriate record, research, news, and managed-page lists with real empty states.
 3. One obvious **Add record** flow: category → subcategory when required → record type → generated template form.
-4. Translation workspace with locale-specific review status.
-5. Evidence, references, location visibility, media, and relationship editors.
+4. English title, summary, and description with review status on the saved record. The database keeps versioned translation support, but Kurdish/Arabic authoring and locale switching are deferred until the client approves that scope.
+5. Evidence, references, location visibility, media, and relationship editors. Image/document workflows use the existing protected media foundation; video upload/management is enabled only after the separate video pipeline and security gate above passes.
 6. Review, publication, archive, record history, and restore flows; template migration remains a controlled maintenance operation rather than a routine client screen.
 7. News, scheduled publication, managed pages, and organization-profile editors.
 8. A simple admin account screen for inviting teachers, activating or disabling users, and assigning only `visitor`, `teacher`, or `admin` through protected actions.
@@ -451,6 +500,7 @@ Build in this order:
 
 Dashboard rules:
 
+- Current dashboard authoring is English-only; do not add a language picker or imply that Kurdish/Arabic content is ready. Preserve locale-neutral identifiers and the existing translation model for a later reviewed expansion.
 - Never place unrestricted category creation inside the record form.
 - Do not display templates, schema versions, role definitions, audit logs, or technical settings unless a specific recovery or maintenance task requires them outside the routine client dashboard.
 - Warn before leaving unsaved work; autosave only drafts and show save state.
@@ -476,7 +526,7 @@ Tasks:
 - Replace local repository implementations route by route.
 - Connect public news, About, ownership/publisher, contact, privacy, and terms routes to published managed content.
 - Connect visitor registration, sign-in, sign-out, and the private saved-record/watch-later page.
-- Add online-only image and research viewers with no download controls, private originals, protected delivery, and clear access/rights states.
+- Add online-only image, video, and research viewers with no download controls, private originals, protected delivery, and clear access/rights states. Video viewing depends on the separate video pipeline and security gate above; do not expose a video control before it is usable and authorized.
 - Add zero-record, zero-location, untranslated, loading, unavailable, and error states.
 - Implement locale routing, direction changes, translation fallback, and server-side cache/revalidation.
 - Define cache keys and invalidation for locale, publication revision, and public visibility; never publicly cache dashboard, user-specific, draft, or restricted-location responses.
@@ -488,7 +538,7 @@ Completion gate:
 - Public pages read only published, authorized API data.
 - News and managed pages expose only published revisions and verified public media/source links.
 - A signed-in visitor can privately save and remove a published record, and cannot read another user's saved list.
-- Images and research documents open in the controlled online viewer without exposing original storage URLs or a download action.
+- Images, videos, and research documents open in controlled online viewers without exposing original storage URLs or a download action; video is included only after its separate processing and security gate passes.
 - An empty collection renders correctly without fake records or failures.
 - Drafts, restricted coordinates, private media, and unpublished translations cannot be reached publicly.
 - Frontend tests, lint, and production build pass.
@@ -561,7 +611,7 @@ Completion gate:
 - Redis before a measured workload requires it; the initial durable queue uses PostgreSQL.
 - Complex commerce, payments, premium accounts, or orders.
 - Visitor self-registration before verification, recovery, privacy, rate-limit, and abuse controls exist.
-- Client-facing taxonomy, template, custom-role, raw-audit-log, or technical-settings dashboards.
+- Client-facing custom-template, custom-role, raw-audit-log, or technical-settings dashboards; category/subcategory management is in scope.
 - Automated news scraping or feed ingestion before source rights, allowlists, SSRF protection, deduplication, provenance, and editorial review exist.
 - Allowing AI to publish or mutate administrative data autonomously.
 - Permanent category-specific code when configuration and templates are sufficient.

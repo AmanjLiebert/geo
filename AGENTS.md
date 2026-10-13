@@ -22,7 +22,7 @@ The visitor showcase remains the frontend baseline. Phase 5 — the protected ad
 - Category-specific fields come from versioned templates.
 - The only application roles are `visitor`, `teacher`, and `admin`; authentication state is not a separate role.
 - Teachers manage geological records, research, translations, evidence, locations, and media. Admins have the same scientific capabilities plus simple operational management such as news, site pages, user activation, and an optional future shop.
-- Taxonomy, record types, and templates are centrally seeded and maintained through reviewed migrations; routine application roles do not edit them in the dashboard.
+- Teachers and admins may create, edit, archive, and restore categories and subcategories in the dashboard. New structure starts unpublished. Record-type and scientific-template design remains controlled; new branches receive the shared General geological record type.
 - Keep revisions and safe audit history automatically for recovery and security, but do not build a complex audit-log or permission-management interface for client users.
 - Preserve references, provenance, revisions, and audit history.
 - Never silently invent permanent geological rules. Unknown scientific decisions stay configurable and visibly provisional.

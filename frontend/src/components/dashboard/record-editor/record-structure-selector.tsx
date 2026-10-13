@@ -95,20 +95,18 @@ export function RecordStructureSelector({
     setParentCategoryId(node.category.id);
     setRecordTypeId(null);
     setRecordTypes([]);
-    setLoadingRecordTypes(true);
+    setLoadingRecordTypes(node.allowsDirectRecords);
     setRecordTypesError(null);
 
     if (node.allowsDirectRecords && !node.hasChildren) {
       setIsDirectAttachment(true);
       setSubcategoryId(null);
     } else if (node.allowsDirectRecords && node.hasChildren) {
-      // Default to direct if allowed, user can change
       setIsDirectAttachment(true);
       setSubcategoryId(null);
     } else {
-      // Must choose subcategory
       setIsDirectAttachment(false);
-      setSubcategoryId(node.children[0]?.id ?? null);
+      setSubcategoryId(null);
     }
   }
 
@@ -225,13 +223,14 @@ export function RecordStructureSelector({
               <input
                 type="radio"
                 name="attachment-choice"
-                checked={!isDirectAttachment}
+                checked={!isDirectAttachment && subcategoryId !== null}
                 onChange={() => {
-                  if (!subcategoryId && activeRootNode.children[0]) {
-                    handleSelectSubcategory(activeRootNode.children[0].id);
-                  } else {
-                    setIsDirectAttachment(false);
-                  }
+                  setIsDirectAttachment(false);
+                  setSubcategoryId(null);
+                  setRecordTypeId(null);
+                  setRecordTypes([]);
+                  setLoadingRecordTypes(false);
+                  setRecordTypesError(null);
                 }}
                 className={styles.checkboxInput}
               />
@@ -285,7 +284,7 @@ export function RecordStructureSelector({
             </h2>
             <p className={styles.stepDescription}>
               Record types describe the nature of the stored evidence or scientific object (e.g.
-              field occurrence, physical specimen, general reference).
+              field occurrence, physical specimen, or named geological unit).
             </p>
           </header>
 

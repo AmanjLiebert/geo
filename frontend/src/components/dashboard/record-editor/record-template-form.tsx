@@ -259,7 +259,7 @@ export function RecordTemplateForm({
                 disabled={isSaving}
               />
               <span id={`${formId}-slug-help`} className={styles.fieldHelp}>
-                URL-friendly identifier using lowercase letters, numbers, and hyphens.
+                Use a unique URL-friendly identifier with lowercase letters, numbers, and hyphens, or leave it blank.
               </span>
               {slugError && (
                 <span className={styles.fieldError} role="alert">

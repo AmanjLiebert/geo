@@ -15,11 +15,7 @@
  */
 
 export type ScientificRecordStatus =
-  | "unclassified_draft"
-  | "draft"
-  | "in_review"
-  | "published"
-  | "archived";
+  "unclassified_draft" | "draft" | "in_review" | "published" | "archived";
 
 export type DashboardRecordItem = {
   id: string;
@@ -198,6 +194,7 @@ export type DashboardApiErrorKind =
   | "unauthorized"
   | "forbidden"
   | "validation"
+  | "conflict"
   | "rate_limited"
   | "aborted"
   | "network"
@@ -290,7 +287,9 @@ function isValidIsoDate(str: unknown): str is string {
  * Validates the runtime shape of a scientific records list response.
  * Malformed envelopes or items produce a safe generic DashboardApiError.
  */
-export function validateRecordListResponse(data: unknown): DashboardRecordListResponse {
+export function validateRecordListResponse(
+  data: unknown,
+): DashboardRecordListResponse {
   if (!isRecord(data)) {
     throw new DashboardApiError(
       "The scientific server returned an unparseable response.",
@@ -370,7 +369,9 @@ export function validateRecordListResponse(data: unknown): DashboardRecordListRe
  * Validates the runtime shape of a research list response.
  * Malformed envelopes or items produce a safe generic DashboardApiError.
  */
-export function validateResearchListResponse(data: unknown): DashboardResearchListResponse {
+export function validateResearchListResponse(
+  data: unknown,
+): DashboardResearchListResponse {
   if (!isRecord(data)) {
     throw new DashboardApiError(
       "The scientific server returned an unparseable response.",
@@ -420,7 +421,8 @@ export function validateResearchListResponse(data: unknown): DashboardResearchLi
       typeof status !== "string" ||
       !VALID_RESEARCH_STATUSES.has(status) ||
       (publicationYear !== null &&
-        (typeof publicationYear !== "number" || !Number.isInteger(publicationYear))) ||
+        (typeof publicationYear !== "number" ||
+          !Number.isInteger(publicationYear))) ||
       (doi !== null && typeof doi !== "string") ||
       !isValidIsoDate(updatedAt)
     ) {
@@ -453,7 +455,9 @@ export function validateResearchListResponse(data: unknown): DashboardResearchLi
  * Validates the runtime shape of a news list response.
  * Malformed envelopes or items produce a safe generic DashboardApiError.
  */
-export function validateNewsListResponse(data: unknown): DashboardNewsListResponse {
+export function validateNewsListResponse(
+  data: unknown,
+): DashboardNewsListResponse {
   if (!isRecord(data)) {
     throw new DashboardApiError(
       "The editorial server returned an unparseable response.",
@@ -535,7 +539,9 @@ export function validateNewsListResponse(data: unknown): DashboardNewsListRespon
  * Validates the runtime shape of a managed pages list response.
  * Malformed envelopes or items produce a safe generic DashboardApiError.
  */
-export function validatePageListResponse(data: unknown): DashboardPageListResponse {
+export function validatePageListResponse(
+  data: unknown,
+): DashboardPageListResponse {
   if (!isRecord(data)) {
     throw new DashboardApiError(
       "The editorial server returned an unparseable response.",
@@ -576,7 +582,8 @@ export function validatePageListResponse(data: unknown): DashboardPageListRespon
       );
     }
 
-    const { id, pageType, title, status, effectiveAt, publishedAt, updatedAt } = item;
+    const { id, pageType, title, status, effectiveAt, publishedAt, updatedAt } =
+      item;
 
     if (
       typeof id !== "string" ||
@@ -619,7 +626,9 @@ export function validatePageListResponse(data: unknown): DashboardPageListRespon
 /**
  * Validates category list response from scientific structure endpoint.
  */
-export function validateCategoryListResponse(data: unknown): { items: StructureCategory[] } {
+export function validateCategoryListResponse(data: unknown): {
+  items: StructureCategory[];
+} {
   if (!isRecord(data) || !Array.isArray(data.items)) {
     throw new DashboardApiError(
       "The scientific server returned an unparseable response.",
@@ -690,7 +699,9 @@ export function validateCategoryListResponse(data: unknown): { items: StructureC
 /**
  * Validates record type list response for a category.
  */
-export function validateRecordTypeListResponse(data: unknown): { items: CategoryRecordType[] } {
+export function validateRecordTypeListResponse(data: unknown): {
+  items: CategoryRecordType[];
+} {
   if (!isRecord(data) || !Array.isArray(data.items)) {
     throw new DashboardApiError(
       "The scientific server returned an unparseable response.",
@@ -755,7 +766,9 @@ export function validateRecordTypeListResponse(data: unknown): { items: Category
 /**
  * Validates active scientific template response.
  */
-export function validateActiveTemplateResponse(data: unknown): ActiveScientificTemplate {
+export function validateActiveTemplateResponse(
+  data: unknown,
+): ActiveScientificTemplate {
   if (!isRecord(data)) {
     throw new DashboardApiError(
       "The scientific server returned an unparseable response.",
@@ -867,7 +880,9 @@ export function validateActiveTemplateResponse(data: unknown): ActiveScientificT
 /**
  * Validates scientific record detail response from GET / POST / PATCH /records.
  */
-export function validateRecordDetailResponse(data: unknown): ScientificRecordDetail {
+export function validateRecordDetailResponse(
+  data: unknown,
+): ScientificRecordDetail {
   if (!isRecord(data)) {
     throw new DashboardApiError(
       "The scientific server returned an unparseable response.",
@@ -916,16 +931,23 @@ export function validateRecordDetailResponse(data: unknown): ScientificRecordDet
   const validatedTranslations: RecordTranslationItem[] = [];
   if (Array.isArray(translations)) {
     for (const t of translations) {
-      if (isRecord(t) && typeof t.locale === "string" && typeof t.title === "string") {
+      if (
+        isRecord(t) &&
+        typeof t.locale === "string" &&
+        typeof t.title === "string"
+      ) {
         validatedTranslations.push({
           locale: t.locale,
           title: t.title,
           summary: typeof t.summary === "string" ? t.summary : null,
           description: typeof t.description === "string" ? t.description : null,
-          sourceLocale: typeof t.sourceLocale === "string" ? t.sourceLocale : null,
+          sourceLocale:
+            typeof t.sourceLocale === "string" ? t.sourceLocale : null,
           status: typeof t.status === "string" ? t.status : "draft",
-          translatorUserId: typeof t.translatorUserId === "string" ? t.translatorUserId : null,
-          reviewerUserId: typeof t.reviewerUserId === "string" ? t.reviewerUserId : null,
+          translatorUserId:
+            typeof t.translatorUserId === "string" ? t.translatorUserId : null,
+          reviewerUserId:
+            typeof t.reviewerUserId === "string" ? t.reviewerUserId : null,
           createdAt: isValidIsoDate(t.createdAt) ? t.createdAt : createdAt,
           updatedAt: isValidIsoDate(t.updatedAt) ? t.updatedAt : updatedAt,
         });
@@ -949,7 +971,10 @@ export function validateRecordDetailResponse(data: unknown): ScientificRecordDet
   };
 }
 
-const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
+const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(
+  /\/$/,
+  "",
+);
 
 export function buildDashboardUrl(
   path: string,
@@ -973,7 +998,10 @@ function getCsrfToken(): string | null {
   return match ? decodeURIComponent(match.slice(prefix.length)) : null;
 }
 
-function classifyError(status: number): { kind: DashboardApiErrorKind; message: string } {
+function classifyError(status: number): {
+  kind: DashboardApiErrorKind;
+  message: string;
+} {
   if (status === 400) {
     return {
       kind: "validation",
@@ -983,7 +1011,8 @@ function classifyError(status: number): { kind: DashboardApiErrorKind; message: 
   if (status === 401) {
     return {
       kind: "unauthorized",
-      message: "Your session has expired or you are not signed in. Please sign in to continue.",
+      message:
+        "Your session has expired or you are not signed in. Please sign in to continue.",
     };
   }
   if (status === 403) {
@@ -995,7 +1024,8 @@ function classifyError(status: number): { kind: DashboardApiErrorKind; message: 
   if (status === 429) {
     return {
       kind: "rate_limited",
-      message: "Too many requests were sent in a short time. Please wait a moment and try again.",
+      message:
+        "Too many requests were sent in a short time. Please wait a moment and try again.",
     };
   }
   if (status >= 500) {
@@ -1012,6 +1042,23 @@ function classifyError(status: number): { kind: DashboardApiErrorKind; message: 
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
+    if (response.status === 409) {
+      const defaultMessage =
+        "This record conflicts with an existing value or state. Please review it and try again.";
+      let message = defaultMessage;
+      try {
+        const body = (await response.json()) as Record<string, unknown>;
+        if (
+          body.detail ===
+          "That identifier is already in use. Choose another or leave it blank."
+        ) {
+          message = body.detail;
+        }
+      } catch {
+        // Keep the safe generic message if the server response cannot be parsed.
+      }
+      throw new DashboardApiError(message, 409, "conflict");
+    }
     if (response.status === 400) {
       try {
         const body = (await response.json()) as Record<string, unknown>;
@@ -1032,7 +1079,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
         if (typeof body.message === "string") {
           message = body.message;
         } else if (Array.isArray(body.message)) {
-          message = body.message.filter((m): m is string => typeof m === "string").join(". ");
+          message = body.message
+            .filter((m): m is string => typeof m === "string")
+            .join(". ");
         }
 
         throw new DashboardApiError(message, 400, "validation", issues);
@@ -1215,7 +1264,9 @@ export async function listStructureCategories(
   locale = "en",
   signal?: AbortSignal,
 ): Promise<{ items: StructureCategory[] }> {
-  const url = buildDashboardUrl("/api/v1/scientific-structure/categories", { locale });
+  const url = buildDashboardUrl("/api/v1/scientific-structure/categories", {
+    locale,
+  });
 
   try {
     const response = await fetch(url, {
@@ -1289,11 +1340,14 @@ export async function getActiveTemplate(
   locale = "en",
   signal?: AbortSignal,
 ): Promise<ActiveScientificTemplate> {
-  const url = buildDashboardUrl("/api/v1/scientific-structure/templates/active", {
-    categoryId,
-    recordTypeId,
-    locale,
-  });
+  const url = buildDashboardUrl(
+    "/api/v1/scientific-structure/templates/active",
+    {
+      categoryId,
+      recordTypeId,
+      locale,
+    },
+  );
 
   try {
     const response = await fetch(url, {
@@ -1406,7 +1460,10 @@ export async function getRecord(
   recordId: string,
   signal?: AbortSignal,
 ): Promise<ScientificRecordDetail> {
-  const url = buildDashboardUrl(`/api/v1/records/${encodeURIComponent(recordId)}`, {});
+  const url = buildDashboardUrl(
+    `/api/v1/records/${encodeURIComponent(recordId)}`,
+    {},
+  );
 
   try {
     const response = await fetch(url, {
@@ -1441,7 +1498,10 @@ export async function updateRecord(
   payload: UpdateRecordPayload,
   signal?: AbortSignal,
 ): Promise<ScientificRecordDetail> {
-  const url = buildDashboardUrl(`/api/v1/records/${encodeURIComponent(recordId)}`, {});
+  const url = buildDashboardUrl(
+    `/api/v1/records/${encodeURIComponent(recordId)}`,
+    {},
+  );
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",

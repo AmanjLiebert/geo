@@ -46,6 +46,12 @@ const SCIENTIFIC_SECTION: NavSection = {
       description: "Geological records: view, create, and edit draft records.",
     },
     {
+      id: "categories",
+      label: "Categories",
+      href: "/dashboard/categories",
+      description: "Organize geological categories and subcategories.",
+    },
+    {
       id: "research",
       label: "Research",
       href: "/dashboard/research",

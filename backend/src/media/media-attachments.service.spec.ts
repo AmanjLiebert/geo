@@ -35,6 +35,8 @@ describe('MediaService record attachments', () => {
     expect(managerQuery.mock.calls[0]?.[0]).toContain('FOR UPDATE');
     expect(managerQuery.mock.calls[1]?.[0]).toContain('INSERT INTO record_media');
     expect(managerQuery.mock.calls[1]?.[1]).toEqual([recordId, mediaAssetId, 'field photo']);
+    expect(managerQuery.mock.calls[2]?.[0]).toContain('UPDATE scientific_records');
+    expect(managerQuery.mock.calls[3]?.[0]).toContain('INSERT INTO content_audit_events');
   });
 
   it.each(['published', 'archived'])('blocks attachment changes to %s records', async (status) => {

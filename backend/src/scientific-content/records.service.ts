@@ -157,86 +157,102 @@ export class RecordsService {
     const stableId = randomUUID();
     const attributes = input.attributes ?? {};
 
-    await this.dataSource.transaction(async (manager) => {
-      const classification = await this.resolveClassification(
-        manager,
-        input.categoryId,
-        input.recordTypeId,
-      );
-      if (classification) {
-        const fields = await this.loadFields(manager, classification.template_version_id);
-        this.assertValidAttributes(fields, attributes, false);
-      } else if (Object.keys(attributes).length > 0) {
-        throw new BadRequestException('An unclassified draft cannot contain template attributes.');
-      }
+    try {
+      await this.dataSource.transaction(async (manager) => {
+        const classification = await this.resolveClassification(
+          manager,
+          input.categoryId,
+          input.recordTypeId,
+        );
+        if (classification) {
+          const fields = await this.loadFields(manager, classification.template_version_id);
+          this.assertValidAttributes(fields, attributes, false);
+        } else if (Object.keys(attributes).length > 0) {
+          throw new BadRequestException(
+            'An unclassified draft cannot contain template attributes.',
+          );
+        }
 
-      await manager.query(
-        `
+        await manager.query(
+          `
           INSERT INTO scientific_records (
             id, stable_id, slug, status, category_id, record_type_id,
             template_version_id, attributes, owner_user_id
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
         `,
-        [
-          id,
-          stableId,
-          input.slug ?? null,
-          classification ? ScientificRecordStatus.DRAFT : ScientificRecordStatus.UNCLASSIFIED_DRAFT,
-          classification?.category_id ?? null,
-          classification?.record_type_id ?? null,
-          classification?.template_version_id ?? null,
-          JSON.stringify(attributes),
-          actorUserId,
-        ],
-      );
-      await this.writeRevision(manager, id, actorUserId, 'record.created');
-      await this.writeAudit(manager, actorUserId, 'scientific-record.created', id, {
-        classified: classification !== null,
+          [
+            id,
+            stableId,
+            input.slug ?? null,
+            classification
+              ? ScientificRecordStatus.DRAFT
+              : ScientificRecordStatus.UNCLASSIFIED_DRAFT,
+            classification?.category_id ?? null,
+            classification?.record_type_id ?? null,
+            classification?.template_version_id ?? null,
+            JSON.stringify(attributes),
+            actorUserId,
+          ],
+        );
+        await this.writeRevision(manager, id, actorUserId, 'record.created');
+        await this.writeAudit(manager, actorUserId, 'scientific-record.created', id, {
+          classified: classification !== null,
+        });
       });
-    });
+    } catch (error) {
+      if (isScientificRecordSlugConflict(error)) {
+        throw new ConflictException(
+          'That identifier is already in use. Choose another or leave it blank.',
+        );
+      }
+      throw error;
+    }
 
     return this.get(id);
   }
 
   async update(actorUserId: string, recordId: string, input: UpdateRecordDto) {
-    await this.dataSource.transaction(async (manager) => {
-      const current = await this.findRecord(manager, recordId, true);
-      this.assertEditable(current);
+    try {
+      await this.dataSource.transaction(async (manager) => {
+        const current = await this.findRecord(manager, recordId, true);
+        this.assertEditable(current);
 
-      const classificationChanged =
-        input.categoryId !== undefined || input.recordTypeId !== undefined;
-      let classification: ClassificationRow | null;
-      if (classificationChanged) {
-        if (current.status !== ScientificRecordStatus.UNCLASSIFIED_DRAFT) {
+        const classificationChanged =
+          input.categoryId !== undefined || input.recordTypeId !== undefined;
+        let classification: ClassificationRow | null;
+        if (classificationChanged) {
+          if (current.status !== ScientificRecordStatus.UNCLASSIFIED_DRAFT) {
+            throw new BadRequestException(
+              'Reclassifying an already classified record is not permitted.',
+            );
+          }
+          classification = await this.resolveClassification(
+            manager,
+            input.categoryId,
+            input.recordTypeId,
+          );
+        } else if (current.template_version_id) {
+          classification = {
+            category_id: current.category_id as string,
+            record_type_id: current.record_type_id as string,
+            template_version_id: current.template_version_id,
+          };
+        } else {
+          classification = null;
+        }
+
+        const attributes = input.attributes ?? current.attributes;
+        if (classification) {
+          const fields = await this.loadFields(manager, classification.template_version_id);
+          this.assertValidAttributes(fields, attributes, false);
+        } else if (Object.keys(attributes).length > 0) {
           throw new BadRequestException(
-            'Reclassifying an already classified record is not permitted.',
+            'An unclassified draft cannot contain template attributes.',
           );
         }
-        classification = await this.resolveClassification(
-          manager,
-          input.categoryId,
-          input.recordTypeId,
-        );
-      } else if (current.template_version_id) {
-        classification = {
-          category_id: current.category_id as string,
-          record_type_id: current.record_type_id as string,
-          template_version_id: current.template_version_id,
-        };
-      } else {
-        classification = null;
-      }
 
-      const attributes = input.attributes ?? current.attributes;
-      if (classification) {
-        const fields = await this.loadFields(manager, classification.template_version_id);
-        this.assertValidAttributes(fields, attributes, false);
-      } else if (Object.keys(attributes).length > 0) {
-        throw new BadRequestException('An unclassified draft cannot contain template attributes.');
-      }
-
-      await manager.query(
-        `
+        await manager.query(
+          `
           UPDATE scientific_records
           SET slug = $2,
               status = $3,
@@ -247,19 +263,29 @@ export class RecordsService {
               updated_at = now()
           WHERE id = $1
         `,
-        [
-          recordId,
-          input.slug === undefined ? current.slug : input.slug,
-          classification ? ScientificRecordStatus.DRAFT : ScientificRecordStatus.UNCLASSIFIED_DRAFT,
-          classification?.category_id ?? null,
-          classification?.record_type_id ?? null,
-          classification?.template_version_id ?? null,
-          JSON.stringify(attributes),
-        ],
-      );
-      await this.writeRevision(manager, recordId, actorUserId, 'record.updated');
-      await this.writeAudit(manager, actorUserId, 'scientific-record.updated', recordId, {});
-    });
+          [
+            recordId,
+            input.slug === undefined ? current.slug : input.slug,
+            classification
+              ? ScientificRecordStatus.DRAFT
+              : ScientificRecordStatus.UNCLASSIFIED_DRAFT,
+            classification?.category_id ?? null,
+            classification?.record_type_id ?? null,
+            classification?.template_version_id ?? null,
+            JSON.stringify(attributes),
+          ],
+        );
+        await this.writeRevision(manager, recordId, actorUserId, 'record.updated');
+        await this.writeAudit(manager, actorUserId, 'scientific-record.updated', recordId, {});
+      });
+    } catch (error) {
+      if (isScientificRecordSlugConflict(error)) {
+        throw new ConflictException(
+          'That identifier is already in use. Choose another or leave it blank.',
+        );
+      }
+      throw error;
+    }
 
     return this.get(recordId);
   }
@@ -710,4 +736,13 @@ export class RecordsService {
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
   });
+}
+
+function isScientificRecordSlugConflict(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const value = error as { code?: unknown; constraint?: unknown; driverError?: unknown };
+  if (value.code === '23505' && value.constraint === 'scientific_records_slug_key') return true;
+  if (typeof value.driverError !== 'object' || value.driverError === null) return false;
+  const driver = value.driverError as { code?: unknown; constraint?: unknown };
+  return driver.code === '23505' && driver.constraint === 'scientific_records_slug_key';
 }

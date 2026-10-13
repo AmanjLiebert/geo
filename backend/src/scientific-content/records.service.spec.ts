@@ -257,6 +257,33 @@ describe('RecordsService.list', () => {
 });
 
 describe('RecordsService.update state enforcement and pinned template versions', () => {
+  it('returns a safe conflict when a draft identifier is already used', async () => {
+    const dataSource = {
+      transaction: vi.fn().mockRejectedValue({
+        code: '23505',
+        constraint: 'scientific_records_slug_key',
+      }),
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await expect(service.create('actor-1', { slug: 'existing-record' })).rejects.toThrow(
+      'That identifier is already in use. Choose another or leave it blank.',
+    );
+    await expect(
+      service.update('actor-1', 'record-1', { slug: 'existing-record' }),
+    ).rejects.toThrow('That identifier is already in use. Choose another or leave it blank.');
+  });
+
+  it('does not mislabel unrelated database failures as identifier conflicts', async () => {
+    const databaseError = { code: '23505', constraint: 'another_unique_key' };
+    const dataSource = {
+      transaction: vi.fn().mockRejectedValue(databaseError),
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await expect(service.create('actor-1', {})).rejects.toBe(databaseError);
+  });
+
   it('rejects editing published records with ConflictException', async () => {
     const queryMock = vi.fn().mockImplementation((sql: string) => {
       if (sql.includes('SELECT * FROM scientific_records')) {

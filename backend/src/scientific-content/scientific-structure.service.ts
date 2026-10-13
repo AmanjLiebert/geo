@@ -1,7 +1,13 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { DataSource } from 'typeorm';
 import { CreateStructureRequestDto } from './dto/create-structure-request.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
 import { FieldDataType, FieldDefinition } from './scientific-content.types';
 import { applyFieldMapping, validateAttributes } from './template-validation';
 
@@ -14,6 +20,9 @@ interface CategoryRow {
   position: number;
   name: string | null;
   description: string | null;
+  summary: string | null;
+  publication_status: string;
+  image_media_asset_id: string | null;
 }
 
 interface RecordTypeRow {
@@ -81,7 +90,7 @@ export class ScientificStructureService {
     const rows = (await this.dataSource.query(
       `
         SELECT c.id, c.parent_id, c.stable_key, c.slug, c.records_allowed, c.position,
-               ct.name, ct.description
+               c.publication_status, c.image_media_asset_id, ct.name, ct.summary, ct.description
         FROM categories c
         LEFT JOIN category_translations ct
           ON ct.category_id = c.id AND ct.locale = $1
@@ -101,9 +110,85 @@ export class ScientificStructureService {
         position: row.position,
         name: row.name ?? row.stable_key,
         description: row.description,
+        summary: row.summary,
+        publicationStatus: row.publication_status,
+        imageMediaAssetId: row.image_media_asset_id,
         locale,
         translationAvailable: row.name !== null,
       })),
+    };
+  }
+
+  async createCategory(actorUserId: string, input: CreateCategoryDto) {
+    const title = input.title.trim();
+    const summary = input.summary.trim();
+    const description = input.description.trim();
+    if (title.length < 2 || summary.length < 2 || description.length < 2) {
+      throw new BadRequestException('Complete the category title, summary, and description.');
+    }
+    const id = randomUUID();
+    // The suffix makes an editable title independent of the permanent route identity.
+    const slugBase =
+      title
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 90) || 'category';
+    const slug = `${slugBase}-${id.slice(0, 8)}`;
+    await this.dataSource.transaction(async (manager) => {
+      if (input.parentId) {
+        const parent = await manager.query<Array<{ id: string; parent_id: string | null }>>(
+          `SELECT id, parent_id FROM categories WHERE id = $1 AND status = 'active' FOR UPDATE`,
+          [input.parentId],
+        );
+        if (!parent[0]) throw new NotFoundException('Parent category was not found.');
+        if (parent[0].parent_id)
+          throw new BadRequestException('Only two category levels are available.');
+      }
+      if (input.imageMediaAssetId) {
+        const images = await manager.query<Array<{ id: string }>>(
+          `SELECT id FROM media_assets WHERE id = $1 AND owner_user_id = $2 AND media_kind = 'image' AND processing_status NOT IN ('rejected', 'archived', 'failed') FOR UPDATE`,
+          [input.imageMediaAssetId, actorUserId],
+        );
+        if (!images[0]) throw new BadRequestException('Choose an image uploaded by your account.');
+      }
+      const types = await manager.query<Array<{ type_id: string; version_id: string }>>(
+        `SELECT rt.id AS type_id, tv.id AS version_id FROM record_types rt JOIN record_templates t ON t.record_type_id = rt.id JOIN template_versions tv ON tv.template_id = t.id AND tv.status = 'active' WHERE rt.stable_key = 'general_geological_record' AND rt.status = 'active'`,
+      );
+      if (!types[0]) throw new ConflictException('The general record form is unavailable.');
+      await manager.query(
+        `INSERT INTO categories (id, parent_id, stable_key, slug, records_allowed, publication_status, image_media_asset_id, position) VALUES ($1,$2,$3,$4,true,'draft',$5,(SELECT COALESCE(MAX(position),-1)+1 FROM categories WHERE parent_id IS NOT DISTINCT FROM $2::uuid))`,
+        [
+          id,
+          input.parentId ?? null,
+          `managed_${id.replaceAll('-', '')}`,
+          slug,
+          input.imageMediaAssetId ?? null,
+        ],
+      );
+      await manager.query(
+        `INSERT INTO category_translations (category_id, locale, name, summary, description) VALUES ($1,'en',$2,$3,$4)`,
+        [id, title, summary, description],
+      );
+      await manager.query(
+        `INSERT INTO category_record_types (category_id, record_type_id, active_template_version_id) VALUES ($1,$2,$3)`,
+        [id, types[0].type_id, types[0].version_id],
+      );
+      await manager.query(
+        `INSERT INTO content_audit_events (actor_user_id, action, target_type, target_id, metadata) VALUES ($1,'category.created','category',$2,$3::jsonb)`,
+        [actorUserId, id, JSON.stringify({ parentId: input.parentId ?? null })],
+      );
+    });
+    return {
+      id,
+      parentId: input.parentId ?? null,
+      slug,
+      title,
+      summary,
+      description,
+      publicationStatus: 'draft',
+      imageMediaAssetId: input.imageMediaAssetId ?? null,
     };
   }
 

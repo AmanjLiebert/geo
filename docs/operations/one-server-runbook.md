@@ -16,13 +16,14 @@
 3. Set `SITE_ADDRESS` to the real HTTPS domain and set `CORS_ORIGINS` to approved browser origins.
 4. Keep `SWAGGER_ENABLED=false` in production unless the API documentation is deliberately protected.
 5. Complete `docs/operations/firebase-auth-setup.md` and place the Firebase service account outside Git.
-6. Run `docker compose build`.
-7. Run `docker compose up -d`.
-8. Create the first admin invitation with the documented maintenance command.
-9. Verify `https://<domain>/health/live`, `https://<domain>/health/ready`, visitor sign-in, invited admin sign-in, and sign-out.
-10. Verify that PostgreSQL, the API port, the worker, and `/metrics` are not reachable directly from the public network.
-11. Run the PostgreSQL job proof from the backend image or a controlled maintenance shell.
-12. Run the backup and restore rehearsal before entering real content.
+6. On the separate private primary-media bucket, allow browser `PUT` CORS only from the exact deployed frontend HTTPS origin and only for the upload headers the signed request requires. Keep the bucket private; never use `*` as an allowed origin. Local development may use `http://localhost:3000`, while the one-server Docker proxy uses `http://localhost`; authorize each exact origin only when that environment is in use. A missing bucket CORS rule blocks browser uploads even when server-side signed-upload rehearsals pass. Verify the preflight `OPTIONS` response returns the requesting origin before testing the upload form.
+7. Run `docker compose build`.
+8. Run `docker compose up -d`.
+9. Create the first admin invitation with the documented maintenance command.
+10. Verify `https://<domain>/health/live`, `https://<domain>/health/ready`, visitor sign-in, invited admin sign-in, and sign-out.
+11. Verify that PostgreSQL, the API port, the worker, and `/metrics` are not reachable directly from the public network.
+12. Run the PostgreSQL job proof from the backend image or a controlled maintenance shell.
+13. Run the backup and restore rehearsal before entering real content.
 
 ## Release procedure
 
