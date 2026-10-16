@@ -111,9 +111,27 @@ describe('category readiness evaluation', () => {
 });
 
 describe('category publication service', () => {
+  function defaultCategoryRowForChild() {
+    return {
+      id: 'sub-1',
+      parent_id: 'parent-1',
+      status: 'active',
+      publication_status: 'draft',
+      name: 'Subcategory',
+      summary: 'Subcategory summary',
+      description: 'Subcategory description',
+      image_media_asset_id: 'img-1',
+      position: 1,
+      draft_title: null,
+      image_processing_status: 'approved',
+      image_rights_statement: 'CC BY',
+    };
+  }
+
   function harness(options?: {
     categoryRow?: Record<string, unknown>;
-    mediaFound?: boolean;
+    parentRow?: Record<string, unknown> | null;
+    mediaRow?: Record<string, unknown> | null;
   }) {
     const queries: Array<{ sql: string; params: unknown[] }> = [];
     const defaultRow = {
@@ -149,8 +167,33 @@ describe('category publication service', () => {
       if (sql.includes('SELECT id, status, publication_status FROM categories')) {
         return Promise.resolve(row ? [row] : []);
       }
-      if (sql.includes('SELECT id FROM media_assets')) {
-        return Promise.resolve(options?.mediaFound !== false ? [{ id: 'img-1' }] : []);
+      if (sql.includes('SELECT status, publication_status') && sql.includes('FOR SHARE')) {
+        const parentRow =
+          options?.parentRow !== undefined
+            ? options.parentRow
+            : row && row.parent_id
+              ? {
+                  status: row.parent_status ?? 'active',
+                  publication_status: row.parent_publication_status ?? 'published',
+                }
+              : null;
+        return Promise.resolve(parentRow ? [parentRow] : []);
+      }
+      if (sql.includes('FROM media_assets') && sql.includes('FOR SHARE')) {
+        const mediaRow =
+          options?.mediaRow !== undefined
+            ? options.mediaRow
+            : {
+                processing_status:
+                  row?.draft_title !== null
+                    ? (row?.draft_image_processing_status ?? 'approved')
+                    : (row?.image_processing_status ?? 'approved'),
+                rights_statement:
+                  row?.draft_title !== null
+                    ? (row?.draft_image_rights_statement ?? 'Public domain')
+                    : (row?.image_rights_statement ?? 'Public domain'),
+              };
+        return Promise.resolve(mediaRow ? [mediaRow] : []);
       }
       return Promise.resolve([]);
     });
@@ -174,11 +217,17 @@ describe('category publication service', () => {
     });
 
     expect(queries.some((q) => q.sql.includes('FOR UPDATE OF c'))).toBe(true);
+    const lockedMedia = queries.find(
+      (q) => q.sql.includes('FROM media_assets') && q.sql.includes('FOR SHARE'),
+    );
+    expect(lockedMedia?.params).toEqual(['img-draft-1']);
     const updateCategory = queries.find((q) => q.sql.includes('UPDATE categories'));
     expect(updateCategory).toBeDefined();
     expect(updateCategory?.params).toEqual(['cat-1', 'img-draft-1', 2]);
 
-    const upsertTranslation = queries.find((q) => q.sql.includes('INSERT INTO category_translations'));
+    const upsertTranslation = queries.find((q) =>
+      q.sql.includes('INSERT INTO category_translations'),
+    );
     expect(upsertTranslation).toBeDefined();
     expect(upsertTranslation?.params).toEqual([
       'cat-1',
@@ -222,7 +271,7 @@ describe('category publication service', () => {
   });
 
   it('rejects publishing when parent is unpublished or archived', async () => {
-    const { service } = harness({
+    const { service, queries } = harness({
       categoryRow: {
         id: 'sub-1',
         parent_id: 'parent-1',
@@ -239,11 +288,52 @@ describe('category publication service', () => {
         image_processing_status: 'approved',
         image_rights_statement: 'CC BY',
       },
+      parentRow: { status: 'active', publication_status: 'draft' },
     });
 
-    await expect(service.publishCategory('teacher-1', 'sub-1')).rejects.toThrow(
-      ConflictException,
+    await expect(service.publishCategory('teacher-1', 'sub-1')).rejects.toThrow(ConflictException);
+    expect(
+      queries.some(
+        (query) =>
+          query.sql.includes('SELECT status, publication_status') &&
+          query.sql.includes('FOR SHARE'),
+      ),
+    ).toBe(true);
+    expect(queries.some((query) => query.sql.includes('UPDATE categories'))).toBe(false);
+  });
+
+  it('uses the locked parent state and rejects an archived parent without promotion', async () => {
+    const { service, queries } = harness({
+      categoryRow: {
+        ...defaultCategoryRowForChild(),
+      },
+      parentRow: { status: 'archived', publication_status: 'published' },
+    });
+
+    await expect(service.publishCategory('teacher-1', 'sub-1')).rejects.toThrow(ConflictException);
+    expect(queries.some((query) => query.sql.includes('UPDATE categories'))).toBe(false);
+  });
+
+  it.each([
+    { name: 'missing', mediaRow: null },
+    {
+      name: 'rejected',
+      mediaRow: { processing_status: 'rejected', rights_statement: 'CC BY' },
+    },
+    {
+      name: 'without rights',
+      mediaRow: { processing_status: 'approved', rights_statement: '   ' },
+    },
+  ])('rejects $name locked media state without partial promotion', async ({ mediaRow }) => {
+    const { service, queries } = harness({ mediaRow });
+
+    await expect(service.publishCategory('teacher-1', 'cat-1')).rejects.toThrow(
+      BadRequestException,
     );
+    expect(queries.some((query) => query.sql.includes('UPDATE categories'))).toBe(false);
+    expect(
+      queries.some((query) => query.sql.includes('DELETE FROM category_draft_revisions')),
+    ).toBe(false);
   });
 
   it('rejects publishing an archived category with 409 Conflict', async () => {
@@ -264,9 +354,7 @@ describe('category publication service', () => {
       },
     });
 
-    await expect(service.publishCategory('teacher-1', 'cat-1')).rejects.toThrow(
-      ConflictException,
-    );
+    await expect(service.publishCategory('teacher-1', 'cat-1')).rejects.toThrow(ConflictException);
   });
 
   it('rejects duplicate publish when category is already published with no draft changes', async () => {
@@ -287,9 +375,7 @@ describe('category publication service', () => {
       },
     });
 
-    await expect(service.publishCategory('teacher-1', 'cat-1')).rejects.toThrow(
-      ConflictException,
-    );
+    await expect(service.publishCategory('teacher-1', 'cat-1')).rejects.toThrow(ConflictException);
   });
 
   it('unpublishes a published category, writes audit event, and preserves all other data', async () => {
@@ -304,12 +390,16 @@ describe('category publication service', () => {
     const result = await service.unpublishCategory('teacher-1', 'cat-1');
     expect(result).toEqual({ id: 'cat-1', publicationStatus: 'draft' });
 
-    const update = queries.find((q) => q.sql.includes('UPDATE categories SET publication_status ='));
+    const update = queries.find((q) =>
+      q.sql.includes('UPDATE categories SET publication_status ='),
+    );
     expect(update).toBeDefined();
     expect(update?.params).toEqual(['cat-1']);
 
     const audit = queries.find(
-      (q) => q.sql.includes('INSERT INTO content_audit_events') && q.params.includes('category.unpublished'),
+      (q) =>
+        q.sql.includes('INSERT INTO content_audit_events') &&
+        q.params.includes('category.unpublished'),
     );
     expect(audit).toBeDefined();
 

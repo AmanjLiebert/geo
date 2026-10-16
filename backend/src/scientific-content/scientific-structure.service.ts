@@ -9,7 +9,12 @@ import { DataSource } from 'typeorm';
 import { CreateStructureRequestDto } from './dto/create-structure-request.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { EditCategoryDto } from './dto/edit-category.dto';
-import { FieldDataType, FieldDefinition, ValidationIssue, CategoryReadinessResult } from './scientific-content.types';
+import {
+  FieldDataType,
+  FieldDefinition,
+  ValidationIssue,
+  CategoryReadinessResult,
+} from './scientific-content.types';
 import { applyFieldMapping, validateAttributes } from './template-validation';
 
 interface CategoryRow {
@@ -591,23 +596,15 @@ export class ScientificStructureService {
       const rows = (await manager.query(
         `
           SELECT c.id, c.parent_id, c.status, c.publication_status, c.image_media_asset_id, c.position,
-                 p.status AS parent_status, p.publication_status AS parent_publication_status,
                  ct.name, ct.summary, ct.description,
                  dr.title AS draft_title, dr.summary AS draft_summary,
                  dr.description AS draft_description,
                  dr.image_media_asset_id AS draft_image_media_asset_id,
-                 dr.position AS draft_position,
-                 m.processing_status AS image_processing_status,
-                 m.rights_statement AS image_rights_statement,
-                 dm.processing_status AS draft_image_processing_status,
-                 dm.rights_statement AS draft_image_rights_statement
+                 dr.position AS draft_position
           FROM categories c
-          LEFT JOIN categories p ON p.id = c.parent_id
           LEFT JOIN category_draft_revisions dr ON dr.category_id = c.id
           LEFT JOIN category_translations ct
             ON ct.category_id = c.id AND ct.locale = 'en'
-          LEFT JOIN media_assets m ON m.id = c.image_media_asset_id
-          LEFT JOIN media_assets dm ON dm.id = dr.image_media_asset_id
           WHERE c.id = $1
           FOR UPDATE OF c
         `,
@@ -621,33 +618,63 @@ export class ScientificStructureService {
         throw new ConflictException('Archived categories cannot be published.');
       }
 
-      if (row.parent_id) {
-        if (row.parent_status !== 'active') {
-          throw new ConflictException('Parent category is archived.');
-        }
-        if (row.parent_publication_status !== 'published') {
-          throw new ConflictException('Parent category must be published before this subcategory can publish.');
-        }
-      }
-
       const hasDraft = row.draft_title !== null;
       const title = (hasDraft ? row.draft_title : row.name)?.trim() ?? '';
       const summary = (hasDraft ? row.draft_summary : row.summary)?.trim() ?? '';
       const description = (hasDraft ? row.draft_description : row.description)?.trim() ?? '';
       const imageAssetId = hasDraft ? row.draft_image_media_asset_id : row.image_media_asset_id;
       const position = hasDraft && row.draft_position !== null ? row.draft_position : row.position;
-      const imageProcessingStatus = hasDraft
-        ? row.draft_image_processing_status
-        : row.image_processing_status;
-      const imageRightsStatement = hasDraft
-        ? row.draft_image_rights_statement
-        : row.image_rights_statement;
+
+      if (row.publication_status === 'published' && !hasDraft) {
+        throw new ConflictException('Category is already published with no pending changes.');
+      }
+
+      let parentStatus: string | null = null;
+      let parentPublicationStatus: string | null = null;
+      if (row.parent_id) {
+        const parentRows = await manager.query<
+          Array<{ status: string; publication_status: string }>
+        >(
+          `SELECT status, publication_status
+           FROM categories
+           WHERE id = $1
+           FOR SHARE`,
+          [row.parent_id],
+        );
+        const parent = parentRows[0];
+        if (!parent || parent.status !== 'active') {
+          throw new ConflictException('Parent category is archived or unavailable.');
+        }
+        if (parent.publication_status !== 'published') {
+          throw new ConflictException(
+            'Parent category must be published before this subcategory can publish.',
+          );
+        }
+        parentStatus = parent.status;
+        parentPublicationStatus = parent.publication_status;
+      }
+
+      let imageProcessingStatus: string | null = null;
+      let imageRightsStatement: string | null = null;
+      if (imageAssetId) {
+        const mediaRows = await manager.query<
+          Array<{ processing_status: string; rights_statement: string | null }>
+        >(
+          `SELECT processing_status, rights_statement
+           FROM media_assets
+           WHERE id = $1
+           FOR SHARE`,
+          [imageAssetId],
+        );
+        imageProcessingStatus = mediaRows[0]?.processing_status ?? null;
+        imageRightsStatement = mediaRows[0]?.rights_statement ?? null;
+      }
 
       const issues = evaluateCategoryReadiness({
         status: row.status,
         parentId: row.parent_id,
-        parentStatus: row.parent_status,
-        parentPublicationStatus: row.parent_publication_status,
+        parentStatus,
+        parentPublicationStatus,
         title,
         summary,
         description,
@@ -661,14 +688,6 @@ export class ScientificStructureService {
           message: 'Category is not ready for publication.',
           issues,
         });
-      }
-
-      if (row.publication_status === 'published' && !hasDraft) {
-        throw new ConflictException('Category is already published with no pending changes.');
-      }
-
-      if (imageAssetId) {
-        await manager.query(`SELECT id FROM media_assets WHERE id = $1 FOR SHARE`, [imageAssetId]);
       }
 
       await manager.query(
@@ -690,10 +709,9 @@ export class ScientificStructureService {
       );
 
       if (hasDraft) {
-        await manager.query(
-          `DELETE FROM category_draft_revisions WHERE category_id = $1`,
-          [categoryId],
-        );
+        await manager.query(`DELETE FROM category_draft_revisions WHERE category_id = $1`, [
+          categoryId,
+        ]);
       }
 
       await manager.query(

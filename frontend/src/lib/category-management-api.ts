@@ -26,9 +26,9 @@ export type ManagedCategory = {
   position: number;
   imageMediaAssetId: string | null;
   draftRevision: null | { title: string; summary: string; description: string; imageMediaAssetId: string | null; position: number };
-  readiness?: CategoryReadiness;
-  displayState?: CategoryDisplayState;
-  hasUnpublishedChanges?: boolean;
+  readiness: CategoryReadiness;
+  displayState: CategoryDisplayState;
+  hasUnpublishedChanges: boolean;
 };
 
 export function getCategoryBadgeState(item: ManagedCategory): CategoryBadgeState {
@@ -77,29 +77,28 @@ function object(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function parseReadiness(value: unknown, errorMessage: string): CategoryReadiness {
+  if (!object(value) || typeof value.publishable !== "boolean" || !Array.isArray(value.issues)) {
+    throw new DashboardApiError(errorMessage, 200, "server");
+  }
+  const issues = value.issues.map((issue) => {
+    if (!object(issue) || typeof issue.field !== "string" || typeof issue.code !== "string" || typeof issue.message !== "string") {
+      throw new DashboardApiError(errorMessage, 200, "server");
+    }
+    return { field: issue.field, code: issue.code, message: issue.message };
+  });
+  return { publishable: value.publishable, issues };
+}
+
 export async function listManagedCategories(): Promise<ManagedCategory[]> {
   const response = await requestRecordResource("/api/v1/scientific-structure/categories/manage?locale=en");
   if (!object(response) || !Array.isArray(response.items)) throw new DashboardApiError("Categories could not be loaded.", 200, "server");
   return response.items.map((item: unknown) => {
-    if (!object(item) || typeof item.id !== "string" || (item.parentId !== null && typeof item.parentId !== "string") || typeof item.name !== "string" || (item.summary !== null && typeof item.summary !== "string") || (item.description !== null && typeof item.description !== "string") || !["draft", "published"].includes(String(item.publicationStatus)) || !["active", "archived"].includes(String(item.status)) || !Number.isInteger(item.position) || (item.imageMediaAssetId !== null && typeof item.imageMediaAssetId !== "string") || (item.draftRevision !== null && (!object(item.draftRevision) || typeof item.draftRevision.title !== "string" || typeof item.draftRevision.summary !== "string" || typeof item.draftRevision.description !== "string" || !Number.isInteger(item.draftRevision.position) || (item.draftRevision.imageMediaAssetId !== null && typeof item.draftRevision.imageMediaAssetId !== "string")))) {
+    if (!object(item) || typeof item.id !== "string" || (item.parentId !== null && typeof item.parentId !== "string") || typeof item.name !== "string" || (item.summary !== null && typeof item.summary !== "string") || (item.description !== null && typeof item.description !== "string") || !["draft", "published"].includes(String(item.publicationStatus)) || !["active", "archived"].includes(String(item.status)) || !Number.isInteger(item.position) || (item.imageMediaAssetId !== null && typeof item.imageMediaAssetId !== "string") || (item.draftRevision !== null && (!object(item.draftRevision) || typeof item.draftRevision.title !== "string" || typeof item.draftRevision.summary !== "string" || typeof item.draftRevision.description !== "string" || !Number.isInteger(item.draftRevision.position) || (item.draftRevision.imageMediaAssetId !== null && typeof item.draftRevision.imageMediaAssetId !== "string"))) || typeof item.hasUnpublishedChanges !== "boolean" || typeof item.displayState !== "string" || !["draft", "published", "unpublished", "archived"].includes(item.displayState)) {
       throw new DashboardApiError("Categories could not be loaded.", 200, "server");
     }
-    let readiness: CategoryReadiness | undefined;
-    if (object(item.readiness) && typeof item.readiness.publishable === "boolean" && Array.isArray(item.readiness.issues)) {
-      readiness = {
-        publishable: item.readiness.publishable,
-        issues: item.readiness.issues.filter(object).map((issue) => ({
-          field: String(issue.field ?? ""),
-          code: String(issue.code ?? ""),
-          message: String(issue.message ?? ""),
-        })),
-      };
-    }
-    let displayState: CategoryDisplayState | undefined;
-    if (typeof item.displayState === "string" && ["draft", "published", "unpublished", "archived"].includes(item.displayState)) {
-      displayState = item.displayState as CategoryDisplayState;
-    }
-    const hasUnpublishedChanges = item.hasUnpublishedChanges === true;
+    const readiness = parseReadiness(item.readiness, "Categories could not be loaded.");
+    const displayState = item.displayState as CategoryDisplayState;
     return {
       id: item.id,
       parentId: item.parentId,
@@ -113,24 +112,14 @@ export async function listManagedCategories(): Promise<ManagedCategory[]> {
       draftRevision: item.draftRevision,
       readiness,
       displayState,
-      hasUnpublishedChanges,
+      hasUnpublishedChanges: item.hasUnpublishedChanges,
     } as ManagedCategory;
   });
 }
 
 export async function getCategoryReadiness(id: string): Promise<CategoryReadiness> {
   const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}/readiness`);
-  if (!object(result) || typeof result.publishable !== "boolean" || !Array.isArray(result.issues)) {
-    throw new DashboardApiError("Category readiness could not be loaded.", 200, "server");
-  }
-  return {
-    publishable: result.publishable,
-    issues: result.issues.filter(object).map((issue) => ({
-      field: String(issue.field ?? ""),
-      code: String(issue.code ?? ""),
-      message: String(issue.message ?? ""),
-    })),
-  };
+  return parseReadiness(result, "Category readiness could not be loaded.");
 }
 
 export async function publishCategory(id: string): Promise<void> {

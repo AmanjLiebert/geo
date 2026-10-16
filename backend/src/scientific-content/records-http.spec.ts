@@ -12,7 +12,8 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Environment } from '../config/environment';
-import { UserRole, UserStatus } from '../identity/access-control';
+import { Permission, UserRole, UserStatus } from '../identity/access-control';
+import { HIGH_RISK_ACTION_KEY, REQUIRED_PERMISSIONS_KEY } from '../identity/access.decorators';
 import { AccessGuard } from '../identity/access.guard';
 import { AuthContext } from '../identity/auth-context';
 import { hashToken } from '../identity/identity.utils';
@@ -107,6 +108,17 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
             id: 'sess-teacher',
             csrfTokenHash: validCsrfHash,
             reauthenticatedAt: new Date(),
+            mfaVerifiedAt: null,
+          },
+        } as AuthContext);
+      }
+      if (token === 'stale-teacher-session') {
+        return Promise.resolve({
+          user: { id: 'teacher-1', role: UserRole.TEACHER, status: UserStatus.ACTIVE },
+          session: {
+            id: 'sess-stale-teacher',
+            csrfTokenHash: validCsrfHash,
+            reauthenticatedAt: new Date(Date.now() - 10 * 60 * 1_000),
             mfaVerifiedAt: null,
           },
         } as AuthContext);
@@ -1151,6 +1163,20 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
   });
 
   describe('category readiness and publication boundary', () => {
+    it.each(['publishCategory', 'unpublishCategory'] as const)(
+      'marks %s as a dedicated high-risk publication action',
+      (methodName) => {
+        const method = Object.getOwnPropertyDescriptor(
+          ScientificStructureController.prototype,
+          methodName,
+        )?.value as (...args: unknown[]) => unknown;
+        expect(Reflect.getMetadata(REQUIRED_PERMISSIONS_KEY, method)).toEqual([
+          Permission.PUBLISH_SCIENTIFIC_CONTENT,
+        ]);
+        expect(Reflect.getMetadata(HIGH_RISK_ACTION_KEY, method)).toBe(true);
+      },
+    );
+
     it.each(['teacher-session', 'admin-session'])(
       'allows %s to check category readiness',
       async (session) => {
@@ -1166,7 +1192,9 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         });
         expect(response.statusCode).toBe(200);
         expect(response.body).toContain('"publishable":true');
-        expect(mockScientificStructureService.getCategoryReadiness).toHaveBeenCalledWith(validCategoryId);
+        expect(mockScientificStructureService.getCategoryReadiness).toHaveBeenCalledWith(
+          validCategoryId,
+        );
       },
     );
 
@@ -1245,6 +1273,18 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       }
     });
 
+    it('denies publish and unpublish when privileged authentication is stale', async () => {
+      for (const endpoint of ['publish', 'unpublish']) {
+        const response = await app.inject({
+          method: 'POST',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/${endpoint}`,
+          cookies: { gk_session: 'stale-teacher-session', gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+        });
+        expect(response.statusCode, endpoint).toBe(403);
+      }
+    });
+
     it('rejects invalid category UUID parameter', async () => {
       for (const endpoint of ['readiness', 'publish', 'unpublish']) {
         const method = endpoint === 'readiness' ? 'GET' : 'POST';
@@ -1290,10 +1330,7 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
 
         expect(response.statusCode).toBe(201);
         expect(response.body).toContain(validRecordId);
-        expect(mockRecordsService.create).toHaveBeenCalledWith(
-          expect.any(String),
-          payload,
-        );
+        expect(mockRecordsService.create).toHaveBeenCalledWith(expect.any(String), payload);
       },
     );
 

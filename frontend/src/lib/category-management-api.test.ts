@@ -98,6 +98,49 @@ describe("category management API", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toContain("/api/v1/scientific-structure/categories/cat-1/readiness");
   });
 
+  it.each([
+    ["missing readiness", { displayState: "draft", hasUnpublishedChanges: false }],
+    ["invalid display state", { displayState: "hidden", hasUnpublishedChanges: false, readiness: { publishable: true, issues: [] } }],
+    ["invalid unpublished-change flag", { displayState: "draft", hasUnpublishedChanges: "false", readiness: { publishable: true, issues: [] } }],
+    ["malformed readiness issue", { displayState: "draft", hasUnpublishedChanges: false, readiness: { publishable: false, issues: [{ field: "image", code: 42, message: "Image required." }] } }],
+  ])("rejects a managed category response with %s", async (_name, contractFields) => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          items: [{
+            id: "cat-1",
+            parentId: null,
+            name: "Fossils",
+            summary: "Fossil specimens",
+            description: "Detailed description",
+            publicationStatus: "draft",
+            status: "active",
+            position: 0,
+            imageMediaAssetId: "img-1",
+            draftRevision: null,
+            ...contractFields,
+          }],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(listManagedCategories()).rejects.toMatchObject({ message: "Categories could not be loaded.", kind: "server" });
+  });
+
+  it("rejects malformed category readiness issues instead of coercing them", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({ categoryId: "cat-1", publishable: false, issues: [{ field: "image", code: { unsafe: true }, message: "Image required." }] }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getCategoryReadiness("cat-1")).rejects.toMatchObject({ message: "Category readiness could not be loaded.", kind: "server" });
+  });
+
   it("publishes category via POST /publish", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(

@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { Permission } from '../identity/access-control';
-import { CurrentAuth, RequirePermissions } from '../identity/access.decorators';
+import { CurrentAuth, HighRiskAction, RequirePermissions } from '../identity/access.decorators';
 import { AuthContext } from '../identity/auth-context';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CreateStructureRequestDto } from './dto/create-structure-request.dto';
@@ -87,6 +87,8 @@ export class ScientificStructureController {
   }
 
   @Post('categories/:categoryId/publish')
+  @RequirePermissions(Permission.PUBLISH_SCIENTIFIC_CONTENT)
+  @HighRiskAction()
   @Header('Cache-Control', 'private, no-store')
   publishCategory(
     @CurrentAuth() auth: AuthContext,
@@ -96,6 +98,8 @@ export class ScientificStructureController {
   }
 
   @Post('categories/:categoryId/unpublish')
+  @RequirePermissions(Permission.PUBLISH_SCIENTIFIC_CONTENT)
+  @HighRiskAction()
   @Header('Cache-Control', 'private, no-store')
   unpublishCategory(
     @CurrentAuth() auth: AuthContext,
