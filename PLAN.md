@@ -12,7 +12,7 @@ The client approved dashboard management of categories and subcategories for bot
 6. **Real Explore:** replace mock geological collections/records in Explore and its detail pages with minimal published API projections; run Next.js dynamically on the existing server for new routes without rebuild. Gate: publish/edit/archive and empty states are reflected correctly.
 7. **End-to-end handoff:** role, security, responsive, direct-link, archive/restore, and empty-state checks; remove misleading showcase claims on converted pages.
 
-Phase 5 dashboard work remains active. Steps 1–3 passed their local migration, authorization, draft-editing, archive/restore, populated-branch recovery, and empty-branch recovery checks. Step 4 — record entry under newly managed branches — is next. Later steps require their own completion checks. “Visitor posts” means published geological records, not news or visitor submissions. New category creation supports two hierarchy levels initially. Existing records are not removed or silently reclassified.
+Phase 5 dashboard work remains active. Steps 1–4 passed their creation, draft-editing, archive/restore, record-entry, authorization, and preservation gates. Step 5A — category readiness and publication — is next; record review/publication follows as a separate focused task. Later steps require their own completion checks. “Visitor posts” means published geological records, not news or visitor submissions. New category creation supports two hierarchy levels initially. Existing records are not removed or silently reclassified.
 
 ## 1. Purpose
 

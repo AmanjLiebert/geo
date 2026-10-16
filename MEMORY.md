@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 5 / category-to-public-content step 4 — record entry |
-| Task folder | `docs/agent-work/phase-5-step-4-record-entry/` |
-| Status | `COMPLETE` |
+| Task | Phase 5 / step 5A — category readiness and publication |
+| Task folder | `docs/agent-work/phase-5-step-5a-category-publication/` |
+| Status | `READY_FOR_IMPLEMENTATION` |
 | Implementer | Antigravity |
 | Reviewer | Codex |
-| Plan gate | A teacher or admin can save and reopen a general geological draft under a newly managed category/subcategory; existing specialist record types continue to work. |
+| Plan gate | A teacher or admin can see category readiness, publish only a complete active category branch, and unpublish it without deleting content, records, revisions, or history. |
 
 ## Required file order
 
