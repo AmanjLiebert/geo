@@ -122,3 +122,12 @@
 - Clean distinction in `listCategories` and UI between fresh Drafts and categories that were previously Unpublished.
 - Subcategory readiness check enforcing published parent status.
 
+## Correction round
+
+- Correction commit: `54a2706f5704b3c95f77cd33a77e46cb38735bcf`
+- Category publish and unpublish now explicitly require `PUBLISH_SCIENTIFIC_CONTENT` and recent privileged authentication through `@HighRiskAction()`.
+- Publication now locks and re-reads the current parent and selected media asset before evaluating readiness. Missing, rejected, unapproved, non-rights-cleared, archived-parent, and unpublished-parent states abort without promotion.
+- Frontend parsing now requires the readiness/display-state contract and rejects malformed issue values instead of coercing them.
+- Focused backend tests: 107 passed. Focused frontend tests: 16 passed. Backend/frontend type checks and lint passed. `git diff --check` passed.
+- No schema, migration, routing, dependency, or build-configuration changes were made, so production builds were not repeated during the correction round.
+
