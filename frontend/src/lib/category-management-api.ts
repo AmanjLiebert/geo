@@ -8,6 +8,10 @@ export type ManagedCategory = {
   summary: string | null;
   description: string | null;
   publicationStatus: "draft" | "published";
+  status: "active" | "archived";
+  position: number;
+  imageMediaAssetId: string | null;
+  draftRevision: null | { title: string; summary: string; description: string; imageMediaAssetId: string | null; position: number };
 };
 
 function object(value: unknown): value is Record<string, unknown> {
@@ -15,14 +19,30 @@ function object(value: unknown): value is Record<string, unknown> {
 }
 
 export async function listManagedCategories(): Promise<ManagedCategory[]> {
-  const response = await requestRecordResource("/api/v1/scientific-structure/categories?locale=en");
+  const response = await requestRecordResource("/api/v1/scientific-structure/categories/manage?locale=en");
   if (!object(response) || !Array.isArray(response.items)) throw new DashboardApiError("Categories could not be loaded.", 200, "server");
   return response.items.map((item: unknown) => {
-    if (!object(item) || typeof item.id !== "string" || (item.parentId !== null && typeof item.parentId !== "string") || typeof item.name !== "string" || (item.summary !== null && typeof item.summary !== "string") || (item.description !== null && typeof item.description !== "string") || !["draft", "published"].includes(String(item.publicationStatus))) {
+    if (!object(item) || typeof item.id !== "string" || (item.parentId !== null && typeof item.parentId !== "string") || typeof item.name !== "string" || (item.summary !== null && typeof item.summary !== "string") || (item.description !== null && typeof item.description !== "string") || !["draft", "published"].includes(String(item.publicationStatus)) || !["active", "archived"].includes(String(item.status)) || !Number.isInteger(item.position) || (item.imageMediaAssetId !== null && typeof item.imageMediaAssetId !== "string") || (item.draftRevision !== null && (!object(item.draftRevision) || typeof item.draftRevision.title !== "string" || typeof item.draftRevision.summary !== "string" || typeof item.draftRevision.description !== "string" || !Number.isInteger(item.draftRevision.position) || (item.draftRevision.imageMediaAssetId !== null && typeof item.draftRevision.imageMediaAssetId !== "string")))) {
       throw new DashboardApiError("Categories could not be loaded.", 200, "server");
     }
-    return { id: item.id, parentId: item.parentId, name: item.name, summary: item.summary, description: item.description, publicationStatus: item.publicationStatus } as ManagedCategory;
+    return { id: item.id, parentId: item.parentId, name: item.name, summary: item.summary, description: item.description, publicationStatus: item.publicationStatus, status: item.status, position: item.position, imageMediaAssetId: item.imageMediaAssetId, draftRevision: item.draftRevision } as ManagedCategory;
   });
+}
+
+export async function previewCategoryArchive(id: string): Promise<{ categoryCount: number; recordCount: number; status: "active" | "archived" }> {
+  const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}/archive-preview`);
+  if (!object(result) || !Number.isInteger(result.categoryCount) || !Number.isInteger(result.recordCount) || !["active", "archived"].includes(String(result.status))) throw new DashboardApiError("Category impact could not be loaded.", 200, "server");
+  return result as { categoryCount: number; recordCount: number; status: "active" | "archived" };
+}
+
+export async function changeCategoryArchive(id: string, restore: boolean, impact: { categoryCount: number; recordCount: number }): Promise<void> {
+  const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}/${restore ? "restore" : "archive"}`, "POST", impact);
+  if (!object(result) || result.status !== (restore ? "active" : "archived")) throw new DashboardApiError("Category change could not be confirmed.", 200, "server");
+}
+
+export async function saveCategoryDraft(id: string, input: { title: string; summary: string; description: string; imageMediaAssetId: string | null; position: number }): Promise<void> {
+  const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}`, "PATCH", input);
+  if (!object(result) || result.id !== id || result.revisionSaved !== true) throw new DashboardApiError("The draft could not be confirmed.", 200, "server");
 }
 
 export async function createManagedCategory(input: { title: string; summary: string; description: string; parentId?: string; imageMediaAssetId?: string }): Promise<void> {

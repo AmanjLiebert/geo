@@ -6,6 +6,7 @@
 .form { display: grid; gap: 16px; }
 .form label { display: grid; gap: 6px; font-weight: 700; }
 .form input, .form select, .form textarea { width: 100%; min-height: 44px; padding: 10px; border: 2px solid var(--carbon); border-radius: 4px; background: #fff; color: var(--carbon); font: inherit; }
+.form input[type="checkbox"] { width: 22px; min-height: 22px; margin-right: 10px; accent-color: var(--shale); }
 .form button { min-height: 44px; padding: 10px 20px; background: var(--shale); color: white; border: 2px solid var(--carbon); border-radius: 4px; box-shadow: 3px 3px 0 var(--carbon); font-weight: 700; cursor: pointer; }
 .form button:disabled { opacity: .6; cursor: wait; }
 .tree { display: grid; gap: 16px; padding-left: 20px; }

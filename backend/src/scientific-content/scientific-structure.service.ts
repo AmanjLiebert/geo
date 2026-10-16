@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { DataSource } from 'typeorm';
 import { CreateStructureRequestDto } from './dto/create-structure-request.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { EditCategoryDto } from './dto/edit-category.dto';
 import { FieldDataType, FieldDefinition } from './scientific-content.types';
 import { applyFieldMapping, validateAttributes } from './template-validation';
 
@@ -22,7 +23,13 @@ interface CategoryRow {
   description: string | null;
   summary: string | null;
   publication_status: string;
+  status: string;
   image_media_asset_id: string | null;
+  draft_title: string | null;
+  draft_summary: string | null;
+  draft_description: string | null;
+  draft_image_media_asset_id: string | null;
+  draft_position: number | null;
 }
 
 interface RecordTypeRow {
@@ -86,18 +93,23 @@ interface StructureRequestRow {
 export class ScientificStructureService {
   constructor(private readonly dataSource: DataSource) {}
 
-  async listCategories(locale: string) {
+  async listCategories(locale: string, includeArchived = false) {
     const rows = (await this.dataSource.query(
       `
-        SELECT c.id, c.parent_id, c.stable_key, c.slug, c.records_allowed, c.position,
-               c.publication_status, c.image_media_asset_id, ct.name, ct.summary, ct.description
+        SELECT c.id, c.parent_id, c.stable_key, c.slug, c.records_allowed, c.position, c.status,
+               c.publication_status, c.image_media_asset_id, ct.name, ct.summary, ct.description,
+               dr.title AS draft_title, dr.summary AS draft_summary,
+               dr.description AS draft_description,
+               dr.image_media_asset_id AS draft_image_media_asset_id,
+               dr.position AS draft_position
         FROM categories c
+        LEFT JOIN category_draft_revisions dr ON dr.category_id = c.id
         LEFT JOIN category_translations ct
           ON ct.category_id = c.id AND ct.locale = $1
-        WHERE c.status = 'active'
+        WHERE (c.status = 'active' OR $2::boolean)
         ORDER BY c.parent_id NULLS FIRST, c.position, c.stable_key
       `,
-      [locale],
+      [locale, includeArchived],
     )) as unknown as CategoryRow[];
 
     return {
@@ -112,9 +124,20 @@ export class ScientificStructureService {
         description: row.description,
         summary: row.summary,
         publicationStatus: row.publication_status,
+        status: row.status,
         imageMediaAssetId: row.image_media_asset_id,
         locale,
         translationAvailable: row.name !== null,
+        draftRevision:
+          row.draft_title === null
+            ? null
+            : {
+                title: row.draft_title,
+                summary: row.draft_summary,
+                description: row.draft_description,
+                imageMediaAssetId: row.draft_image_media_asset_id,
+                position: row.draft_position,
+              },
       })),
     };
   }
@@ -190,6 +213,156 @@ export class ScientificStructureService {
       publicationStatus: 'draft',
       imageMediaAssetId: input.imageMediaAssetId ?? null,
     };
+  }
+
+  async editCategory(actorUserId: string, categoryId: string, input: EditCategoryDto) {
+    const title = input.title.trim();
+    const summary = input.summary.trim();
+    const description = input.description.trim();
+    if (title.length < 2 || summary.length < 2 || description.length < 2) {
+      throw new BadRequestException('Complete the category title, summary, and description.');
+    }
+    return this.dataSource.transaction(async (manager) => {
+      const categories = await manager.query<
+        Array<{ id: string; image_media_asset_id: string | null }>
+      >(
+        `SELECT id, image_media_asset_id FROM categories WHERE id = $1 AND status = 'active' FOR UPDATE`,
+        [categoryId],
+      );
+      if (!categories[0]) throw new NotFoundException('Category was not found.');
+      const drafts = await manager.query<Array<{ image_media_asset_id: string | null }>>(
+        `SELECT image_media_asset_id FROM category_draft_revisions WHERE category_id = $1`,
+        [categoryId],
+      );
+      if (
+        input.imageMediaAssetId &&
+        input.imageMediaAssetId !== categories[0].image_media_asset_id &&
+        input.imageMediaAssetId !== drafts[0]?.image_media_asset_id
+      ) {
+        const images = await manager.query<Array<{ id: string }>>(
+          `SELECT id FROM media_assets WHERE id = $1 AND owner_user_id = $2 AND media_kind = 'image' AND processing_status NOT IN ('rejected', 'archived', 'failed') FOR UPDATE`,
+          [input.imageMediaAssetId, actorUserId],
+        );
+        if (!images[0]) throw new BadRequestException('Choose an image uploaded by your account.');
+      }
+      await manager.query(
+        `INSERT INTO category_draft_revisions (category_id, title, summary, description, image_media_asset_id, position, edited_by_user_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
+         ON CONFLICT (category_id) DO UPDATE SET title = EXCLUDED.title, summary = EXCLUDED.summary,
+           description = EXCLUDED.description, image_media_asset_id = EXCLUDED.image_media_asset_id,
+           position = EXCLUDED.position, edited_by_user_id = EXCLUDED.edited_by_user_id, updated_at = now()`,
+        [
+          categoryId,
+          title,
+          summary,
+          description,
+          input.imageMediaAssetId ?? null,
+          input.position,
+          actorUserId,
+        ],
+      );
+      await manager.query(
+        `INSERT INTO category_draft_revision_history (id, category_id, title, summary, description, image_media_asset_id, position, edited_by_user_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [
+          randomUUID(),
+          categoryId,
+          title,
+          summary,
+          description,
+          input.imageMediaAssetId ?? null,
+          input.position,
+          actorUserId,
+        ],
+      );
+      await manager.query(
+        `INSERT INTO content_audit_events (actor_user_id, action, target_type, target_id, metadata) VALUES ($1,'category.draft_edited','category',$2,'{}'::jsonb)`,
+        [actorUserId, categoryId],
+      );
+      return { id: categoryId, publicationStatus: 'draft', revisionSaved: true };
+    });
+  }
+
+  async previewCategoryArchive(categoryId: string) {
+    const rows = await this.dataSource.query<
+      Array<{ id: string; status: string; category_count: string; record_count: string }>
+    >(
+      `WITH RECURSIVE branch AS (
+         SELECT id, status FROM categories WHERE id = $1
+         UNION ALL SELECT c.id, c.status FROM categories c JOIN branch b ON c.parent_id = b.id
+       ) SELECT (SELECT count(*) FROM branch WHERE status = (SELECT status FROM categories WHERE id = $1))::text AS category_count,
+                (SELECT count(*) FROM scientific_records WHERE category_id IN (SELECT id FROM branch))::text AS record_count,
+                (SELECT status::text FROM categories WHERE id = $1) AS status`,
+      [categoryId],
+    );
+    if (!rows[0]?.status) throw new NotFoundException('Category was not found.');
+    return {
+      categoryCount: Number(rows[0].category_count),
+      recordCount: Number(rows[0].record_count),
+      status: rows[0].status,
+    };
+  }
+
+  async setCategoryArchive(
+    actorUserId: string,
+    categoryId: string,
+    restore: boolean,
+    confirmed: { categoryCount: number; recordCount: number },
+  ) {
+    return this.dataSource.transaction(async (manager) => {
+      await manager.query('LOCK TABLE categories IN SHARE ROW EXCLUSIVE MODE');
+      const branch = await manager.query<
+        Array<{ id: string; depth: number; status: string; parent_id: string | null }>
+      >(
+        `WITH RECURSIVE branch AS (
+           SELECT id, parent_id, status::text, 0 AS depth FROM categories WHERE id = $1
+           UNION ALL SELECT c.id, c.parent_id, c.status::text, b.depth + 1 FROM categories c JOIN branch b ON c.parent_id = b.id
+         ) SELECT * FROM branch ORDER BY depth ${restore ? 'ASC' : 'DESC'}, id`,
+        [categoryId],
+      );
+      if (!branch[0]) throw new NotFoundException('Category was not found.');
+      const root = branch.find((item) => item.id === categoryId)!;
+      if (root.status !== (restore ? 'archived' : 'active'))
+        throw new ConflictException('Category state has changed. Refresh and try again.');
+      if (restore && root.parent_id) {
+        const parent = await manager.query<Array<{ status: string }>>(
+          'SELECT status FROM categories WHERE id = $1',
+          [root.parent_id],
+        );
+        if (parent[0]?.status !== 'active')
+          throw new ConflictException('Restore the parent category first.');
+      }
+      const affected = branch.filter((item) => item.status === (restore ? 'archived' : 'active'));
+      const recordRows = await manager.query<Array<{ count: string }>>(
+        `SELECT count(*)::text AS count FROM scientific_records WHERE category_id = ANY($1::uuid[])`,
+        [branch.map((item) => item.id)],
+      );
+      const recordCount = Number(recordRows[0]?.count ?? 0);
+      if (confirmed.categoryCount !== affected.length || confirmed.recordCount !== recordCount) {
+        throw new ConflictException('Category contents changed. Review the impact and try again.');
+      }
+      for (const item of affected) {
+        await manager.query('UPDATE categories SET status = $2, updated_at = now() WHERE id = $1', [
+          item.id,
+          restore ? 'active' : 'archived',
+        ]);
+      }
+      await manager.query(
+        `INSERT INTO content_audit_events (actor_user_id, action, target_type, target_id, metadata)
+         VALUES ($1,$2,'category',$3,$4::jsonb)`,
+        [
+          actorUserId,
+          restore ? 'category.restored' : 'category.archived',
+          categoryId,
+          JSON.stringify({ categoryCount: affected.length, recordCount }),
+        ],
+      );
+      return {
+        categoryCount: affected.length,
+        recordCount,
+        status: restore ? 'active' : 'archived',
+      };
+    });
   }
 
   async listRecordTypes(categoryId: string, locale: string) {

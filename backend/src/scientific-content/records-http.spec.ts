@@ -63,6 +63,9 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
   const mockScientificStructureService = {
     listCategories: vi.fn(),
     createCategory: vi.fn(),
+    editCategory: vi.fn(),
+    previewCategoryArchive: vi.fn(),
+    setCategoryArchive: vi.fn(),
     listRecordTypes: vi.fn(),
     getActiveTemplate: vi.fn(),
     getTemplateVersion: vi.fn(),
@@ -177,6 +180,21 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     mockScientificStructureService.createCategory.mockResolvedValue({
       id: validCategoryId,
       publicationStatus: 'draft',
+    });
+    mockScientificStructureService.editCategory.mockResolvedValue({
+      id: validCategoryId,
+      publicationStatus: 'draft',
+      revisionSaved: true,
+    });
+    mockScientificStructureService.previewCategoryArchive.mockResolvedValue({
+      categoryCount: 2,
+      recordCount: 3,
+      status: 'active',
+    });
+    mockScientificStructureService.setCategoryArchive.mockResolvedValue({
+      categoryCount: 2,
+      recordCount: 3,
+      status: 'archived',
     });
     mockTrustService.listEvidence.mockResolvedValue({ items: [] });
     mockTrustService.listReferences.mockResolvedValue({
@@ -985,6 +1003,142 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         });
         expect(response.statusCode).toBe(400);
       }
+    });
+  });
+
+  describe('category draft edit boundary', () => {
+    const payload = {
+      title: 'Revised category',
+      summary: 'Revised summary',
+      description: 'Revised description',
+      imageMediaAssetId: null,
+      position: 2,
+    };
+
+    it.each(['teacher-session', 'admin-session'])(
+      'allows %s to save an unpublished revision',
+      async (session) => {
+        const response = await app.inject({
+          method: 'PATCH',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}`,
+          cookies: { gk_session: session, gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+          payload,
+        });
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toContain('"revisionSaved":true');
+      },
+    );
+
+    it('denies visitors and signed-out requests', async () => {
+      for (const session of ['visitor-session', undefined]) {
+        const response = await app.inject({
+          method: 'PATCH',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}`,
+          cookies: session ? { gk_session: session, gk_csrf: validCsrf } : undefined,
+          headers: session ? { 'x-csrf-token': validCsrf } : undefined,
+          payload,
+        });
+        expect(response.statusCode).toBe(session ? 403 : 401);
+      }
+    });
+
+    it('rejects hierarchy changes and invalid order', async () => {
+      for (const invalid of [
+        { ...payload, parentId: validCategoryId },
+        { ...payload, position: -1 },
+      ]) {
+        const response = await app.inject({
+          method: 'PATCH',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}`,
+          cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+          payload: invalid,
+        });
+        expect(response.statusCode).toBe(400);
+      }
+    });
+  });
+
+  describe('category archive and restore boundary', () => {
+    const impact = { categoryCount: 2, recordCount: 3 };
+
+    it.each(['teacher-session', 'admin-session'])(
+      'allows %s to preview and confirm an archive',
+      async (session) => {
+        const preview = await app.inject({
+          method: 'GET',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/archive-preview`,
+          cookies: { gk_session: session },
+        });
+        expect(preview.statusCode).toBe(200);
+        const archived = await app.inject({
+          method: 'POST',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/archive`,
+          cookies: { gk_session: session, gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+          payload: impact,
+        });
+        expect(archived.statusCode).toBe(201);
+        expect(mockScientificStructureService.setCategoryArchive).toHaveBeenCalledWith(
+          expect.any(String),
+          validCategoryId,
+          false,
+          impact,
+        );
+      },
+    );
+
+    it('allows restore with confirmed impact', async () => {
+      mockScientificStructureService.setCategoryArchive.mockResolvedValueOnce({
+        ...impact,
+        status: 'active',
+      });
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/scientific-structure/categories/${validCategoryId}/restore`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: impact,
+      });
+      expect(response.statusCode).toBe(201);
+      expect(mockScientificStructureService.setCategoryArchive).toHaveBeenCalledWith(
+        'teacher-1',
+        validCategoryId,
+        true,
+        impact,
+      );
+    });
+
+    it('denies visitors, signed-out requests, missing CSRF, and invalid impact', async () => {
+      const visitor = await app.inject({
+        method: 'POST',
+        url: `/api/v1/scientific-structure/categories/${validCategoryId}/archive`,
+        cookies: { gk_session: 'visitor-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: impact,
+      });
+      const signedOut = await app.inject({
+        method: 'GET',
+        url: `/api/v1/scientific-structure/categories/${validCategoryId}/archive-preview`,
+      });
+      const noCsrf = await app.inject({
+        method: 'POST',
+        url: `/api/v1/scientific-structure/categories/${validCategoryId}/archive`,
+        cookies: { gk_session: 'teacher-session' },
+        payload: impact,
+      });
+      const invalid = await app.inject({
+        method: 'POST',
+        url: `/api/v1/scientific-structure/categories/${validCategoryId}/archive`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { categoryCount: 0, recordCount: -1 },
+      });
+      expect(visitor.statusCode).toBe(403);
+      expect(signedOut.statusCode).toBe(401);
+      expect(noCsrf.statusCode).toBe(403);
+      expect(invalid.statusCode).toBe(400);
     });
   });
 });

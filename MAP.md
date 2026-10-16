@@ -4,6 +4,10 @@
 
 Teachers and admins can manage category/subcategory drafts through protected NestJS endpoints. PostgreSQL retains stable category identity, unpublished state, private image association, and automatic history. Existing seeded structure is preserved. New categories receive the shared General geological record pairing; custom scientific templates remain a separate controlled concern. Public discovery later reads only published, active structure and records from NestJS, never dashboard data or mock files. The ordered gates are in `PLAN.md`; the earlier migration-only dashboard prohibition below is superseded for categories/subcategories, not for arbitrary template editing.
 
+Category edits are stored as private draft revisions with append-only history. The live category row, English translation, image, display order, stable ID, and slug remain unchanged until an explicit later publication action. Parent movement is not available in this editing gate, so existing two-level relationships cannot accidentally form cycles.
+
+Archive and restore operate on an entire category subtree. The dashboard previews and confirms affected category and record counts, the backend rechecks those counts transactionally, descendants are archived before their parent and restored after their parent, and neither records nor type bindings are deleted. Normal scientific-structure queries continue to hide archived branches; the protected management projection includes them so authorized users can restore them.
+
 This document defines system boundaries, data ownership, permissions, and workflows. Use `PLAN.md` for delivery order. The existing frontend and its visual design remain the baseline.
 
 ## 1. System map

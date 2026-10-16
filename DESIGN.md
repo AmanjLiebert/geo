@@ -2,7 +2,7 @@
 
 ## Approved category-management change
 
-The teacher/admin scientific workspace now includes simple category and subcategory creation, followed in later gates by editing and archive/restore. New branches begin unpublished and receive a General geological record choice automatically. The earlier prohibition on category creation in the dashboard is superseded; custom scientific-field-template editing remains unavailable. Keep the established visual language, plain labels, accessible image upload, and an obvious unpublished state. Public Explore must eventually show only published database content, never showcase records presented as real.
+The teacher/admin scientific workspace now includes simple category and subcategory creation, unpublished draft editing, and confirmed archive/restore with preserved records. New branches begin unpublished and receive a General geological record choice automatically. The earlier prohibition on category creation in the dashboard is superseded; custom scientific-field-template editing remains unavailable. Keep the established visual language, plain labels, accessible image upload, and obvious draft/removed states. Public Explore must eventually show only published database content, never showcase records presented as real.
 
 ## Product and audience
 
