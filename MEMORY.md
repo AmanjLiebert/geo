@@ -8,7 +8,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Phase 5 / category-to-public-content step 4 — record entry |
 | Task folder | `docs/agent-work/phase-5-step-4-record-entry/` |
-| Status | `CHANGES_REQUIRED` |
+| Status | `COMPLETE` |
 | Implementer | Antigravity |
 | Reviewer | Codex |
 | Plan gate | A teacher or admin can save and reopen a general geological draft under a newly managed category/subcategory; existing specialist record types continue to work. |
@@ -35,6 +35,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 - One agent edits the implementation at a time; do not make overlapping changes in the same files.
 - Use a dedicated branch and report the exact commit hash.
 - During implementation, run focused tests first. Run the broader phase gate once before handoff.
+- During correction rounds, run only affected tests and type checks. Do not repeat full suites or production builds that already passed unless the correction changes dependencies, build configuration, routing/export behavior, or the reviewer explicitly requests them.
 - Do not rebuild unaffected services or rehearse database recovery when the task has no schema/data change.
 - Schema, authorization, storage, publication, or destructive-data work still requires the stronger checks appropriate to its risk.
 - Reports must state commands and outcomes truthfully. “Not run” is acceptable; invented or inferred pass results are not.
