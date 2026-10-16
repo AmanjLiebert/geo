@@ -220,4 +220,53 @@ describe('ScientificTrustService record attachments', () => {
     expect(sql).not.toContain('created_by_user_id');
     expect(params).toEqual([recordId]);
   });
+
+  it('rejects evidence writes when category branch is archived, and allows them after restoration', async () => {
+    let isCategoryArchived = true;
+    const query = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: recordId,
+            status: 'draft',
+            category_id: 'cat-trust-test',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+          },
+        ]);
+      }
+      if (sql.includes('FROM categories c')) {
+        if (isCategoryArchived) return Promise.resolve([]);
+        return Promise.resolve([{ id: 'cat-trust-test' }]);
+      }
+      if (sql.includes('FROM scientific_references')) {
+        return Promise.resolve([{ id: referenceId }]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const manager = { query } as unknown as EntityManager;
+    const dataSource = {
+      transaction: vi.fn(async (cb: (m: EntityManager) => Promise<unknown>) => cb(manager)),
+    } as unknown as DataSource;
+    const service = new ScientificTrustService(dataSource);
+
+    // Blocked while category branch is archived
+    await expect(
+      service.addEvidence('teacher', recordId, {
+        referenceId,
+        evidenceKind: 'field_observation',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // Restore category branch
+    isCategoryArchived = false;
+
+    // Allowed after restoration
+    const result = await service.addEvidence('teacher', recordId, {
+      referenceId,
+      evidenceKind: 'field_observation',
+    });
+    expect(result.recordId).toBe(recordId);
+  });
 });

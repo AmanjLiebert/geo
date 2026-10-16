@@ -17,6 +17,7 @@ import {
 } from './scientific-content.types';
 import { validateAttributes } from './template-validation';
 import { ScientificTrustService } from '../publishing/scientific-trust.service';
+import { assertCategoryBranchActive } from './record-invariants';
 
 interface RecordRow {
   id: string;
@@ -215,7 +216,7 @@ export class RecordsService {
     try {
       await this.dataSource.transaction(async (manager) => {
         const current = await this.findRecord(manager, recordId, true);
-        this.assertEditable(current);
+        this.assertEditableLifecycle(current);
 
         const classificationChanged =
           input.categoryId !== undefined || input.recordTypeId !== undefined;
@@ -232,18 +233,7 @@ export class RecordsService {
             input.recordTypeId,
           );
         } else if (current.template_version_id) {
-          const activeCategories = await manager.query<Array<{ id: string }>>(
-            `SELECT c.id FROM categories c
-             LEFT JOIN categories p ON p.id = c.parent_id
-             WHERE c.id = $1 AND c.status = 'active'
-               AND (p.id IS NULL OR p.status = 'active')`,
-            [current.category_id],
-          );
-          if (!activeCategories[0]) {
-            throw new ConflictException(
-              'The category for this record is archived or inactive.',
-            );
-          }
+          await assertCategoryBranchActive(manager, current.category_id);
           classification = {
             category_id: current.category_id as string,
             record_type_id: current.record_type_id as string,
@@ -310,7 +300,7 @@ export class RecordsService {
   ) {
     await this.dataSource.transaction(async (manager) => {
       const record = await this.findRecord(manager, recordId, true);
-      this.assertEditable(record);
+      await this.assertEditable(manager, record);
       const status = ContentTranslationStatus.DRAFT;
       await manager.query(
         `
@@ -362,7 +352,7 @@ export class RecordsService {
   async reviewTranslation(reviewerUserId: string, recordId: string, locale: string) {
     await this.dataSource.transaction(async (manager) => {
       const record = await this.findRecord(manager, recordId, true);
-      this.assertEditable(record);
+      await this.assertEditable(manager, record);
       const rows = (await manager.query(
         `SELECT translator_user_id FROM record_translations
          WHERE record_id = $1 AND locale = $2 FOR UPDATE`,
@@ -423,7 +413,7 @@ export class RecordsService {
     }
     await this.dataSource.transaction(async (manager) => {
       const record = await this.findRecord(manager, recordId, true);
-      this.assertEditable(record);
+      await this.assertEditable(manager, record);
       await manager.query(
         `UPDATE scientific_records SET status = 'in_review', updated_at = now() WHERE id = $1`,
         [recordId],
@@ -669,7 +659,15 @@ export class RecordsService {
     );
   }
 
-  private assertEditable(record: RecordRow): void {
+  private async assertEditable(
+    executor: DataSource | EntityManager,
+    record: RecordRow,
+  ): Promise<void> {
+    this.assertEditableLifecycle(record);
+    await assertCategoryBranchActive(executor, record.category_id);
+  }
+
+  private assertEditableLifecycle(record: RecordRow): void {
     if (record.status === ScientificRecordStatus.ARCHIVED) {
       throw new ConflictException('Restore the record before editing it.');
     }

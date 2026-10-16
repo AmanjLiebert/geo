@@ -11,6 +11,7 @@ import { AddEvidenceDto, CreateReferenceDto } from './dto/reference.dto';
 import { CreateLocationDto } from './dto/location.dto';
 import { CreateRelationshipDto } from './dto/relationship.dto';
 import { CreateMapLayerDto } from './dto/map-layer.dto';
+import { assertRecordEditable as assertRecordEditableInvariant } from '../scientific-content/record-invariants';
 
 interface IdRow {
   id: string;
@@ -475,15 +476,7 @@ export class ScientificTrustService {
   }
 
   private async assertRecordEditable(executor: EntityManager, id: string) {
-    const rows = (await executor.query(
-      `SELECT status, template_version_id FROM scientific_records WHERE id = $1 FOR UPDATE`,
-      [id],
-    )) as unknown as Array<{ status: string; template_version_id: string | null }>;
-    if (!rows[0]) throw new NotFoundException('Scientific record not found.');
-    if (rows[0].status === 'published' || rows[0].status === 'archived') {
-      throw new ConflictException('This record cannot be edited in its current state.');
-    }
-    return rows[0];
+    return assertRecordEditableInvariant(executor, id, { lock: true });
   }
 
   private async assertTargetExists(

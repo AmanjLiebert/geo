@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
@@ -18,6 +17,7 @@ import { randomUUID } from 'node:crypto';
 import { DataSource } from 'typeorm';
 import { Environment } from '../config/environment';
 import { JobQueueService } from '../jobs/job-queue.service';
+import { assertRecordEditable } from '../scientific-content/record-invariants';
 import { AttachMediaDto, CreateMediaUploadDto } from './dto/create-media-upload.dto';
 
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
@@ -148,14 +148,7 @@ export class MediaService {
       throw new BadRequestException('Rejected or archived media cannot be attached.');
     }
     await this.dataSource.transaction(async (manager) => {
-      const records = (await manager.query(
-        `SELECT status FROM scientific_records WHERE id = $1 FOR UPDATE`,
-        [recordId],
-      )) as unknown as Array<{ status: string }>;
-      if (!records[0]) throw new NotFoundException('Scientific record not found.');
-      if (records[0].status === 'published' || records[0].status === 'archived') {
-        throw new ConflictException('This record cannot be edited in its current state.');
-      }
+      await assertRecordEditable(manager, recordId, { lock: true });
       await manager.query(
         `INSERT INTO record_media (record_id, media_asset_id, purpose)
        VALUES ($1,$2,$3) ON CONFLICT (record_id, media_asset_id)

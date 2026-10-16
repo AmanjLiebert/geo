@@ -26,7 +26,11 @@ import { RecordRelationships } from "./record-relationships";
 import { RecordMedia } from "./record-media";
 import { RecordEvidence } from "./record-evidence";
 import { RecordLocations } from "./record-locations";
-import { canChangeClassification } from "./record-editor-utils";
+import {
+  canChangeClassification,
+  isRecordCategoryArchived,
+  isRecordEditorReadOnly,
+} from "./record-editor-utils";
 import type {
   RecordEditorMode,
   StructureSelection,
@@ -118,7 +122,8 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
           if (
             record.status === "published" ||
             record.status === "archived" ||
-            record.status === "in_review"
+            record.status === "in_review" ||
+            isRecordCategoryArchived(record.categoryId, catRes.items)
           ) {
             setLoading(false);
             return;
@@ -340,11 +345,12 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
 
   const isCategoryArchived =
     mode === "edit" &&
-    Boolean(
-      recordDetail?.categoryId &&
-        categories.length > 0 &&
-        !categories.some((c) => c.id === recordDetail.categoryId),
-    );
+    isRecordCategoryArchived(recordDetail?.categoryId, categories);
+
+  const isReadOnly = isRecordEditorReadOnly(
+    recordDetail?.status,
+    isCategoryArchived,
+  );
 
   return (
     <div className={styles.container}>
@@ -390,6 +396,11 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
             <p className={styles.bannerText}>
               The scientific category for this record has been archived. Restore the category in category management to edit or publish this draft.
             </p>
+            <div style={{ marginTop: "12px" }}>
+              <Link href="/dashboard/records" className={styles.button}>
+                Return to records list
+              </Link>
+            </div>
           </div>
         </div>
       )}
@@ -500,7 +511,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       )}
 
       {/* Step 1 & 2: Guided Structure Selection (Create mode or Unclassified draft) */}
-      {!loading && !error && !isNonEditable && step === "structure" && (
+      {!loading && !error && !isReadOnly && step === "structure" && (
         <RecordStructureSelector
           categories={categories}
           initialSelection={selection}
@@ -511,7 +522,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       {/* Step 3: Template form */}
       {!loading &&
         !error &&
-        !isNonEditable &&
+        !isReadOnly &&
         step === "fields" &&
         activeTemplate && (
           <RecordTemplateForm
@@ -538,7 +549,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         )}
       {!loading &&
         !error &&
-        !isNonEditable &&
+        !isReadOnly &&
         mode === "edit" &&
         recordDetail && (
           <RecordEnglishDetails
@@ -549,7 +560,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         )}
       {!loading &&
         !error &&
-        !isNonEditable &&
+        !isReadOnly &&
         mode === "edit" &&
         recordDetail?.status === "draft" && (
           <>

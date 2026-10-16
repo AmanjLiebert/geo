@@ -1,6 +1,11 @@
 import 'reflect-metadata';
 import cookie from '@fastify/cookie';
-import { UnauthorizedException, ValidationPipe, VersioningType } from '@nestjs/common';
+import {
+  ConflictException,
+  UnauthorizedException,
+  ValidationPipe,
+  VersioningType,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -1252,6 +1257,81 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
 
       expect(invalidGet.statusCode).toBe(400);
       expect(invalidPost.statusCode).toBe(400);
+    });
+
+    it('returns 409 Conflict across all draft mutation endpoints when category branch is archived', async () => {
+      const conflictError = new ConflictException(
+        'The category for this record is archived or inactive.',
+      );
+      mockRecordsService.update.mockRejectedValueOnce(conflictError);
+      mockRecordsService.upsertTranslation.mockRejectedValueOnce(conflictError);
+      mockTrustService.addEvidence.mockRejectedValueOnce(conflictError);
+      mockTrustService.addLocation.mockRejectedValueOnce(conflictError);
+      mockTrustService.addRelationship.mockRejectedValueOnce(conflictError);
+      mockMediaService.attachToRecord.mockRejectedValueOnce(conflictError);
+
+      const updateRes = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { slug: 'test-slug' },
+      });
+      const transRes = await app.inject({
+        method: 'PUT',
+        url: `/api/v1/records/${validRecordId}/translations/en`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { title: 'Draft Title' },
+      });
+      const evidenceRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/records/${validRecordId}/evidence`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { referenceId: validCategoryId, evidenceKind: 'field_observation' },
+      });
+      const locationRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/records/${validRecordId}/locations`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: {
+          exactLatitude: 36,
+          exactLongitude: 44,
+          publicLatitude: 36,
+          publicLongitude: 44,
+          visibility: 'public',
+        },
+      });
+      const relRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/records/${validRecordId}/relationships`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: {
+          targetType: 'record',
+          targetId: validCategoryId,
+          relationshipType: 'related_to',
+        },
+      });
+      const mediaRes = await app.inject({
+        method: 'POST',
+        url: `/api/v1/media/records/${validRecordId}/attachments`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: {
+          mediaAssetId: validCategoryId,
+          purpose: 'field photo',
+        },
+      });
+
+      expect(updateRes.statusCode).toBe(409);
+      expect(transRes.statusCode).toBe(409);
+      expect(evidenceRes.statusCode).toBe(409);
+      expect(locationRes.statusCode).toBe(409);
+      expect(relRes.statusCode).toBe(409);
+      expect(mediaRes.statusCode).toBe(409);
     });
   });
 });

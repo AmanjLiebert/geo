@@ -6,6 +6,8 @@ import {
   canChangeClassification,
   formatFieldValueForSubmit,
   formatSlugForSubmit,
+  isRecordCategoryArchived,
+  isRecordEditorReadOnly,
   sortTemplateFields,
   validateFieldInput,
   validateSlug,
@@ -704,6 +706,45 @@ describe("record-editor-utils", () => {
       expect(html).toContain("Select subcategory branch (required)");
       expect(html).toContain("Invertebrates");
       expect(html).not.toContain("Attach directly to general");
+    });
+  });
+
+  describe("isRecordCategoryArchived", () => {
+    it("returns false when categoryId is null or undefined", () => {
+      expect(isRecordCategoryArchived(null, sampleCategories)).toBe(false);
+      expect(isRecordCategoryArchived(undefined, sampleCategories)).toBe(false);
+      expect(isRecordCategoryArchived("", sampleCategories)).toBe(false);
+    });
+
+    it("returns true when categories list is empty (edge case: all categories archived)", () => {
+      expect(isRecordCategoryArchived("cat-child-1", [])).toBe(true);
+    });
+
+    it("returns true when categoryId is not in active categories (archived category)", () => {
+      expect(isRecordCategoryArchived("cat-archived-999", sampleCategories)).toBe(true);
+    });
+
+    it("returns false when categoryId is in active categories", () => {
+      expect(isRecordCategoryArchived("cat-child-1", sampleCategories)).toBe(false);
+      expect(isRecordCategoryArchived("cat-root-2", sampleCategories)).toBe(false);
+    });
+  });
+
+  describe("isRecordEditorReadOnly", () => {
+    it("returns true when category is archived even if record is draft", () => {
+      expect(isRecordEditorReadOnly("draft", true)).toBe(true);
+      expect(isRecordEditorReadOnly("unclassified_draft", true)).toBe(true);
+    });
+
+    it("returns true for non-editable record statuses", () => {
+      expect(isRecordEditorReadOnly("published", false)).toBe(true);
+      expect(isRecordEditorReadOnly("archived", false)).toBe(true);
+      expect(isRecordEditorReadOnly("in_review", false)).toBe(true);
+    });
+
+    it("returns false for active drafts with active categories", () => {
+      expect(isRecordEditorReadOnly("draft", false)).toBe(false);
+      expect(isRecordEditorReadOnly("unclassified_draft", false)).toBe(false);
     });
   });
 });

@@ -71,4 +71,52 @@ describe('MediaService record attachments', () => {
     expect(sql).not.toContain('storage_key');
     expect(params).toEqual([recordId]);
   });
+
+  it('rejects media attachments when category branch is archived, and allows them after restoration', async () => {
+    let isCategoryArchived = true;
+    const managerQuery = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: recordId,
+            status: 'draft',
+            category_id: 'cat-media-test',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+          },
+        ]);
+      }
+      if (sql.includes('FROM categories c')) {
+        if (isCategoryArchived) return Promise.resolve([]);
+        return Promise.resolve([{ id: 'cat-media-test' }]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      query: vi.fn().mockResolvedValue([{ id: mediaAssetId, processing_status: 'approved' }]),
+      transaction: vi.fn(async (cb: (m: EntityManager) => Promise<unknown>) =>
+        cb({ query: managerQuery } as unknown as EntityManager),
+      ),
+    } as unknown as DataSource;
+    const service = createService(dataSource);
+
+    // Blocked while category branch is archived
+    await expect(
+      service.attachToRecord('teacher', recordId, {
+        mediaAssetId,
+        purpose: 'field photo',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    // Restore category branch
+    isCategoryArchived = false;
+
+    // Allowed after restoration
+    const result = await service.attachToRecord('teacher', recordId, {
+      mediaAssetId,
+      purpose: 'field photo',
+    });
+    expect(result.recordId).toBe(recordId);
+  });
 });

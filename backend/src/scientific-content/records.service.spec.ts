@@ -757,4 +757,94 @@ describe('RecordsService.update state enforcement and pinned template versions',
       }),
     ).rejects.toThrow(/The category for this record is archived or inactive/);
   });
+
+  it('rejects upserting translation when record category or parent is archived', async () => {
+    const queryMock = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-under-archived-cat',
+            status: 'draft',
+            category_id: 'cat-archived-id',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+            attributes: {},
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      }
+      if (sql.includes('FROM categories c')) {
+        return Promise.resolve([]); // Category or parent is archived
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await expect(
+      service.upsertTranslation('actor-1', 'rec-under-archived-cat', 'en', {
+        title: 'New Translation Title',
+      }),
+    ).rejects.toThrow(/The category for this record is archived or inactive/);
+  });
+
+  it('allows draft updates and translations once the category branch is restored', async () => {
+    let isCategoryArchived = true;
+    const queryMock = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-restore-check',
+            status: 'draft',
+            category_id: 'cat-restored-id',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+            attributes: {},
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      }
+      if (sql.includes('FROM categories c')) {
+        if (isCategoryArchived) return Promise.resolve([]);
+        return Promise.resolve([{ id: 'cat-restored-id' }]);
+      }
+      if (sql.includes('SELECT stable_key, data_type FROM field_definitions')) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    // Blocked while archived
+    await expect(
+      service.upsertTranslation('actor-1', 'rec-restore-check', 'en', {
+        title: 'Draft Title',
+      }),
+    ).rejects.toThrow(/The category for this record is archived or inactive/);
+
+    // Restore category branch
+    isCategoryArchived = false;
+
+    // Allowed after restoration
+    await expect(
+      service.upsertTranslation('actor-1', 'rec-restore-check', 'en', {
+        title: 'Draft Title',
+      }),
+    ).resolves.toBeDefined();
+  });
 });

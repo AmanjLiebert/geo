@@ -308,3 +308,33 @@ export function formatSlugForSubmit(
   if (trimmed.length > 0) return trimmed;
   return mode === "edit" ? null : undefined;
 }
+
+/**
+ * Determines whether a classified record's category is archived (not present in active categories).
+ * Correctly detects archived status even when activeCategories is empty.
+ */
+export function isRecordCategoryArchived(
+  recordCategoryId: string | null | undefined,
+  activeCategories: StructureCategory[],
+): boolean {
+  if (!recordCategoryId) return false;
+  return !activeCategories.some((c) => c.id === recordCategoryId);
+}
+
+/**
+ * Determines whether the record editor should render in read-only state.
+ * Returns true if the record is non-editable (published, archived, or in_review)
+ * or if its category branch has been archived.
+ */
+export function isRecordEditorReadOnly(
+  recordStatus: string | null | undefined,
+  isCategoryArchived: boolean,
+): boolean {
+  if (isCategoryArchived) return true;
+  if (!recordStatus) return false;
+  return (
+    recordStatus === "published" ||
+    recordStatus === "archived" ||
+    recordStatus === "in_review"
+  );
+}
