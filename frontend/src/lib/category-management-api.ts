@@ -1,6 +1,20 @@
 import { DashboardApiError } from "./dashboard-api";
 import { requestRecordResource } from "./record-extras-api";
 
+export type CategoryReadinessIssue = {
+  field: string;
+  code: string;
+  message: string;
+};
+
+export type CategoryReadiness = {
+  publishable: boolean;
+  issues: CategoryReadinessIssue[];
+};
+
+export type CategoryDisplayState = "draft" | "published" | "unpublished" | "archived";
+export type CategoryBadgeState = "draft" | "published" | "unpublished" | "removed";
+
 export type ManagedCategory = {
   id: string;
   parentId: string | null;
@@ -12,7 +26,52 @@ export type ManagedCategory = {
   position: number;
   imageMediaAssetId: string | null;
   draftRevision: null | { title: string; summary: string; description: string; imageMediaAssetId: string | null; position: number };
+  readiness?: CategoryReadiness;
+  displayState?: CategoryDisplayState;
+  hasUnpublishedChanges?: boolean;
 };
+
+export function getCategoryBadgeState(item: ManagedCategory): CategoryBadgeState {
+  if (item.status === "archived") return "removed";
+  if (item.displayState === "published") return "published";
+  if (item.displayState === "unpublished") return "unpublished";
+  return "draft";
+}
+
+export function getCategoryActions(item: ManagedCategory, isChild = false, parentItem?: ManagedCategory): {
+  canEdit: boolean;
+  canPublish: boolean;
+  isPublishDisabled: boolean;
+  publishLabel: "Publish" | "Publish changes";
+  canUnpublish: boolean;
+  canRemove: boolean;
+  canRestore: boolean;
+  isRestoreDisabled: boolean;
+  hasUnpublishedChanges: boolean;
+  isReadyToPublish: boolean;
+  showReadinessIssues: boolean;
+} {
+  const isArchived = item.status === "archived";
+  const hasUnpublishedDraft = item.draftRevision !== null || item.hasUnpublishedChanges === true;
+  const isNeedsPublish = !isArchived && (item.displayState !== "published" || hasUnpublishedDraft);
+  const isReady = !isArchived && item.readiness?.publishable === true;
+  const isNotReady = !isArchived && item.readiness !== undefined && !item.readiness.publishable;
+  const isParentArchived = isChild && parentItem?.status === "archived";
+
+  return {
+    canEdit: !isArchived,
+    canPublish: isNeedsPublish,
+    isPublishDisabled: !isReady,
+    publishLabel: item.displayState === "published" && hasUnpublishedDraft ? "Publish changes" : "Publish",
+    canUnpublish: !isArchived && (item.displayState === "published" || item.publicationStatus === "published"),
+    canRemove: !isArchived,
+    canRestore: isArchived,
+    isRestoreDisabled: isParentArchived,
+    hasUnpublishedChanges: hasUnpublishedDraft,
+    isReadyToPublish: isNeedsPublish && isReady,
+    showReadinessIssues: isNeedsPublish && isNotReady,
+  };
+}
 
 function object(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -25,8 +84,63 @@ export async function listManagedCategories(): Promise<ManagedCategory[]> {
     if (!object(item) || typeof item.id !== "string" || (item.parentId !== null && typeof item.parentId !== "string") || typeof item.name !== "string" || (item.summary !== null && typeof item.summary !== "string") || (item.description !== null && typeof item.description !== "string") || !["draft", "published"].includes(String(item.publicationStatus)) || !["active", "archived"].includes(String(item.status)) || !Number.isInteger(item.position) || (item.imageMediaAssetId !== null && typeof item.imageMediaAssetId !== "string") || (item.draftRevision !== null && (!object(item.draftRevision) || typeof item.draftRevision.title !== "string" || typeof item.draftRevision.summary !== "string" || typeof item.draftRevision.description !== "string" || !Number.isInteger(item.draftRevision.position) || (item.draftRevision.imageMediaAssetId !== null && typeof item.draftRevision.imageMediaAssetId !== "string")))) {
       throw new DashboardApiError("Categories could not be loaded.", 200, "server");
     }
-    return { id: item.id, parentId: item.parentId, name: item.name, summary: item.summary, description: item.description, publicationStatus: item.publicationStatus, status: item.status, position: item.position, imageMediaAssetId: item.imageMediaAssetId, draftRevision: item.draftRevision } as ManagedCategory;
+    let readiness: CategoryReadiness | undefined;
+    if (object(item.readiness) && typeof item.readiness.publishable === "boolean" && Array.isArray(item.readiness.issues)) {
+      readiness = {
+        publishable: item.readiness.publishable,
+        issues: item.readiness.issues.filter(object).map((issue) => ({
+          field: String(issue.field ?? ""),
+          code: String(issue.code ?? ""),
+          message: String(issue.message ?? ""),
+        })),
+      };
+    }
+    let displayState: CategoryDisplayState | undefined;
+    if (typeof item.displayState === "string" && ["draft", "published", "unpublished", "archived"].includes(item.displayState)) {
+      displayState = item.displayState as CategoryDisplayState;
+    }
+    const hasUnpublishedChanges = item.hasUnpublishedChanges === true;
+    return {
+      id: item.id,
+      parentId: item.parentId,
+      name: item.name,
+      summary: item.summary,
+      description: item.description,
+      publicationStatus: item.publicationStatus,
+      status: item.status,
+      position: item.position,
+      imageMediaAssetId: item.imageMediaAssetId,
+      draftRevision: item.draftRevision,
+      readiness,
+      displayState,
+      hasUnpublishedChanges,
+    } as ManagedCategory;
   });
+}
+
+export async function getCategoryReadiness(id: string): Promise<CategoryReadiness> {
+  const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}/readiness`);
+  if (!object(result) || typeof result.publishable !== "boolean" || !Array.isArray(result.issues)) {
+    throw new DashboardApiError("Category readiness could not be loaded.", 200, "server");
+  }
+  return {
+    publishable: result.publishable,
+    issues: result.issues.filter(object).map((issue) => ({
+      field: String(issue.field ?? ""),
+      code: String(issue.code ?? ""),
+      message: String(issue.message ?? ""),
+    })),
+  };
+}
+
+export async function publishCategory(id: string): Promise<void> {
+  const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}/publish`, "POST");
+  if (!object(result) || result.publicationStatus !== "published") throw new DashboardApiError("The category could not be published.", 200, "server");
+}
+
+export async function unpublishCategory(id: string): Promise<void> {
+  const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}/unpublish`, "POST");
+  if (!object(result) || result.publicationStatus !== "draft") throw new DashboardApiError("The category could not be unpublished.", 200, "server");
 }
 
 export async function previewCategoryArchive(id: string): Promise<{ categoryCount: number; recordCount: number; status: "active" | "archived" }> {

@@ -71,6 +71,9 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     editCategory: vi.fn(),
     previewCategoryArchive: vi.fn(),
     setCategoryArchive: vi.fn(),
+    getCategoryReadiness: vi.fn(),
+    publishCategory: vi.fn(),
+    unpublishCategory: vi.fn(),
     listRecordTypes: vi.fn(),
     getActiveTemplate: vi.fn(),
     getTemplateVersion: vi.fn(),
@@ -1144,6 +1147,115 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       expect(signedOut.statusCode).toBe(401);
       expect(noCsrf.statusCode).toBe(403);
       expect(invalid.statusCode).toBe(400);
+    });
+  });
+
+  describe('category readiness and publication boundary', () => {
+    it.each(['teacher-session', 'admin-session'])(
+      'allows %s to check category readiness',
+      async (session) => {
+        mockScientificStructureService.getCategoryReadiness.mockResolvedValueOnce({
+          categoryId: validCategoryId,
+          publishable: true,
+          issues: [],
+        });
+        const response = await app.inject({
+          method: 'GET',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/readiness`,
+          cookies: { gk_session: session },
+        });
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toContain('"publishable":true');
+        expect(mockScientificStructureService.getCategoryReadiness).toHaveBeenCalledWith(validCategoryId);
+      },
+    );
+
+    it.each(['teacher-session', 'admin-session'])(
+      'allows %s to publish a complete category',
+      async (session) => {
+        mockScientificStructureService.publishCategory.mockResolvedValueOnce({
+          id: validCategoryId,
+          publicationStatus: 'published',
+          promotedDraft: true,
+        });
+        const response = await app.inject({
+          method: 'POST',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/publish`,
+          cookies: { gk_session: session, gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+        });
+        expect(response.statusCode).toBe(201);
+        expect(response.body).toContain('"publicationStatus":"published"');
+        expect(mockScientificStructureService.publishCategory).toHaveBeenCalledWith(
+          expect.any(String),
+          validCategoryId,
+        );
+      },
+    );
+
+    it.each(['teacher-session', 'admin-session'])(
+      'allows %s to unpublish a category',
+      async (session) => {
+        mockScientificStructureService.unpublishCategory.mockResolvedValueOnce({
+          id: validCategoryId,
+          publicationStatus: 'draft',
+        });
+        const response = await app.inject({
+          method: 'POST',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/unpublish`,
+          cookies: { gk_session: session, gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+        });
+        expect(response.statusCode).toBe(201);
+        expect(response.body).toContain('"publicationStatus":"draft"');
+        expect(mockScientificStructureService.unpublishCategory).toHaveBeenCalledWith(
+          expect.any(String),
+          validCategoryId,
+        );
+      },
+    );
+
+    it('denies visitors and signed-out requests on readiness, publish, and unpublish', async () => {
+      for (const endpoint of ['readiness', 'publish', 'unpublish']) {
+        const isGet = endpoint === 'readiness';
+        const method = isGet ? 'GET' : 'POST';
+        const visitor = await app.inject({
+          method,
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/${endpoint}`,
+          cookies: { gk_session: 'visitor-session', gk_csrf: validCsrf },
+          headers: isGet ? undefined : { 'x-csrf-token': validCsrf },
+        });
+        const signedOut = await app.inject({
+          method,
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/${endpoint}`,
+        });
+        expect(visitor.statusCode, `visitor ${endpoint}`).toBe(403);
+        expect(signedOut.statusCode, `signedOut ${endpoint}`).toBe(401);
+      }
+    });
+
+    it('denies mutating publish and unpublish requests without valid CSRF', async () => {
+      for (const endpoint of ['publish', 'unpublish']) {
+        const noCsrf = await app.inject({
+          method: 'POST',
+          url: `/api/v1/scientific-structure/categories/${validCategoryId}/${endpoint}`,
+          cookies: { gk_session: 'teacher-session' },
+        });
+        expect(noCsrf.statusCode, `noCsrf ${endpoint}`).toBe(403);
+      }
+    });
+
+    it('rejects invalid category UUID parameter', async () => {
+      for (const endpoint of ['readiness', 'publish', 'unpublish']) {
+        const method = endpoint === 'readiness' ? 'GET' : 'POST';
+        const response = await app.inject({
+          method,
+          url: `/api/v1/scientific-structure/categories/invalid-uuid/${endpoint}`,
+          cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+        });
+        expect(response.statusCode).toBe(400);
+      }
     });
   });
 

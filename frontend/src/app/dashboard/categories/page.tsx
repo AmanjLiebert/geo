@@ -1,7 +1,19 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { changeCategoryArchive, createManagedCategory, listManagedCategories, previewCategoryArchive, saveCategoryDraft, uploadCategoryImage, type ManagedCategory } from "@/lib/category-management-api";
+import {
+  changeCategoryArchive,
+  createManagedCategory,
+  getCategoryActions,
+  getCategoryBadgeState,
+  listManagedCategories,
+  previewCategoryArchive,
+  publishCategory,
+  saveCategoryDraft,
+  unpublishCategory,
+  uploadCategoryImage,
+  type ManagedCategory,
+} from "@/lib/category-management-api";
 import styles from "./page.module.css";
 
 export default function CategoriesPage() {
@@ -36,6 +48,33 @@ export default function CategoriesPage() {
       await refresh();
     } catch { setError("Category status could not be changed. Refresh and try again."); }
     finally { setBusy(false); }
+  }
+
+  async function handlePublish(item: ManagedCategory) {
+    if (item.readiness && !item.readiness.publishable) {
+      setError("This category is not ready for publication. Resolve the missing requirements below.");
+      return;
+    }
+    setBusy(true); setError(""); setMessage("");
+    try {
+      await publishCategory(item.id);
+      setMessage(`"${item.name}" published successfully.`);
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The category could not be published. Refresh and try again.");
+    } finally { setBusy(false); }
+  }
+
+  async function handleUnpublish(item: ManagedCategory) {
+    if (!window.confirm(`Unpublish "${item.name}"? It will be hidden from public view. Records and drafts will be preserved.`)) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      await unpublishCategory(item.id);
+      setMessage(`"${item.name}" unpublished. Records and drafts were preserved.`);
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The category could not be unpublished. Refresh and try again.");
+    } finally { setBusy(false); }
   }
 
   function beginEdit(item: ManagedCategory) {
@@ -92,6 +131,87 @@ export default function CategoriesPage() {
     finally { setBusy(false); }
   }
 
+  function getStatusBadge(item: ManagedCategory) {
+    const badgeState = getCategoryBadgeState(item);
+    if (badgeState === "removed") return <span className={`${styles.badge} ${styles.badgeRemoved}`}>Removed</span>;
+    if (badgeState === "published") return <span className={`${styles.badge} ${styles.badgePublished}`}>Published</span>;
+    if (badgeState === "unpublished") return <span className={`${styles.badge} ${styles.badgeUnpublished}`}>Unpublished</span>;
+    return <span className={`${styles.badge} ${styles.badgeDraft}`}>Draft</span>;
+  }
+
+  function renderCategoryNode(item: ManagedCategory, isChild = false, parentItem?: ManagedCategory) {
+    const actions = getCategoryActions(item, isChild, parentItem);
+
+    return (
+      <div className={styles.categoryItem}>
+        <div className={styles.categoryHeader}>
+          <span className={styles.categoryTitle}>{item.name}</span>
+          {getStatusBadge(item)}
+          {actions.hasUnpublishedChanges && <span className={`${styles.badge} ${styles.badgeChanges}`}>Unpublished changes</span>}
+          {actions.isReadyToPublish && <span className={`${styles.badge} ${styles.badgeReady}`}>Ready to publish</span>}
+        </div>
+        {item.summary && <p className={styles.summary}>{item.summary}</p>}
+        {actions.showReadinessIssues && (
+          <ul className={styles.issuesList} aria-label={`Requirements before publishing ${item.name}`}>
+            {item.readiness?.issues.map((issue) => (
+              <li key={`${item.id}-${issue.code}`} className={styles.issueItem}>
+                {issue.message}
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className={styles.actions}>
+          {actions.canEdit && (
+            <button type="button" className={styles.btnEdit} onClick={() => beginEdit(item)}>
+              Edit
+            </button>
+          )}
+          {actions.canPublish && (
+            <button
+              type="button"
+              disabled={busy || actions.isPublishDisabled}
+              className={styles.btnPublish}
+              onClick={() => void handlePublish(item)}
+              title={actions.isPublishDisabled ? "Complete requirements to publish" : undefined}
+            >
+              {actions.publishLabel}
+            </button>
+          )}
+          {actions.canUnpublish && (
+            <button
+              type="button"
+              disabled={busy}
+              className={styles.btnUnpublish}
+              onClick={() => void handleUnpublish(item)}
+            >
+              Unpublish
+            </button>
+          )}
+          {actions.canRemove && (
+            <button
+              type="button"
+              disabled={busy}
+              className={styles.btnRemove}
+              onClick={() => void changeArchive(item)}
+            >
+              Remove
+            </button>
+          )}
+          {actions.canRestore && (
+            <button
+              type="button"
+              disabled={busy || actions.isRestoreDisabled}
+              className={styles.btnRestore}
+              onClick={() => void changeArchive(item)}
+            >
+              Restore
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const roots = items.filter((item) => item.parentId === null);
   return <main className={styles.page}>
     <header><h1>Categories</h1><p>Organize geological subjects for the collection.</p></header>
@@ -124,7 +244,27 @@ export default function CategoriesPage() {
       </form>
     </section>}
     <section className={styles.panel} aria-labelledby="category-list-title"><h2 id="category-list-title">Current categories</h2>
-      {roots.length === 0 ? <p>No categories yet.</p> : <ul className={styles.tree}>{roots.map((root) => <li key={root.id}><strong>{root.name}</strong> <small>{root.status === "archived" ? "Removed" : root.publicationStatus === "draft" ? "Draft" : "Published"}</small>{root.draftRevision && <small>Unpublished changes</small>}{root.summary && <p>{root.summary}</p>}{root.status === "active" && <button type="button" onClick={() => beginEdit(root)}>Edit</button>} <button type="button" disabled={busy} onClick={() => void changeArchive(root)}>{root.status === "archived" ? "Restore" : "Remove"}</button>{items.some((item) => item.parentId === root.id) && <ul>{items.filter((item) => item.parentId === root.id).map((child) => <li key={child.id}>{child.name} <small>{child.status === "archived" ? "Removed" : child.publicationStatus === "draft" ? "Draft" : "Published"}</small>{child.draftRevision && <small>Unpublished changes</small>} {child.status === "active" && <button type="button" onClick={() => beginEdit(child)}>Edit</button>} <button type="button" disabled={busy || (child.status === "archived" && root.status === "archived")} onClick={() => void changeArchive(child)}>{child.status === "archived" ? "Restore" : "Remove"}</button></li>)}</ul>}</li>)}</ul>}
+      {roots.length === 0 ? <p>No categories yet.</p> : (
+        <ul className={styles.tree}>
+          {roots.map((root) => {
+            const children = items.filter((item) => item.parentId === root.id);
+            return (
+              <li key={root.id}>
+                {renderCategoryNode(root, false)}
+                {children.length > 0 && (
+                  <ul>
+                    {children.map((child) => (
+                      <li key={child.id}>
+                        {renderCategoryNode(child, true, root)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   </main>;
 }

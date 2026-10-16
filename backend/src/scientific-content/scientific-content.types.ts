@@ -35,3 +35,9 @@ export interface ValidationIssue {
   code: string;
   message: string;
 }
+
+export interface CategoryReadinessResult {
+  categoryId: string;
+  publishable: boolean;
+  issues: ValidationIssue[];
+}

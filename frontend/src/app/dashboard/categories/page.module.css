@@ -9,7 +9,27 @@
 .form input[type="checkbox"] { width: 22px; min-height: 22px; margin-right: 10px; accent-color: var(--shale); }
 .form button { min-height: 44px; padding: 10px 20px; background: var(--shale); color: white; border: 2px solid var(--carbon); border-radius: 4px; box-shadow: 3px 3px 0 var(--carbon); font-weight: 700; cursor: pointer; }
 .form button:disabled { opacity: .6; cursor: wait; }
-.tree { display: grid; gap: 16px; padding-left: 20px; }
-.tree ul { padding-left: 24px; margin-top: 8px; }
-.tree li { margin-bottom: 7px; }
-.tree small { margin-left: 8px; font-size: 12px; color: var(--ink-soft); }
+.tree { display: grid; gap: 16px; padding-left: 0; list-style: none; }
+.tree ul { padding-left: 24px; margin-top: 12px; display: grid; gap: 12px; list-style: none; }
+.categoryItem { padding: 16px; background: #fff; border: 2px solid var(--carbon); border-radius: 4px; box-shadow: 3px 3px 0 var(--carbon); display: grid; gap: 10px; }
+.categoryHeader { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.categoryTitle { font-size: 16px; font-weight: 700; color: var(--carbon); }
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 3px; border: 1px solid var(--carbon); font-family: var(--font-plex-mono, monospace); }
+.badgeDraft { background: #fdf6e2; color: #8a6d3b; }
+.badgePublished { background: #e3efe8; color: #2e624c; }
+.badgeUnpublished { background: #eee; color: #51554f; }
+.badgeRemoved { background: #20231f; color: #fff; }
+.badgeChanges { background: #faeed7; color: #a05a1c; border-color: #a05a1c; }
+.badgeReady { background: #e8f4ec; color: #1e5a32; border-color: #1e5a32; }
+.summary { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+.issuesList { margin: 4px 0 0; padding: 8px 12px; background: #fdf4f2; border: 1px solid #e0c2bc; border-radius: 4px; list-style: square; padding-left: 28px; display: grid; gap: 4px; }
+.issueItem { font-size: 13px; color: #8a2b16; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.actions button { min-height: 38px; padding: 6px 14px; font-size: 13px; font-weight: 700; border: 2px solid var(--carbon); border-radius: 4px; box-shadow: 2px 2px 0 var(--carbon); cursor: pointer; transition: transform 0.1s ease; }
+.actions button:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--carbon); }
+.actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btnEdit { background: var(--limestone); color: var(--carbon); }
+.btnPublish { background: var(--shale); color: #fff; }
+.btnUnpublish { background: #f4ece1; color: var(--carbon); }
+.btnRemove { background: #fff; color: #8a2b16; border-color: var(--carbon); }
+.btnRestore { background: var(--shale); color: #fff; }

@@ -80,6 +80,30 @@ export class ScientificStructureController {
     return this.structure.setCategoryArchive(auth.user.id, categoryId, true, input);
   }
 
+  @Get('categories/:categoryId/readiness')
+  @Header('Cache-Control', 'private, no-store')
+  getCategoryReadiness(@Param('categoryId', ParseUUIDPipe) categoryId: string) {
+    return this.structure.getCategoryReadiness(categoryId);
+  }
+
+  @Post('categories/:categoryId/publish')
+  @Header('Cache-Control', 'private, no-store')
+  publishCategory(
+    @CurrentAuth() auth: AuthContext,
+    @Param('categoryId', ParseUUIDPipe) categoryId: string,
+  ) {
+    return this.structure.publishCategory(auth.user.id, categoryId);
+  }
+
+  @Post('categories/:categoryId/unpublish')
+  @Header('Cache-Control', 'private, no-store')
+  unpublishCategory(
+    @CurrentAuth() auth: AuthContext,
+    @Param('categoryId', ParseUUIDPipe) categoryId: string,
+  ) {
+    return this.structure.unpublishCategory(auth.user.id, categoryId);
+  }
+
   @Get('categories/:categoryId/record-types')
   @Header('Cache-Control', 'private, no-store')
   listRecordTypes(

@@ -9,7 +9,7 @@ import { DataSource } from 'typeorm';
 import { CreateStructureRequestDto } from './dto/create-structure-request.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { EditCategoryDto } from './dto/edit-category.dto';
-import { FieldDataType, FieldDefinition } from './scientific-content.types';
+import { FieldDataType, FieldDefinition, ValidationIssue, CategoryReadinessResult } from './scientific-content.types';
 import { applyFieldMapping, validateAttributes } from './template-validation';
 
 interface CategoryRow {
@@ -30,6 +30,102 @@ interface CategoryRow {
   draft_description: string | null;
   draft_image_media_asset_id: string | null;
   draft_position: number | null;
+  parent_status?: string | null;
+  parent_publication_status?: string | null;
+  image_processing_status?: string | null;
+  image_rights_statement?: string | null;
+  draft_image_processing_status?: string | null;
+  draft_image_rights_statement?: string | null;
+  was_unpublished?: boolean;
+}
+
+export function evaluateCategoryReadiness(row: {
+  status: string;
+  parentId: string | null;
+  parentStatus?: string | null;
+  parentPublicationStatus?: string | null;
+  title: string | null;
+  summary: string | null;
+  description: string | null;
+  imageMediaAssetId: string | null;
+  imageProcessingStatus?: string | null;
+  imageRightsStatement?: string | null;
+}): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+
+  if (row.status !== 'active') {
+    issues.push({
+      field: 'category',
+      code: 'category_not_active',
+      message: 'Archived categories cannot be published.',
+    });
+  }
+
+  if (row.parentId) {
+    if (row.parentStatus !== 'active') {
+      issues.push({
+        field: 'parent',
+        code: 'parent_not_active',
+        message: 'Parent category is archived.',
+      });
+    }
+    if (row.parentPublicationStatus !== 'published') {
+      issues.push({
+        field: 'parent',
+        code: 'parent_not_published',
+        message: 'Parent category must be published before this subcategory can publish.',
+      });
+    }
+  }
+
+  const title = row.title?.trim() ?? '';
+  if (title.length < 2 || title.length > 160) {
+    issues.push({
+      field: 'title',
+      code: 'title_invalid',
+      message: 'Enter a title between 2 and 160 characters.',
+    });
+  }
+
+  const summary = row.summary?.trim() ?? '';
+  if (summary.length < 2 || summary.length > 500) {
+    issues.push({
+      field: 'summary',
+      code: 'summary_invalid',
+      message: 'Enter a summary between 2 and 500 characters.',
+    });
+  }
+
+  const description = row.description?.trim() ?? '';
+  if (description.length < 2 || description.length > 4000) {
+    issues.push({
+      field: 'description',
+      code: 'description_invalid',
+      message: 'Enter a description between 2 and 4000 characters.',
+    });
+  }
+
+  if (!row.imageMediaAssetId) {
+    issues.push({
+      field: 'image',
+      code: 'image_required',
+      message: 'Add an approved image for the category.',
+    });
+  } else if (row.imageProcessingStatus !== 'approved') {
+    issues.push({
+      field: 'image',
+      code: 'image_not_approved',
+      message: 'The category image must be approved before publication.',
+    });
+  } else if (!row.imageRightsStatement || row.imageRightsStatement.trim().length === 0) {
+    issues.push({
+      field: 'image',
+      code: 'image_rights_required',
+      message: 'The category image must have a valid rights statement.',
+    });
+  }
+
+  return issues;
 }
 
 interface RecordTypeRow {
@@ -101,12 +197,24 @@ export class ScientificStructureService {
                dr.title AS draft_title, dr.summary AS draft_summary,
                dr.description AS draft_description,
                dr.image_media_asset_id AS draft_image_media_asset_id,
-               dr.position AS draft_position
+               dr.position AS draft_position,
+               p.status AS parent_status,
+               p.publication_status AS parent_publication_status,
+               m.processing_status AS image_processing_status,
+               m.rights_statement AS image_rights_statement,
+               dm.processing_status AS draft_image_processing_status,
+               dm.rights_statement AS draft_image_rights_statement,
+               EXISTS (
+                 SELECT 1 FROM content_audit_events cae
+                 WHERE cae.target_type = 'category' AND cae.target_id = c.id AND cae.action = 'category.unpublished'
+               ) AS was_unpublished
         FROM categories c
         LEFT JOIN categories p ON p.id = c.parent_id
         LEFT JOIN category_draft_revisions dr ON dr.category_id = c.id
         LEFT JOIN category_translations ct
           ON ct.category_id = c.id AND ct.locale = $1
+        LEFT JOIN media_assets m ON m.id = c.image_media_asset_id
+        LEFT JOIN media_assets dm ON dm.id = dr.image_media_asset_id
         WHERE (c.status = 'active' OR $2::boolean)
           AND ($2::boolean OR p.id IS NULL OR p.status = 'active')
         ORDER BY c.parent_id NULLS FIRST, c.position, c.stable_key
@@ -115,32 +223,83 @@ export class ScientificStructureService {
     )) as unknown as CategoryRow[];
 
     return {
-      items: rows.map((row) => ({
-        id: row.id,
-        parentId: row.parent_id,
-        stableKey: row.stable_key,
-        slug: row.slug,
-        recordsAllowed: row.records_allowed,
-        position: row.position,
-        name: row.name ?? row.stable_key,
-        description: row.description,
-        summary: row.summary,
-        publicationStatus: row.publication_status,
-        status: row.status,
-        imageMediaAssetId: row.image_media_asset_id,
-        locale,
-        translationAvailable: row.name !== null,
-        draftRevision:
-          row.draft_title === null
-            ? null
-            : {
-                title: row.draft_title,
-                summary: row.draft_summary,
-                description: row.draft_description,
-                imageMediaAssetId: row.draft_image_media_asset_id,
-                position: row.draft_position,
-              },
-      })),
+      items: rows.map((row) => {
+        const hasDraft = row.draft_title !== null;
+        const title = hasDraft ? row.draft_title : row.name;
+        const summary = hasDraft ? row.draft_summary : row.summary;
+        const description = hasDraft ? row.draft_description : row.description;
+        const imageMediaAssetId = hasDraft
+          ? row.draft_image_media_asset_id
+          : row.image_media_asset_id;
+        const imageProcessingStatus = hasDraft
+          ? row.draft_image_processing_status
+          : row.image_processing_status;
+        const imageRightsStatement = hasDraft
+          ? row.draft_image_rights_statement
+          : row.image_rights_statement;
+
+        const readinessIssues = evaluateCategoryReadiness({
+          status: row.status,
+          parentId: row.parent_id,
+          parentStatus: row.parent_status,
+          parentPublicationStatus: row.parent_publication_status,
+          title,
+          summary,
+          description,
+          imageMediaAssetId,
+          imageProcessingStatus,
+          imageRightsStatement,
+        });
+
+        let displayState: 'draft' | 'published' | 'unpublished' | 'archived';
+        if (row.status === 'archived') {
+          displayState = 'archived';
+        } else if (row.publication_status === 'published') {
+          if (
+            row.parent_id &&
+            (row.parent_status !== 'active' || row.parent_publication_status !== 'published')
+          ) {
+            displayState = 'unpublished';
+          } else {
+            displayState = 'published';
+          }
+        } else {
+          displayState = row.was_unpublished ? 'unpublished' : 'draft';
+        }
+
+        return {
+          id: row.id,
+          parentId: row.parent_id,
+          stableKey: row.stable_key,
+          slug: row.slug,
+          recordsAllowed: row.records_allowed,
+          position: row.position,
+          name: row.name ?? row.stable_key,
+          description: row.description,
+          summary: row.summary,
+          publicationStatus: row.publication_status,
+          status: row.status,
+          imageMediaAssetId: row.image_media_asset_id,
+          locale,
+          translationAvailable: row.name !== null,
+          readiness: {
+            publishable: readinessIssues.length === 0,
+            issues: readinessIssues,
+          },
+          displayState,
+          hasUnpublishedChanges: hasDraft,
+          draftRevision:
+            row.draft_title === null
+              ? null
+              : {
+                  title: row.draft_title,
+                  summary: row.draft_summary,
+                  description: row.draft_description,
+                  imageMediaAssetId: row.draft_image_media_asset_id,
+                  position: row.draft_position,
+                },
+        };
+      }),
     };
   }
 
@@ -363,6 +522,231 @@ export class ScientificStructureService {
         categoryCount: affected.length,
         recordCount,
         status: restore ? 'active' : 'archived',
+      };
+    });
+  }
+
+  async getCategoryReadiness(categoryId: string): Promise<CategoryReadinessResult> {
+    const rows = (await this.dataSource.query(
+      `
+        SELECT c.id, c.parent_id, c.status, c.publication_status, c.image_media_asset_id,
+               p.status AS parent_status, p.publication_status AS parent_publication_status,
+               ct.name, ct.summary, ct.description,
+               dr.title AS draft_title, dr.summary AS draft_summary,
+               dr.description AS draft_description,
+               dr.image_media_asset_id AS draft_image_media_asset_id,
+               m.processing_status AS image_processing_status,
+               m.rights_statement AS image_rights_statement,
+               dm.processing_status AS draft_image_processing_status,
+               dm.rights_statement AS draft_image_rights_statement
+        FROM categories c
+        LEFT JOIN categories p ON p.id = c.parent_id
+        LEFT JOIN category_draft_revisions dr ON dr.category_id = c.id
+        LEFT JOIN category_translations ct
+          ON ct.category_id = c.id AND ct.locale = 'en'
+        LEFT JOIN media_assets m ON m.id = c.image_media_asset_id
+        LEFT JOIN media_assets dm ON dm.id = dr.image_media_asset_id
+        WHERE c.id = $1
+      `,
+      [categoryId],
+    )) as unknown as CategoryRow[];
+
+    const row = rows[0];
+    if (!row) throw new NotFoundException('Category was not found.');
+
+    const hasDraft = row.draft_title !== null;
+    const title = hasDraft ? row.draft_title : row.name;
+    const summary = hasDraft ? row.draft_summary : row.summary;
+    const description = hasDraft ? row.draft_description : row.description;
+    const imageMediaAssetId = hasDraft ? row.draft_image_media_asset_id : row.image_media_asset_id;
+    const imageProcessingStatus = hasDraft
+      ? row.draft_image_processing_status
+      : row.image_processing_status;
+    const imageRightsStatement = hasDraft
+      ? row.draft_image_rights_statement
+      : row.image_rights_statement;
+
+    const issues = evaluateCategoryReadiness({
+      status: row.status,
+      parentId: row.parent_id,
+      parentStatus: row.parent_status,
+      parentPublicationStatus: row.parent_publication_status,
+      title,
+      summary,
+      description,
+      imageMediaAssetId,
+      imageProcessingStatus,
+      imageRightsStatement,
+    });
+
+    return {
+      categoryId,
+      publishable: issues.length === 0,
+      issues,
+    };
+  }
+
+  async publishCategory(actorUserId: string, categoryId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const rows = (await manager.query(
+        `
+          SELECT c.id, c.parent_id, c.status, c.publication_status, c.image_media_asset_id, c.position,
+                 p.status AS parent_status, p.publication_status AS parent_publication_status,
+                 ct.name, ct.summary, ct.description,
+                 dr.title AS draft_title, dr.summary AS draft_summary,
+                 dr.description AS draft_description,
+                 dr.image_media_asset_id AS draft_image_media_asset_id,
+                 dr.position AS draft_position,
+                 m.processing_status AS image_processing_status,
+                 m.rights_statement AS image_rights_statement,
+                 dm.processing_status AS draft_image_processing_status,
+                 dm.rights_statement AS draft_image_rights_statement
+          FROM categories c
+          LEFT JOIN categories p ON p.id = c.parent_id
+          LEFT JOIN category_draft_revisions dr ON dr.category_id = c.id
+          LEFT JOIN category_translations ct
+            ON ct.category_id = c.id AND ct.locale = 'en'
+          LEFT JOIN media_assets m ON m.id = c.image_media_asset_id
+          LEFT JOIN media_assets dm ON dm.id = dr.image_media_asset_id
+          WHERE c.id = $1
+          FOR UPDATE OF c
+        `,
+        [categoryId],
+      )) as unknown as CategoryRow[];
+
+      const row = rows[0];
+      if (!row) throw new NotFoundException('Category was not found.');
+
+      if (row.status !== 'active') {
+        throw new ConflictException('Archived categories cannot be published.');
+      }
+
+      if (row.parent_id) {
+        if (row.parent_status !== 'active') {
+          throw new ConflictException('Parent category is archived.');
+        }
+        if (row.parent_publication_status !== 'published') {
+          throw new ConflictException('Parent category must be published before this subcategory can publish.');
+        }
+      }
+
+      const hasDraft = row.draft_title !== null;
+      const title = (hasDraft ? row.draft_title : row.name)?.trim() ?? '';
+      const summary = (hasDraft ? row.draft_summary : row.summary)?.trim() ?? '';
+      const description = (hasDraft ? row.draft_description : row.description)?.trim() ?? '';
+      const imageAssetId = hasDraft ? row.draft_image_media_asset_id : row.image_media_asset_id;
+      const position = hasDraft && row.draft_position !== null ? row.draft_position : row.position;
+      const imageProcessingStatus = hasDraft
+        ? row.draft_image_processing_status
+        : row.image_processing_status;
+      const imageRightsStatement = hasDraft
+        ? row.draft_image_rights_statement
+        : row.image_rights_statement;
+
+      const issues = evaluateCategoryReadiness({
+        status: row.status,
+        parentId: row.parent_id,
+        parentStatus: row.parent_status,
+        parentPublicationStatus: row.parent_publication_status,
+        title,
+        summary,
+        description,
+        imageMediaAssetId: imageAssetId,
+        imageProcessingStatus,
+        imageRightsStatement,
+      });
+
+      if (issues.length > 0) {
+        throw new BadRequestException({
+          message: 'Category is not ready for publication.',
+          issues,
+        });
+      }
+
+      if (row.publication_status === 'published' && !hasDraft) {
+        throw new ConflictException('Category is already published with no pending changes.');
+      }
+
+      if (imageAssetId) {
+        await manager.query(`SELECT id FROM media_assets WHERE id = $1 FOR SHARE`, [imageAssetId]);
+      }
+
+      await manager.query(
+        `UPDATE categories
+         SET publication_status = 'published',
+             image_media_asset_id = $2,
+             position = $3,
+             updated_at = now()
+         WHERE id = $1`,
+        [categoryId, imageAssetId, position],
+      );
+
+      await manager.query(
+        `INSERT INTO category_translations (category_id, locale, name, summary, description, updated_at)
+         VALUES ($1, 'en', $2, $3, $4, now())
+         ON CONFLICT (category_id, locale) DO UPDATE
+         SET name = EXCLUDED.name, summary = EXCLUDED.summary, description = EXCLUDED.description, updated_at = now()`,
+        [categoryId, title, summary, description],
+      );
+
+      if (hasDraft) {
+        await manager.query(
+          `DELETE FROM category_draft_revisions WHERE category_id = $1`,
+          [categoryId],
+        );
+      }
+
+      await manager.query(
+        `INSERT INTO content_audit_events (actor_user_id, action, target_type, target_id, metadata)
+         VALUES ($1, $2, 'category', $3, $4::jsonb)`,
+        [
+          actorUserId,
+          'category.published',
+          categoryId,
+          JSON.stringify({ promotedDraft: hasDraft, imageMediaAssetId: imageAssetId }),
+        ],
+      );
+
+      return {
+        id: categoryId,
+        publicationStatus: 'published',
+        promotedDraft: hasDraft,
+      };
+    });
+  }
+
+  async unpublishCategory(actorUserId: string, categoryId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const rows = (await manager.query(
+        `SELECT id, status, publication_status FROM categories WHERE id = $1 FOR UPDATE`,
+        [categoryId],
+      )) as unknown as Array<{ id: string; status: string; publication_status: string }>;
+
+      const row = rows[0];
+      if (!row) throw new NotFoundException('Category was not found.');
+
+      if (row.status !== 'active') {
+        throw new ConflictException('Archived categories cannot be unpublished.');
+      }
+
+      if (row.publication_status !== 'published') {
+        throw new ConflictException('Category is not currently published.');
+      }
+
+      await manager.query(
+        `UPDATE categories SET publication_status = 'draft', updated_at = now() WHERE id = $1`,
+        [categoryId],
+      );
+
+      await manager.query(
+        `INSERT INTO content_audit_events (actor_user_id, action, target_type, target_id, metadata)
+         VALUES ($1, $2, 'category', $3, '{}'::jsonb)`,
+        [actorUserId, 'category.unpublished', categoryId],
+      );
+
+      return {
+        id: categoryId,
+        publicationStatus: 'draft',
       };
     });
   }
