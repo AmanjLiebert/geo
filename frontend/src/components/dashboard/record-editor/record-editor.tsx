@@ -268,6 +268,14 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
           `/dashboard/records/edit?recordId=${encodeURIComponent(newRecord.id)}`,
         );
       } else if (mode === "edit" && recordId) {
+        if (isCategoryArchived) {
+          throw new DashboardApiError(
+            "The scientific category for this record has been archived. Restore the category to make changes.",
+            409,
+            "conflict",
+          );
+        }
+
         const payload: UpdateRecordPayload = {
           slug: data.slug,
           attributes: data.attributes,
@@ -330,6 +338,14 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       recordDetail.status === "archived" ||
       recordDetail.status === "in_review");
 
+  const isCategoryArchived =
+    mode === "edit" &&
+    Boolean(
+      recordDetail?.categoryId &&
+        categories.length > 0 &&
+        !categories.some((c) => c.id === recordDetail.categoryId),
+    );
+
   return (
     <div className={styles.container}>
       {/* Page Header */}
@@ -364,6 +380,19 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
             : "Update the scientific fields and supporting details for this draft record."}
         </p>
       </header>
+
+      {/* Category archived alert */}
+      {!loading && !error && isCategoryArchived && (
+        <div className={styles.bannerError} role="alert">
+          <AlertTriangle className={styles.bannerIcon} aria-hidden="true" />
+          <div className={styles.bannerContent}>
+            <span className={styles.bannerTitle}>Category is archived</span>
+            <p className={styles.bannerText}>
+              The scientific category for this record has been archived. Restore the category in category management to edit or publish this draft.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Loading state */}
       {loading && (

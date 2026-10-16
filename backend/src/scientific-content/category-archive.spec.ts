@@ -5,7 +5,8 @@ import { ScientificStructureService } from './scientific-structure.service';
 
 function harness(recordCount = '2') {
   const queries: string[] = [];
-  const query = vi.fn((sql: string) => {
+  const query = vi.fn((sql: string, params?: unknown[]) => {
+    void params;
     queries.push(sql);
     if (sql.includes('SELECT * FROM branch ORDER BY depth'))
       return [

@@ -103,10 +103,12 @@ export class ScientificStructureService {
                dr.image_media_asset_id AS draft_image_media_asset_id,
                dr.position AS draft_position
         FROM categories c
+        LEFT JOIN categories p ON p.id = c.parent_id
         LEFT JOIN category_draft_revisions dr ON dr.category_id = c.id
         LEFT JOIN category_translations ct
           ON ct.category_id = c.id AND ct.locale = $1
         WHERE (c.status = 'active' OR $2::boolean)
+          AND ($2::boolean OR p.id IS NULL OR p.status = 'active')
         ORDER BY c.parent_id NULLS FIRST, c.position, c.stable_key
       `,
       [locale, includeArchived],
@@ -372,6 +374,7 @@ export class ScientificStructureService {
                crt.active_template_version_id
         FROM category_record_types crt
         JOIN categories c ON c.id = crt.category_id AND c.status = 'active'
+        LEFT JOIN categories p ON p.id = c.parent_id
         JOIN record_types rt ON rt.id = crt.record_type_id AND rt.status = 'active'
         JOIN template_versions tv
           ON tv.id = crt.active_template_version_id AND tv.status = 'active'
@@ -380,6 +383,7 @@ export class ScientificStructureService {
         LEFT JOIN record_type_translations rtt
           ON rtt.record_type_id = rt.id AND rtt.locale = $2
         WHERE crt.category_id = $1 AND crt.status = 'active'
+          AND (p.id IS NULL OR p.status = 'active')
         ORDER BY crt.position, rt.stable_key
       `,
       [categoryId, locale],
@@ -406,12 +410,14 @@ export class ScientificStructureService {
         FROM category_record_types crt
         JOIN categories c
           ON c.id = crt.category_id AND c.status = 'active' AND c.records_allowed = true
+        LEFT JOIN categories p ON p.id = c.parent_id
         JOIN record_types rt ON rt.id = crt.record_type_id AND rt.status = 'active'
         JOIN template_versions tv
           ON tv.id = crt.active_template_version_id AND tv.status = 'active'
         JOIN record_templates t
           ON t.id = tv.template_id AND t.record_type_id = rt.id AND t.status = 'active'
         WHERE crt.category_id = $1 AND crt.record_type_id = $2 AND crt.status = 'active'
+          AND (p.id IS NULL OR p.status = 'active')
       `,
       [categoryId, recordTypeId],
     )) as unknown as TemplateRow[];

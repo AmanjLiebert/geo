@@ -270,8 +270,13 @@ export function RecordTemplateForm({
           </div>
 
           {/* Dynamic template fields grid */}
-          <div className={styles.formGrid}>
-            {sortedFields.map((field) => {
+          {sortedFields.length === 0 ? (
+            <p className={styles.fieldHelp} style={{ marginBottom: "16px" }}>
+              This general geological record uses the common sections below (record details, sources, locations, related items, and media) rather than category-specific attributes.
+            </p>
+          ) : (
+            <div className={styles.formGrid}>
+              {sortedFields.map((field) => {
               const fieldError = getFieldError(field.stableKey);
               const fieldId = `${formId}-field-${field.stableKey}`;
               const helpId = `${fieldId}-help`;
@@ -471,6 +476,7 @@ export function RecordTemplateForm({
               );
             })}
           </div>
+        )}
 
           {/* Form Actions */}
           <div className={styles.actionsBar}>

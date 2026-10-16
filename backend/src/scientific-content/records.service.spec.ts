@@ -364,6 +364,9 @@ describe('RecordsService.update state enforcement and pinned template versions',
           },
         ]);
       }
+      if (sql.includes('FROM categories c')) {
+        return Promise.resolve([{ id: 'cat-orig' }]);
+      }
       if (sql.includes('SELECT stable_key, data_type')) {
         // Loads fields from pinned template version
         expect(params?.[0]).toBe('tv-pinned-version-1');
@@ -497,6 +500,9 @@ describe('RecordsService.update state enforcement and pinned template versions',
           },
         ]);
       }
+      if (sql.includes('FROM categories c')) {
+        return Promise.resolve([{ id: 'cat-1' }]);
+      }
       if (sql.includes('SELECT stable_key, data_type')) {
         return Promise.resolve([]);
       }
@@ -545,6 +551,9 @@ describe('RecordsService.update state enforcement and pinned template versions',
             updated_at: new Date(),
           },
         ]);
+      }
+      if (sql.includes('FROM categories c')) {
+        return Promise.resolve([{ id: 'cat-1' }]);
       }
       if (sql.includes('SELECT stable_key, data_type')) {
         return Promise.resolve([]);
@@ -608,5 +617,144 @@ describe('RecordsService.update state enforcement and pinned template versions',
         recordTypeId: 'rt-new-forbidden',
       }),
     ).rejects.toThrow(/Reclassifying an already classified record is not permitted/);
+  });
+
+  it('creates and reopens a General geological draft under a newly managed category', async () => {
+    let insertedRecordParams: unknown[] = [];
+    const recordId = 'rec-general-draft-1';
+
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      if (sql.includes('SELECT crt.category_id, crt.record_type_id')) {
+        return Promise.resolve([
+          {
+            category_id: 'cat-managed-1',
+            record_type_id: 'rt-general',
+            template_version_id: 'tv-general-v1',
+          },
+        ]);
+      }
+      if (sql.includes('SELECT stable_key, data_type FROM field_definitions')) {
+        return Promise.resolve([]); // General geological record has no custom fields
+      }
+      if (sql.includes('INSERT INTO scientific_records')) {
+        insertedRecordParams = params;
+        return Promise.resolve([]);
+      }
+      if (sql.includes('SELECT * FROM scientific_records WHERE id = $1')) {
+        return Promise.resolve([
+          {
+            id: (params[0] as string) || recordId,
+            stable_id: 'stable-uuid',
+            slug: 'general-observation-1',
+            status: 'draft',
+            category_id: 'cat-managed-1',
+            record_type_id: 'rt-general',
+            template_version_id: 'tv-general-v1',
+            attributes: {},
+            owner_user_id: 'teacher-1',
+            created_at: new Date('2026-10-16T12:00:00Z'),
+            updated_at: new Date('2026-10-16T12:00:00Z'),
+          },
+        ]);
+      }
+      if (sql.includes('SELECT * FROM record_translations WHERE record_id = $1')) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    const created = await service.create('teacher-1', {
+      categoryId: 'cat-managed-1',
+      recordTypeId: 'rt-general',
+      slug: 'general-observation-1',
+      attributes: {},
+    });
+
+    expect(created.id).toBeDefined();
+    expect(insertedRecordParams[0]).toBe(created.id);
+    expect(created.status).toBe('draft');
+    expect(created.categoryId).toBe('cat-managed-1');
+    expect(created.recordTypeId).toBe('rt-general');
+    expect(created.templateVersionId).toBe('tv-general-v1');
+    expect(created.attributes).toEqual({});
+
+    // Verify reopening draft loads identical classification and template version
+    const reopened = await service.get(created.id);
+    expect(reopened.id).toBe(created.id);
+    expect(reopened.status).toBe('draft');
+    expect(reopened.categoryId).toBe('cat-managed-1');
+    expect(reopened.recordTypeId).toBe('rt-general');
+    expect(reopened.templateVersionId).toBe('tv-general-v1');
+  });
+
+  it('rejects creating a record under an archived category or category with archived parent', async () => {
+    const queryMock = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('SELECT crt.category_id, crt.record_type_id')) {
+        return Promise.resolve([]); // Category status = active filter returns empty
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await expect(
+      service.create('teacher-1', {
+        categoryId: 'cat-archived',
+        recordTypeId: 'rt-general',
+        attributes: {},
+      }),
+    ).rejects.toThrow(/The selected category and record type do not have an active template/);
+  });
+
+  it('rejects updating a classified draft when its category is archived', async () => {
+    const queryMock = vi.fn().mockImplementation((sql: string) => {
+      if (sql.includes('SELECT * FROM scientific_records')) {
+        return Promise.resolve([
+          {
+            id: 'rec-under-archived-cat',
+            status: 'draft',
+            category_id: 'cat-archived-id',
+            record_type_id: 'rt-1',
+            template_version_id: 'tv-1',
+            attributes: {},
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      }
+      if (sql.includes('FROM categories c')) {
+        return Promise.resolve([]); // Category is archived, not active
+      }
+      return Promise.resolve([]);
+    });
+
+    const dataSource = {
+      transaction: vi.fn((cb: (manager: { query: typeof queryMock }) => Promise<unknown>) =>
+        cb({ query: queryMock }),
+      ),
+      query: queryMock,
+    } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await expect(
+      service.update('actor-1', 'rec-under-archived-cat', {
+        slug: 'new-slug',
+        attributes: {},
+      }),
+    ).rejects.toThrow(/The category for this record is archived or inactive/);
   });
 });

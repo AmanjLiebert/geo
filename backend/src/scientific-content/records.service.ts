@@ -232,6 +232,18 @@ export class RecordsService {
             input.recordTypeId,
           );
         } else if (current.template_version_id) {
+          const activeCategories = await manager.query<Array<{ id: string }>>(
+            `SELECT c.id FROM categories c
+             LEFT JOIN categories p ON p.id = c.parent_id
+             WHERE c.id = $1 AND c.status = 'active'
+               AND (p.id IS NULL OR p.status = 'active')`,
+            [current.category_id],
+          );
+          if (!activeCategories[0]) {
+            throw new ConflictException(
+              'The category for this record is archived or inactive.',
+            );
+          }
           classification = {
             category_id: current.category_id as string,
             record_type_id: current.record_type_id as string,
@@ -582,12 +594,14 @@ export class RecordsService {
         FROM category_record_types crt
         JOIN categories c
           ON c.id = crt.category_id AND c.status = 'active' AND c.records_allowed = true
+        LEFT JOIN categories p ON p.id = c.parent_id
         JOIN record_types rt ON rt.id = crt.record_type_id AND rt.status = 'active'
         JOIN template_versions tv
           ON tv.id = crt.active_template_version_id AND tv.status = 'active'
         JOIN record_templates t
           ON t.id = tv.template_id AND t.record_type_id = rt.id AND t.status = 'active'
         WHERE crt.category_id = $1 AND crt.record_type_id = $2 AND crt.status = 'active'
+          AND (p.id IS NULL OR p.status = 'active')
       `,
       [categoryId, recordTypeId],
     )) as unknown as ClassificationRow[];

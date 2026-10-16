@@ -205,39 +205,41 @@ export function RecordStructureSelector({
             </span>
 
             {activeRootNode.allowsDirectRecords && (
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="radio"
-                  name="attachment-choice"
-                  checked={isDirectAttachment}
-                  onChange={handleSelectDirect}
-                  className={styles.checkboxInput}
-                />
-                <span className={styles.checkboxText}>
-                  Attach directly to general &ldquo;{activeRootNode.category.name}&rdquo; category
-                </span>
-              </label>
-            )}
+              <>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="radio"
+                    name="attachment-choice"
+                    checked={isDirectAttachment}
+                    onChange={handleSelectDirect}
+                    className={styles.checkboxInput}
+                  />
+                  <span className={styles.checkboxText}>
+                    Attach directly to general &ldquo;{activeRootNode.category.name}&rdquo; category
+                  </span>
+                </label>
 
-            <label className={styles.checkboxLabel}>
-              <input
-                type="radio"
-                name="attachment-choice"
-                checked={!isDirectAttachment && subcategoryId !== null}
-                onChange={() => {
-                  setIsDirectAttachment(false);
-                  setSubcategoryId(null);
-                  setRecordTypeId(null);
-                  setRecordTypes([]);
-                  setLoadingRecordTypes(false);
-                  setRecordTypesError(null);
-                }}
-                className={styles.checkboxInput}
-              />
-              <span className={styles.checkboxText}>
-                Select a specific &ldquo;{activeRootNode.category.name}&rdquo; subcategory:
-              </span>
-            </label>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="radio"
+                    name="attachment-choice"
+                    checked={!isDirectAttachment}
+                    onChange={() => {
+                      setIsDirectAttachment(false);
+                      setSubcategoryId(null);
+                      setRecordTypeId(null);
+                      setRecordTypes([]);
+                      setLoadingRecordTypes(false);
+                      setRecordTypesError(null);
+                    }}
+                    className={styles.checkboxInput}
+                  />
+                  <span className={styles.checkboxText}>
+                    Select a specific &ldquo;{activeRootNode.category.name}&rdquo; subcategory:
+                  </span>
+                </label>
+              </>
+            )}
 
             {!isDirectAttachment && (
               <div

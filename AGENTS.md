@@ -10,6 +10,15 @@ Read these files before making architectural or product changes:
 
 If documents conflict, `PLAN.md` wins for delivery scope and `MAP.md` wins for system boundaries.
 
+## Agent handoff workflow
+
+- Use `MEMORY.md` as the coordination index for work delegated to another coding agent.
+- Only the task identified as active in `MEMORY.md` may be implemented. Do not begin a later phase or combine adjacent phases.
+- Every delegated task has its own folder under `docs/agent-work/` with separate assignment, implementation-report, and verification files.
+- The assigning/reviewing agent owns `01-assignment.md` and `03-verification.md`. The implementation agent writes only `02-implementation-report.md` unless the assignment explicitly authorizes documentation changes elsewhere.
+- An implementation report is evidence for review, not proof of completion. The task is complete only after independent verification is recorded and the completion gate in `PLAN.md` passes.
+- Never place secrets, credentials, personal data, raw environment files, or private storage/database details in handoff files.
+
 ## Current phase
 
 The visitor showcase remains the frontend baseline. Phase 5 — the protected administration dashboard — is the active implementation phase, building on the completed Phase 1–4 foundational, identity, scientific-content, and publishing/media rehearsals. Current work must follow the active phase in `PLAN.md`. Do not jump ahead to AI, payments, or advanced infrastructure before the earlier phase completion gates pass.

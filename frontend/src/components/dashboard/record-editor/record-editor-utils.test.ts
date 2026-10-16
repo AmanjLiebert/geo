@@ -11,6 +11,7 @@ import {
   validateSlug,
 } from "./record-editor-utils";
 import { RecordTemplateForm } from "./record-template-form";
+import { RecordStructureSelector } from "./record-structure-selector";
 import type { StructureCategory, TemplateField } from "./record-editor-types";
 
 describe("record-editor-utils", () => {
@@ -589,6 +590,120 @@ describe("record-editor-utils", () => {
         }),
       );
       expect(html).not.toContain("Change classification");
+    });
+
+    it("renders helper notice for General geological record with no custom attributes", () => {
+      const generalTemplate = {
+        id: "tmpl-general",
+        stableKey: "general_geological_record_template",
+        name: "General geological record template",
+        version: { id: "tv-gen-1", number: 1, status: "active" as const },
+        fields: [],
+      };
+      const html = renderToStaticMarkup(
+        createElement(RecordTemplateForm, {
+          template: generalTemplate,
+          categoryName: "Central Zagros",
+          recordTypeName: "General geological record",
+          mode: "create",
+          isSaving: false,
+          onSubmit: () => {},
+          onCancel: () => {},
+        }),
+      );
+      expect(html).toContain("General geological record template");
+      expect(html).toContain("This general geological record uses the common sections below");
+    });
+  });
+
+  describe("RecordStructureSelector rendering", () => {
+    const categories: StructureCategory[] = [
+      {
+        id: "cat-managed-root",
+        parentId: null,
+        stableKey: "managed_root",
+        slug: "managed-root",
+        recordsAllowed: true,
+        position: 1,
+        name: "Managed Region",
+        description: "A newly managed geological category",
+        locale: "en",
+        translationAvailable: true,
+      },
+      {
+        id: "cat-managed-child",
+        parentId: "cat-managed-root",
+        stableKey: "managed_child",
+        slug: "managed-child",
+        recordsAllowed: true,
+        position: 1,
+        name: "Managed District",
+        description: "A managed subcategory",
+        locale: "en",
+        translationAvailable: true,
+      },
+      {
+        id: "cat-specialist-root",
+        parentId: null,
+        stableKey: "fossils",
+        slug: "fossils",
+        recordsAllowed: false,
+        position: 2,
+        name: "Fossils",
+        description: "Fossil collection",
+        locale: "en",
+        translationAvailable: true,
+      },
+      {
+        id: "cat-specialist-child",
+        parentId: "cat-specialist-root",
+        stableKey: "invertebrates",
+        slug: "invertebrates",
+        recordsAllowed: true,
+        position: 1,
+        name: "Invertebrates",
+        description: "Fossil invertebrates",
+        locale: "en",
+        translationAvailable: true,
+      },
+    ];
+
+    it("renders direct attachment and subcategory choices when root allows direct records and has children", () => {
+      const html = renderToStaticMarkup(
+        createElement(RecordStructureSelector, {
+          categories,
+          initialSelection: {
+            parentCategoryId: "cat-managed-root",
+            categoryId: "cat-managed-root",
+            isDirectAttachment: true,
+            recordTypeId: null,
+          },
+          onConfirm: () => {},
+        }),
+      );
+      expect(html).toContain("Managed Region");
+      expect(html).toContain("Classification level");
+      expect(html).toContain("Attach directly to general");
+      expect(html).toContain("Select a specific");
+    });
+
+    it("renders subcategories directly without direct attachment radio when root forbids direct records", () => {
+      const html = renderToStaticMarkup(
+        createElement(RecordStructureSelector, {
+          categories,
+          initialSelection: {
+            parentCategoryId: "cat-specialist-root",
+            categoryId: "cat-specialist-child",
+            isDirectAttachment: false,
+            recordTypeId: null,
+          },
+          onConfirm: () => {},
+        }),
+      );
+      expect(html).toContain("Fossils");
+      expect(html).toContain("Select subcategory branch (required)");
+      expect(html).toContain("Invertebrates");
+      expect(html).not.toContain("Attach directly to general");
     });
   });
 });

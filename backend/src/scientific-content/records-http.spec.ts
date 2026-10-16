@@ -1141,4 +1141,117 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       expect(invalid.statusCode).toBe(400);
     });
   });
+
+  describe('managed category record entry and reopening boundary', () => {
+    const payload = {
+      categoryId: validCategoryId,
+      recordTypeId: validRecordTypeId,
+      slug: 'managed-record-slug',
+      attributes: {},
+    };
+
+    it.each(['teacher-session', 'admin-session'])(
+      'allows %s to create a General geological draft under a managed category',
+      async (session) => {
+        mockRecordsService.create.mockResolvedValueOnce({
+          id: validRecordId,
+          status: 'draft',
+          categoryId: validCategoryId,
+          recordTypeId: validRecordTypeId,
+          templateVersionId: 'tv-general-v1',
+          attributes: {},
+          translations: [],
+        });
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/v1/records',
+          cookies: { gk_session: session, gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+          payload,
+        });
+
+        expect(response.statusCode).toBe(201);
+        expect(response.body).toContain(validRecordId);
+        expect(mockRecordsService.create).toHaveBeenCalledWith(
+          expect.any(String),
+          payload,
+        );
+      },
+    );
+
+    it('allows teacher and admin to reopen a saved draft record', async () => {
+      mockRecordsService.get.mockResolvedValueOnce({
+        id: validRecordId,
+        stableId: 'stable-uuid',
+        status: 'draft',
+        categoryId: validCategoryId,
+        recordTypeId: validRecordTypeId,
+        templateVersionId: 'tv-general-v1',
+        attributes: {},
+        ownerUserId: 'teacher-1',
+        createdAt: '2026-10-16T12:00:00.000Z',
+        updatedAt: '2026-10-16T12:00:00.000Z',
+        translations: [],
+      });
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'teacher-session' },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toContain('"status":"draft"');
+      expect(response.body).toContain(validCategoryId);
+      expect(mockRecordsService.get).toHaveBeenCalledWith(validRecordId);
+    });
+
+    it('denies visitor and signed-out requests from creating or reopening records', async () => {
+      const visitorCreate = await app.inject({
+        method: 'POST',
+        url: '/api/v1/records',
+        cookies: { gk_session: 'visitor-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload,
+      });
+      const signedOutCreate = await app.inject({
+        method: 'POST',
+        url: '/api/v1/records',
+        payload,
+      });
+      const visitorGet = await app.inject({
+        method: 'GET',
+        url: `/api/v1/records/${validRecordId}`,
+        cookies: { gk_session: 'visitor-session' },
+      });
+      const signedOutGet = await app.inject({
+        method: 'GET',
+        url: `/api/v1/records/${validRecordId}`,
+      });
+
+      expect(visitorCreate.statusCode).toBe(403);
+      expect(signedOutCreate.statusCode).toBe(401);
+      expect(visitorGet.statusCode).toBe(403);
+      expect(signedOutGet.statusCode).toBe(401);
+    });
+
+    it('rejects malformed record ID and invalid category UUID format', async () => {
+      const invalidGet = await app.inject({
+        method: 'GET',
+        url: '/api/v1/records/not-a-uuid',
+        cookies: { gk_session: 'teacher-session' },
+      });
+      const invalidPost = await app.inject({
+        method: 'POST',
+        url: '/api/v1/records',
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { ...payload, categoryId: 'not-a-uuid' },
+      });
+
+      expect(invalidGet.statusCode).toBe(400);
+      expect(invalidPost.statusCode).toBe(400);
+    });
+  });
 });
