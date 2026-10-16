@@ -36,7 +36,11 @@ export async function previewCategoryArchive(id: string): Promise<{ categoryCoun
 }
 
 export async function changeCategoryArchive(id: string, restore: boolean, impact: { categoryCount: number; recordCount: number }): Promise<void> {
-  const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}/${restore ? "restore" : "archive"}`, "POST", impact);
+  const result = await requestRecordResource(
+    `/api/v1/scientific-structure/categories/${encodeURIComponent(id)}/${restore ? "restore" : "archive"}`,
+    "POST",
+    { categoryCount: impact.categoryCount, recordCount: impact.recordCount },
+  );
   if (!object(result) || result.status !== (restore ? "active" : "archived")) throw new DashboardApiError("Category change could not be confirmed.", 200, "server");
 }
 
