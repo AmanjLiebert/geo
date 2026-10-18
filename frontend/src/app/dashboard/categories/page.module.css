@@ -33,3 +33,5 @@
 .btnUnpublish { background: #f4ece1; color: var(--carbon); }
 .btnRemove { background: #fff; color: #8a2b16; border-color: var(--carbon); }
 .btnRestore { background: var(--shale); color: #fff; }
+.reauthenticationPrompt { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; background: #fdf6e2; color: var(--carbon); border: 2px solid #8a6d3b; border-radius: 4px; }
+.reauthenticationLink { display: inline-flex; align-items: center; min-height: 38px; padding: 6px 14px; background: var(--carbon); color: #fff; border: 2px solid var(--carbon); border-radius: 4px; box-shadow: 2px 2px 0 #8a6d3b; font-size: 13px; font-weight: 700; text-decoration: none; }

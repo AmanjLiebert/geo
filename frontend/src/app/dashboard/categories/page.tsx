@@ -29,7 +29,7 @@ export default function CategoriesPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [reauthenticationRequired, setReauthenticationRequired] = useState(false);
+  const [reauthenticationCategoryId, setReauthenticationCategoryId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ManagedCategory | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editSummary, setEditSummary] = useState("");
@@ -58,32 +58,31 @@ export default function CategoriesPage() {
       setError("This category is not ready for publication. Resolve the missing requirements below.");
       return;
     }
-    setBusy(true); setError(""); setMessage(""); setReauthenticationRequired(false);
+    setBusy(true); setError(""); setMessage(""); setReauthenticationCategoryId(null);
     try {
       await publishCategory(item.id);
       setMessage(`"${item.name}" published successfully.`);
       await refresh();
     } catch (cause) {
-      handleProtectedActionError(cause, "The category could not be published. Refresh and try again.");
+      handleProtectedActionError(cause, item.id, "The category could not be published. Refresh and try again.");
     } finally { setBusy(false); }
   }
 
   async function handleUnpublish(item: ManagedCategory) {
     if (!window.confirm(`Unpublish "${item.name}"? It will be hidden from public view. Records and drafts will be preserved.`)) return;
-    setBusy(true); setError(""); setMessage(""); setReauthenticationRequired(false);
+    setBusy(true); setError(""); setMessage(""); setReauthenticationCategoryId(null);
     try {
       await unpublishCategory(item.id);
       setMessage(`"${item.name}" unpublished. Records and drafts were preserved.`);
       await refresh();
     } catch (cause) {
-      handleProtectedActionError(cause, "The category could not be unpublished. Refresh and try again.");
+      handleProtectedActionError(cause, item.id, "The category could not be unpublished. Refresh and try again.");
     } finally { setBusy(false); }
   }
 
-  function handleProtectedActionError(cause: unknown, fallback: string) {
+  function handleProtectedActionError(cause: unknown, categoryId: string, fallback: string) {
     if (cause instanceof DashboardApiError && cause.status === 403) {
-      setReauthenticationRequired(true);
-      setError("Confirm your identity before continuing.");
+      setReauthenticationCategoryId(categoryId);
       return;
     }
     setError(cause instanceof Error ? cause.message : fallback);
@@ -155,7 +154,7 @@ export default function CategoriesPage() {
     const actions = getCategoryActions(item, isChild, parentItem);
 
     return (
-      <div className={styles.categoryItem}>
+      <div id={`category-${item.id}`} className={styles.categoryItem}>
         <div className={styles.categoryHeader}>
           <span className={styles.categoryTitle}>{item.name}</span>
           {getStatusBadge(item)}
@@ -220,6 +219,17 @@ export default function CategoriesPage() {
             </button>
           )}
         </div>
+        {reauthenticationCategoryId === item.id && (
+          <div className={styles.reauthenticationPrompt} role="alert">
+            <span>Confirm your identity before changing publication status.</span>
+            <Link
+              className={styles.reauthenticationLink}
+              href={`/account?returnTo=${encodeURIComponent(`/dashboard/categories#category-${item.id}`)}`}
+            >
+              Confirm identity
+            </Link>
+          </div>
+        )}
       </div>
     );
   }
@@ -228,7 +238,6 @@ export default function CategoriesPage() {
   return <main className={styles.page}>
     <header><h1>Categories</h1><p>Organize geological subjects for the collection.</p></header>
     {error && <p role="alert">{error}</p>}
-    {reauthenticationRequired && <p><Link href="/account?returnTo=%2Fdashboard%2Fcategories">Confirm identity</Link>, then try the action again.</p>}
     {message && <p role="status">{message}</p>}
     <section className={styles.panel} aria-labelledby="category-create-title">
       <h2 id="category-create-title">Add category</h2>
