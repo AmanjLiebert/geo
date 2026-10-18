@@ -64,6 +64,21 @@ export async function signOutSession(): Promise<void> {
   if (!response.ok && response.status !== 401) throw await toApiError(response);
 }
 
+export async function reauthenticateSession(idToken: string): Promise<void> {
+  const csrfToken = readCookie(process.env.NEXT_PUBLIC_CSRF_COOKIE_NAME ?? "gk_csrf");
+  const response = await fetch(apiUrl("/api/v1/auth/reauthenticate"), {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+    },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!response.ok) throw await toApiError(response);
+}
+
 function apiUrl(path: string): string {
   return `${apiBaseUrl}${path}`;
 }

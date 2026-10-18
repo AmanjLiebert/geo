@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   changeCategoryArchive,
@@ -14,6 +15,7 @@ import {
   uploadCategoryImage,
   type ManagedCategory,
 } from "@/lib/category-management-api";
+import { DashboardApiError } from "@/lib/dashboard-api";
 import styles from "./page.module.css";
 
 export default function CategoriesPage() {
@@ -27,6 +29,7 @@ export default function CategoriesPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [reauthenticationRequired, setReauthenticationRequired] = useState(false);
   const [editing, setEditing] = useState<ManagedCategory | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editSummary, setEditSummary] = useState("");
@@ -55,26 +58,35 @@ export default function CategoriesPage() {
       setError("This category is not ready for publication. Resolve the missing requirements below.");
       return;
     }
-    setBusy(true); setError(""); setMessage("");
+    setBusy(true); setError(""); setMessage(""); setReauthenticationRequired(false);
     try {
       await publishCategory(item.id);
       setMessage(`"${item.name}" published successfully.`);
       await refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The category could not be published. Refresh and try again.");
+      handleProtectedActionError(cause, "The category could not be published. Refresh and try again.");
     } finally { setBusy(false); }
   }
 
   async function handleUnpublish(item: ManagedCategory) {
     if (!window.confirm(`Unpublish "${item.name}"? It will be hidden from public view. Records and drafts will be preserved.`)) return;
-    setBusy(true); setError(""); setMessage("");
+    setBusy(true); setError(""); setMessage(""); setReauthenticationRequired(false);
     try {
       await unpublishCategory(item.id);
       setMessage(`"${item.name}" unpublished. Records and drafts were preserved.`);
       await refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The category could not be unpublished. Refresh and try again.");
+      handleProtectedActionError(cause, "The category could not be unpublished. Refresh and try again.");
     } finally { setBusy(false); }
+  }
+
+  function handleProtectedActionError(cause: unknown, fallback: string) {
+    if (cause instanceof DashboardApiError && cause.status === 403) {
+      setReauthenticationRequired(true);
+      setError("Confirm your identity before continuing.");
+      return;
+    }
+    setError(cause instanceof Error ? cause.message : fallback);
   }
 
   function beginEdit(item: ManagedCategory) {
@@ -215,7 +227,9 @@ export default function CategoriesPage() {
   const roots = items.filter((item) => item.parentId === null);
   return <main className={styles.page}>
     <header><h1>Categories</h1><p>Organize geological subjects for the collection.</p></header>
-    {error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
+    {error && <p role="alert">{error}</p>}
+    {reauthenticationRequired && <p><Link href="/account?returnTo=%2Fdashboard%2Fcategories">Confirm identity</Link>, then try the action again.</p>}
+    {message && <p role="status">{message}</p>}
     <section className={styles.panel} aria-labelledby="category-create-title">
       <h2 id="category-create-title">Add category</h2>
       <form onSubmit={(event) => void submit(event)} className={styles.form}>

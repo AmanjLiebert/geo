@@ -11,7 +11,7 @@ import {
 import { ArrowRight, LogOut, Phone, ShieldCheck } from "lucide-react";
 import { FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { exchangeFirebaseToken } from "@/lib/auth-api";
+import { exchangeFirebaseToken, reauthenticateSession } from "@/lib/auth-api";
 import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase-auth";
 import { firebaseAuthMessage, isE164PhoneNumber, normalizePhoneNumber } from "@/lib/phone-auth";
 import styles from "./account.module.css";
@@ -31,13 +31,25 @@ export function AccountPanel() {
 
   const hashInvitationToken = useSyncExternalStore(subscribeToHash, readInvitationToken, () => undefined);
   const invitationToken = invitationConsumed ? undefined : hashInvitationToken;
+  const returnTo = useSyncExternalStore(subscribeToLocation, readReturnTo, () => undefined);
 
   useEffect(() => () => recaptchaRef.current?.clear(), []);
 
-  const completeServerSignIn = async (idToken: string) => {
-    await exchangeFirebaseToken(idToken, invitationToken);
+  const completeServerIdentity = async (idToken: string) => {
+    if (user) {
+      await reauthenticateSession(idToken);
+    } else {
+      await exchangeFirebaseToken(idToken, invitationToken);
+    }
     const auth = await getFirebaseAuth();
     await signOutFirebase(auth);
+    if (user) {
+      setConfirmation(null);
+      setCode("");
+      setMessage("Identity confirmed.");
+      if (returnTo) window.location.assign(returnTo);
+      return;
+    }
     if (invitationToken) {
       window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
       setInvitationConsumed(true);
@@ -53,7 +65,7 @@ export function AccountPanel() {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       const credential = await signInWithPopup(auth, provider);
-      await completeServerSignIn(await credential.user.getIdToken(true));
+      await completeServerIdentity(await credential.user.getIdToken(true));
     } catch (error) {
       setMessage(firebaseAuthMessage(error));
     } finally {
@@ -93,7 +105,7 @@ export function AccountPanel() {
     setMessage(null);
     try {
       const credential = await confirmation.confirm(code.trim());
-      await completeServerSignIn(await credential.user.getIdToken(true));
+      await completeServerIdentity(await credential.user.getIdToken(true));
     } catch (error) {
       setMessage(firebaseAuthMessage(error));
     } finally {
@@ -134,6 +146,31 @@ export function AccountPanel() {
             ? "Your private saved-record list becomes available when the production record API is connected."
             : "Your scientific workspace will appear when the configurable record foundation is enabled in Phase 3."}
         </p>
+        {returnTo && configured && (
+          <>
+            <p className={styles.message}>Confirm your identity to continue the protected action.</p>
+            <button className={styles.primaryAction} type="button" onClick={signInWithGoogle} disabled={activity !== "idle"}>
+              <span>G</span>{activity === "google" ? "Verifying…" : "Confirm with Google"}<ArrowRight aria-hidden="true" />
+            </button>
+            <div className={styles.divider}><span>or verify a phone</span></div>
+            {!confirmation ? (
+              <form className={styles.form} onSubmit={sendPhoneCode}>
+                <label htmlFor="reauth-phone">Phone number</label>
+                <div className={styles.inputRow}><Phone aria-hidden="true" /><input id="reauth-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+964 750 000 0000" value={phone} onChange={(event) => setPhone(event.target.value)} required /></div>
+                <div id="account-recaptcha" className={styles.recaptcha} />
+                <button className={styles.secondaryAction} type="submit" disabled={activity !== "idle"}>{activity === "phone-send" ? "Sending…" : "Send verification code"}</button>
+              </form>
+            ) : (
+              <form className={styles.form} onSubmit={confirmPhoneCode}>
+                <label htmlFor="reauth-code">Verification code</label>
+                <input id="reauth-code" className={styles.codeInput} inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(event) => setCode(event.target.value)} minLength={6} maxLength={6} required />
+                <button className={styles.secondaryAction} type="submit" disabled={activity !== "idle"}>{activity === "phone-confirm" ? "Verifying…" : "Confirm identity"}</button>
+                <button className={styles.textAction} type="button" onClick={() => { setConfirmation(null); setCode(""); setMessage(null); }}>Use another number</button>
+              </form>
+            )}
+          </>
+        )}
+        {returnTo && !configured && <p className={styles.message} role="alert">Identity confirmation is unavailable. Sign out and sign in again.</p>}
         {message && <p className={styles.message} role="alert">{message}</p>}
         <button className={styles.secondaryAction} type="button" onClick={endSession} disabled={activity !== "idle"}>
           <LogOut aria-hidden="true" />{activity === "signout" ? "Signing out…" : "Sign out"}
@@ -188,4 +225,14 @@ function subscribeToHash(onStoreChange: () => void): () => void {
 function readInvitationToken(): string | undefined {
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   return params.get("invite") ?? undefined;
+}
+
+function subscribeToLocation(onStoreChange: () => void): () => void {
+  window.addEventListener("popstate", onStoreChange);
+  return () => window.removeEventListener("popstate", onStoreChange);
+}
+
+function readReturnTo(): string | undefined {
+  const value = new URLSearchParams(window.location.search).get("returnTo");
+  return value?.startsWith("/") && !value.startsWith("//") ? value : undefined;
 }
