@@ -110,6 +110,20 @@ describe('category readiness evaluation', () => {
   });
 });
 
+describe('category listing query', () => {
+  it('compares text audit target IDs with category UUIDs using a safe cast', async () => {
+    const query = vi.fn().mockResolvedValue([]);
+    const dataSource = { query } as unknown as DataSource;
+    const service = new ScientificStructureService(dataSource);
+
+    await expect(service.listCategories('en')).resolves.toEqual({ items: [] });
+
+    const sql = query.mock.calls[0]?.[0] as string;
+    expect(sql).toContain("cae.target_id = c.id::text");
+    expect(sql).not.toContain('cae.target_id::uuid');
+  });
+});
+
 describe('category publication service', () => {
   function defaultCategoryRowForChild() {
     return {

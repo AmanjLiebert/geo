@@ -211,7 +211,7 @@ export class ScientificStructureService {
                dm.rights_statement AS draft_image_rights_statement,
                EXISTS (
                  SELECT 1 FROM content_audit_events cae
-                 WHERE cae.target_type = 'category' AND cae.target_id = c.id AND cae.action = 'category.unpublished'
+                 WHERE cae.target_type = 'category' AND cae.target_id = c.id::text AND cae.action = 'category.unpublished'
                ) AS was_unpublished
         FROM categories c
         LEFT JOIN categories p ON p.id = c.parent_id
