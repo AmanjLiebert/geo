@@ -215,6 +215,13 @@ Record
 ├── relationships ────────────────────► RecordRelation[]
 ├── revisions ────────────────────────► RecordRevision[]
 └── authorship/ownership ─────────────► User
+
+RecordMedia
+├── mediaAsset ───────────────────────► MediaAsset
+├── purpose / caption / description
+├── image alternative text
+├── display position
+└── primary image marker (at most one per record)
 ```
 
 The record type is first-class data. It must not be stored only as an unrestricted string or confused with a subcategory.
@@ -428,6 +435,8 @@ Publication requires:
 - Valid media rights and reference access.
 - Public-safe geographic representation.
 - Teacher or admin authorization for the target record.
+
+Record media is a one-to-many attachment collection. Images, supported videos, and PDFs remain private objects and are exposed only through authorized short-lived inline viewing. Each attachment owns its presentation metadata rather than borrowing one record-wide caption. Browser-viewable media cannot be made impossible to copy; the enforceable controls are private storage, validation and malware scanning, authorization, short-lived URLs, inline disposition, and no ordinary download control.
 
 ## 11. Record lifecycle map
 

@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 5 / step 5A — category readiness and publication |
-| Task folder | `docs/agent-work/phase-5-step-5a-category-publication/` |
-| Status | `COMPLETE` |
+| Task | Phase 5 / step 5B1 — record media gallery |
+| Task folder | `docs/agent-work/phase-5-step-5b1-record-media-gallery/` |
+| Status | `READY_FOR_IMPLEMENTATION` |
 | Implementer | Antigravity |
 | Reviewer | Codex |
-| Plan gate | A teacher or admin can see category readiness, publish only a complete active category branch, and unpublish it without deleting content, records, revisions, or history. |
+| Plan gate | A teacher or admin can manage multiple private record attachments with independent metadata, safe processing, display order, and one primary image without weakening draft, ownership, or publication protections. |
 
 ## Required file order
 
