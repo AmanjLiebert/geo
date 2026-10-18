@@ -8,8 +8,8 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Phase 5 / step 5B1 — record media gallery |
 | Task folder | `docs/agent-work/phase-5-step-5b1-record-media-gallery/` |
-| Status | `READY_FOR_IMPLEMENTATION` |
-| Implementer | Antigravity |
+| Status | `COMPLETE` |
+| Implementer | Antigravity, continued by Codex after quota interruption |
 | Reviewer | Codex |
 | Plan gate | A teacher or admin can manage multiple private record attachments with independent metadata, safe processing, display order, and one primary image without weakening draft, ownership, or publication protections. |
 
