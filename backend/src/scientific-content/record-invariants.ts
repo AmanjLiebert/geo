@@ -54,7 +54,7 @@ export async function assertRecordEditable(
   if (record.status === 'archived') {
     throw new ConflictException('Restore the record before editing it.');
   }
-  if (record.status === 'published') {
+  if (record.status === 'published' || record.status === 'in_review') {
     throw new ConflictException('This record cannot be edited in its current state.');
   }
 

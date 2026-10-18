@@ -25,7 +25,7 @@ interface ProcessingMediaRow {
   storage_key: string;
   declared_content_type: string;
   byte_size: string;
-  media_kind: 'image' | 'document';
+  media_kind: 'image' | 'document' | 'video';
   processing_status: string;
 }
 
@@ -42,6 +42,12 @@ interface PreparedDerivative {
   width: number;
   height: number;
   sha256: string;
+}
+
+interface PreparedPlayback {
+  storageKey: string;
+  buffer: Buffer;
+  contentType: 'video/mp4';
 }
 
 class UnsafeMediaError extends Error {
@@ -84,7 +90,13 @@ export class MediaProcessorService {
     const directory = await mkdtemp(join(tmpdir(), 'gk-media-'));
     const sourcePath = join(
       directory,
-      media.media_kind === 'document' ? 'source.pdf' : 'source.bin',
+      media.media_kind === 'document'
+        ? 'source.pdf'
+        : media.media_kind === 'video'
+          ? media.declared_content_type === 'video/webm'
+            ? 'source.webm'
+            : 'source.mp4'
+          : 'source.bin',
     );
     const uploadedKeys: string[] = [];
 
@@ -109,10 +121,17 @@ export class MediaProcessorService {
       }
       if (scan.status !== 'clean') throw new Error(`Malware scanner failed: ${scan.detail}`);
 
-      const derivatives =
-        media.media_kind === 'image'
-          ? await this.prepareImageDerivatives(media.id, sourcePath)
-          : await this.prepareDocumentDerivatives(media.id, sourcePath, directory);
+      let playback: PreparedPlayback | null = null;
+      let derivatives: PreparedDerivative[];
+      if (media.media_kind === 'image') {
+        derivatives = await this.prepareImageDerivatives(media.id, sourcePath);
+      } else if (media.media_kind === 'document') {
+        derivatives = await this.prepareDocumentDerivatives(media.id, sourcePath, directory);
+      } else {
+        const video = await this.prepareVideoDerivatives(media.id, sourcePath, directory);
+        playback = video.playback;
+        derivatives = video.posters;
+      }
 
       for (const derivative of derivatives) {
         await client.send(
@@ -130,6 +149,21 @@ export class MediaProcessorService {
           }),
         );
         uploadedKeys.push(derivative.storageKey);
+      }
+
+      if (playback) {
+        await client.send(
+          new PutObjectCommand({
+            Bucket: this.bucket,
+            Key: playback.storageKey,
+            Body: playback.buffer,
+            ContentType: playback.contentType,
+            CacheControl: 'private, no-store, max-age=0',
+            ContentDisposition: 'inline',
+            Metadata: { 'asset-id': media.id, 'derivative-kind': 'playback' },
+          }),
+        );
+        uploadedKeys.push(playback.storageKey);
       }
 
       await this.dataSource.transaction(async (manager) => {
@@ -158,7 +192,7 @@ export class MediaProcessorService {
             derivative_storage_key = $3, scanner_result = 'clean', failure_code = NULL,
             processed_at = now(), updated_at = now()
            WHERE id = $1 AND processing_status = 'processing'`,
-          [media.id, sourceHash, derivatives[0]?.storageKey ?? null],
+          [media.id, sourceHash, playback?.storageKey ?? derivatives[0]?.storageKey ?? null],
         );
       });
     } catch (error) {
@@ -346,6 +380,140 @@ export class MediaProcessorService {
     return derivatives;
   }
 
+  private async prepareVideoDerivatives(assetId: string, sourcePath: string, directory: string) {
+    const posterPath = join(directory, 'poster.png');
+    const playbackPath = join(directory, 'playback.mp4');
+    const maximumDuration = this.config.get('MEDIA_MAX_VIDEO_DURATION_SECONDS', { infer: true });
+    try {
+      const probe = await runCommand(
+        'ffprobe',
+        [
+          '-v',
+          'error',
+          '-select_streams',
+          'v:0',
+          '-show_entries',
+          'stream=width,height:format=duration',
+          '-of',
+          'json',
+          sourcePath,
+        ],
+        15_000,
+      );
+      const metadata = parseVideoProbe(probe);
+      if (
+        !metadata.width ||
+        !metadata.height ||
+        metadata.width > 7_680 ||
+        metadata.height > 4_320 ||
+        !metadata.duration ||
+        metadata.duration > maximumDuration
+      ) {
+        throw new UnsafeMediaError(
+          'unsafe_video_metadata',
+          'Video dimensions or duration are missing or exceed the supported limits.',
+        );
+      }
+
+      await runCommand(
+        'ffmpeg',
+        [
+          '-nostdin',
+          '-y',
+          '-i',
+          sourcePath,
+          '-map_metadata',
+          '-1',
+          '-map',
+          '0:v:0',
+          '-map',
+          '0:a:0?',
+          '-vf',
+          "scale='min(1920,iw)':-2:force_original_aspect_ratio=decrease",
+          '-c:v',
+          'libx264',
+          '-preset',
+          'medium',
+          '-crf',
+          '24',
+          '-pix_fmt',
+          'yuv420p',
+          '-c:a',
+          'aac',
+          '-b:a',
+          '128k',
+          '-movflags',
+          '+faststart',
+          '-t',
+          String(maximumDuration),
+          playbackPath,
+        ],
+        300_000,
+      );
+      await runCommand(
+        'ffmpeg',
+        [
+          '-nostdin',
+          '-y',
+          '-ss',
+          '00:00:01',
+          '-i',
+          sourcePath,
+          '-vframes',
+          '1',
+          '-f',
+          'image2',
+          posterPath,
+        ],
+        30_000,
+      );
+    } catch (error) {
+      const isMissing =
+        (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') ||
+        (error instanceof Error && error.message.includes('ENOENT'));
+      if (isMissing) {
+        throw new UnsafeMediaError(
+          'ffmpeg_unavailable',
+          'FFmpeg is required for video processing and poster derivative generation but is not available on the host.',
+          false,
+        );
+      }
+      throw error;
+    }
+
+    const rendered = await readFile(posterPath);
+    const playback = await readFile(playbackPath);
+    const maximumPlaybackBytes = this.config.get('MEDIA_MAX_VIDEO_BYTES', { infer: true });
+    if (!playback.length || playback.length > maximumPlaybackBytes) {
+      throw new UnsafeMediaError(
+        'video_render_failed',
+        'The processed playback file is empty or exceeds the supported size.',
+      );
+    }
+    const display = await sharp(rendered, { failOn: 'error', limitInputPixels: 100_000_000 })
+      .rotate()
+      .resize({ width: 2_000, height: 2_000, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer({ resolveWithObject: true });
+    const thumbnail = await sharp(rendered, { failOn: 'error', limitInputPixels: 100_000_000 })
+      .rotate()
+      .resize({ width: 480, height: 480, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 76 })
+      .toBuffer({ resolveWithObject: true });
+
+    return {
+      posters: [
+        prepared('display', null, `processed/${assetId}/display.webp`, display),
+        prepared('thumbnail', null, `processed/${assetId}/thumbnail.webp`, thumbnail),
+      ],
+      playback: {
+        storageKey: `processed/${assetId}/playback.mp4`,
+        buffer: playback,
+        contentType: 'video/mp4' as const,
+      },
+    };
+  }
+
   private async deleteObjects(client: S3Client, keys: string[]) {
     for (const key of keys) {
       try {
@@ -388,6 +556,28 @@ export function parsePdfInfo(value: string): { pages: number; encrypted: boolean
   const pages = Number(/^Pages:\s+(\d+)$/im.exec(value)?.[1] ?? 0);
   const encrypted = /^Encrypted:\s+yes/im.test(value);
   return { pages, encrypted };
+}
+
+export function parseVideoProbe(value: string): {
+  width: number;
+  height: number;
+  duration: number;
+} {
+  try {
+    const parsed = JSON.parse(value) as {
+      streams?: Array<{ width?: number; height?: number }>;
+      format?: { duration?: string | number };
+    };
+    const stream = parsed.streams?.[0];
+    const duration = Number(parsed.format?.duration ?? 0);
+    return {
+      width: Number(stream?.width ?? 0),
+      height: Number(stream?.height ?? 0),
+      duration: Number.isFinite(duration) ? duration : 0,
+    };
+  } catch {
+    return { width: 0, height: 0, duration: 0 };
+  }
 }
 
 export function parseClamResponse(
@@ -440,23 +630,49 @@ async function scanFileWithClam(
 }
 
 async function runCommand(command: string, args: string[], timeoutMs: number): Promise<string> {
-  const child = spawn(command, args, { shell: false, windowsHide: true });
-  let stdout = '';
-  let stderr = '';
-  child.stdout.setEncoding('utf8').on('data', (chunk: string) => (stdout += chunk));
-  child.stderr.setEncoding('utf8').on('data', (chunk: string) => (stderr += chunk));
-  const timeout = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
-  try {
-    const [code] = (await once(child, 'close')) as [number | null];
-    if (code !== 0)
-      throw new UnsafeMediaError('document_render_failed', stderr.trim() || `${command} failed.`);
-    return stdout;
-  } finally {
-    clearTimeout(timeout);
-  }
+  return new Promise((resolve, reject) => {
+    let child: ReturnType<typeof spawn>;
+    try {
+      child = spawn(command, args, { shell: false, windowsHide: true });
+    } catch (err) {
+      return reject(err instanceof Error ? err : new Error(String(err)));
+    }
+    let stdout = '';
+    let stderr = '';
+    const timeout = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error(`${command} timed out after ${timeoutMs}ms.`));
+    }, timeoutMs);
+
+    child.on('error', (err) => {
+      clearTimeout(timeout);
+      reject(err);
+    });
+    if (child.stdout) {
+      child.stdout.setEncoding('utf8').on('data', (chunk: string) => (stdout += chunk));
+    }
+    if (child.stderr) {
+      child.stderr.setEncoding('utf8').on('data', (chunk: string) => (stderr += chunk));
+    }
+    child.on('close', (code) => {
+      clearTimeout(timeout);
+      if (code !== 0) {
+        reject(
+          new UnsafeMediaError(
+            command === 'ffmpeg' ? 'video_render_failed' : 'document_render_failed',
+            stderr.trim() || `${command} failed with exit code ${code}.`,
+          ),
+        );
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
 }
 
-function processingFailureCode(error: unknown): string {
+export function processingFailureCode(error: unknown): string {
+  if (error instanceof UnsafeMediaError) return error.failureCode;
+  if (error instanceof Error && /ffmpeg/i.test(error.message)) return 'ffmpeg_unavailable';
   if (error instanceof Error && /scanner/i.test(error.message)) return 'scanner_unavailable';
   return 'processing_failed';
 }

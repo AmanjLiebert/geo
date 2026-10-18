@@ -42,6 +42,8 @@ export interface Environment {
   MEDIA_SCANNER_PORT: number;
   MEDIA_SCANNER_TIMEOUT_MS: number;
   MEDIA_MAX_PDF_PAGES: number;
+  MEDIA_MAX_VIDEO_BYTES: number;
+  MEDIA_MAX_VIDEO_DURATION_SECONDS: number;
 }
 
 export const environmentSchema = Joi.object<Environment>({
@@ -121,6 +123,8 @@ export const environmentSchema = Joi.object<Environment>({
   MEDIA_SCANNER_PORT: Joi.number().port().default(3310),
   MEDIA_SCANNER_TIMEOUT_MS: Joi.number().integer().min(1_000).max(300_000).default(120_000),
   MEDIA_MAX_PDF_PAGES: Joi.number().integer().min(1).max(250).default(100),
+  MEDIA_MAX_VIDEO_BYTES: Joi.number().integer().min(1_048_576).max(104_857_600).default(52_428_800),
+  MEDIA_MAX_VIDEO_DURATION_SECONDS: Joi.number().integer().min(1).max(1_800).default(300),
 }).unknown(true);
 
 export function validateEnvironment(input: NodeJS.ProcessEnv): Environment {

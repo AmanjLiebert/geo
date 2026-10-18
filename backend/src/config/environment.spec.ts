@@ -12,6 +12,8 @@ describe('environment validation', () => {
     expect(environment.PORT).toBe(4100);
     expect(environment.DATABASE_SSL).toBe(true);
     expect(environment.DATABASE_POOL_SIZE).toBe(10);
+    expect(environment.MEDIA_MAX_VIDEO_BYTES).toBe(52_428_800);
+    expect(environment.MEDIA_MAX_VIDEO_DURATION_SECONDS).toBe(300);
   });
 
   it('rejects a missing database URL', () => {

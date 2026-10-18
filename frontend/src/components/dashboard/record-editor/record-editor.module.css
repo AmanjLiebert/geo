@@ -762,3 +762,133 @@
 .detailDisclosure[open] .formSection {
   margin-top: 16px;
 }
+
+/* Gallery cards and attachment details */
+.galleryList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.galleryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  box-shadow: 2px 2px 0 var(--carbon);
+}
+
+.galleryCardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.galleryFilename {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--carbon);
+  overflow-wrap: anywhere;
+}
+
+.badgeGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.primaryBadge {
+  composes: badge;
+  background: var(--ochre);
+  color: var(--carbon);
+}
+
+.kindBadge {
+  composes: badge;
+  background: var(--fossil);
+  color: var(--carbon);
+}
+
+.statusBadgeReady {
+  composes: badge;
+  background: #d4edd9;
+  border-color: #276738;
+  color: #1b4b27;
+}
+
+.statusBadgeProcessing {
+  composes: badge;
+  background: #fff3cd;
+  border-color: #856404;
+  color: #856404;
+}
+
+.statusBadgeFailed {
+  composes: badge;
+  background: #f8d7da;
+  border-color: #721c24;
+  color: #721c24;
+}
+
+.galleryCardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.galleryCardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px dashed var(--fossil);
+}
+
+.inlineEditBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--fossil);
+  border: 1.5px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  margin-top: 8px;
+}
+
+.inlineConfirmBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #fff8f6;
+  border: 1.5px solid var(--iron);
+  border-radius: var(--neo-radius);
+  margin-top: 8px;
+}
+
+.inlineConfirmText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--carbon);
+}
+
+.viewerVideo {
+  max-width: 100%;
+  max-height: 75vh;
+  background: #000;
+  border-radius: 4px;
+}

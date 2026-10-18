@@ -2,9 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardApiError } from "./dashboard-api";
 import {
   addRecordRelationship,
+  detachRecordMedia,
   listRecordMedia,
   listRecordRelationships,
+  reorderRecordMedia,
   saveEnglishRecordDetails,
+  setRecordPrimaryMedia,
+  updateRecordMediaAttachment,
   uploadRecordMedia,
   validateMediaAttachments,
   validateRelationships,
@@ -13,6 +17,7 @@ import {
 const recordId = "11111111-1111-4111-8111-111111111111";
 const targetId = "22222222-2222-4222-8222-222222222222";
 const mediaId = "33333333-3333-4333-8333-333333333333";
+const secondMediaId = "44444444-4444-4444-8444-444444444444";
 
 function ok(data: unknown, status = 200): Response {
   return { ok: true, status, json: async () => data } as Response;
@@ -77,18 +82,63 @@ describe("record extras API", () => {
     ).toThrow(DashboardApiError);
   });
 
-  it("rejects malformed media lists", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(ok({ items: [] }));
-    expect(await listRecordMedia(recordId)).toEqual([]);
+  it("validates multi-attachment gallery lists and rejects malformed items", async () => {
+    const validAttachment = {
+      mediaAssetId: mediaId,
+      purpose: "field photo",
+      position: 0,
+      caption: "North outcrop",
+      description: "Limestone layer",
+      altText: "Bedding planes",
+      isPrimary: true,
+      mediaKind: "image",
+      processingStatus: "approved",
+      filename: "outcrop.jpg",
+      rightsStatement: "CC-BY-4.0",
+      licence: "CC-BY-4.0",
+      credit: "Survey Team",
+    };
+    vi.mocked(fetch).mockResolvedValueOnce(ok({ items: [validAttachment] }));
+    const result = await listRecordMedia(recordId);
+    expect(result).toHaveLength(1);
+    expect(result[0].caption).toBe("North outcrop");
+    expect(result[0].isPrimary).toBe(true);
+
     expect(() =>
       validateMediaAttachments({ items: [{ mediaAssetId: mediaId }] }),
     ).toThrow(DashboardApiError);
+
+    expect(() =>
+      validateMediaAttachments({
+        items: [{ ...validAttachment, isPrimary: "yes" }],
+      }),
+    ).toThrow(DashboardApiError);
+
+    expect(() =>
+      validateMediaAttachments({
+        items: [{ ...validAttachment, mediaAssetId: "not-a-uuid" }],
+      }),
+    ).toThrow(DashboardApiError);
+    expect(() =>
+      validateMediaAttachments({
+        items: [{ ...validAttachment, position: 1.5 }],
+      }),
+    ).toThrow(DashboardApiError);
+    expect(() =>
+      validateMediaAttachments({
+        items: [{ ...validAttachment, processingStatus: "secret-state" }],
+      }),
+    ).toThrow(DashboardApiError);
   });
 
-  it("never uploads an unsupported video", async () => {
-    const video = { name: "field.mp4", type: "video/mp4", size: 100 } as File;
+  it("rejects unsupported video format like AVI", async () => {
+    const aviVideo = {
+      name: "field.avi",
+      type: "video/x-msvideo",
+      size: 100,
+    } as File;
     await expect(
-      uploadRecordMedia(recordId, video, {
+      uploadRecordMedia(recordId, aviVideo, {
         rightsStatement: "Owned",
         purpose: "field",
       }),
@@ -96,14 +146,14 @@ describe("record extras API", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("sends a supported file only to an HTTPS signed upload URL without app cookies", async () => {
+  it("uploads supported MP4 and WebM videos through signed quarantine upload", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(
         ok({
           mediaAssetId: mediaId,
-          uploadUrl: "https://storage.example.test/signed-upload",
+          uploadUrl: "https://storage.example.test/signed-video-upload",
           method: "PUT",
-          requiredHeaders: { "content-type": "image/png" },
+          requiredHeaders: { "content-type": "video/mp4" },
         }),
       )
       .mockResolvedValueOnce({ ok: true, status: 200 } as Response)
@@ -111,17 +161,70 @@ describe("record extras API", () => {
         ok({ mediaAssetId: mediaId, status: "quarantined" }),
       )
       .mockResolvedValueOnce(ok({ mediaAssetId: mediaId }));
-    const file = { name: "field.png", type: "image/png", size: 64 } as File;
-    await uploadRecordMedia(recordId, file, {
-      rightsStatement: "Owned by author",
-      purpose: "field photo",
+
+    const video = {
+      name: "outcrop.mp4",
+      type: "video/mp4",
+      size: 1024 * 1024,
+    } as File;
+    await uploadRecordMedia(recordId, video, {
+      rightsStatement: "Survey Team",
+      purpose: "field observation",
+      caption: "360 sweep of outcrop",
     });
+
+    expect(vi.mocked(fetch).mock.calls[0][1]?.body).toContain('"video/mp4"');
     const [signedUrl, uploadInit] = vi.mocked(fetch).mock.calls[1];
-    expect(signedUrl).toBe("https://storage.example.test/signed-upload");
+    expect(signedUrl).toBe("https://storage.example.test/signed-video-upload");
     expect(uploadInit?.method).toBe("PUT");
     expect(uploadInit?.credentials).toBe("omit");
     expect(vi.mocked(fetch).mock.calls[2][0]).toContain(
       `/api/v1/media/${mediaId}/confirm`,
     );
+    expect(vi.mocked(fetch).mock.calls[3][1]?.body).toContain(
+      '"360 sweep of outcrop"',
+    );
+  });
+
+  it("updates attachment metadata and selects primary image", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(ok({ recordId, mediaAssetId: mediaId }))
+      .mockResolvedValueOnce(ok({ recordId, mediaAssetId: mediaId }));
+
+    await updateRecordMediaAttachment(recordId, mediaId, {
+      caption: "Updated caption",
+      description: "Updated description",
+      altText: "New alt text",
+      position: 1,
+    });
+    expect(vi.mocked(fetch).mock.calls[0][0]).toContain(
+      `/api/v1/media/records/${recordId}/attachments/${mediaId}`,
+    );
+    expect(vi.mocked(fetch).mock.calls[0][1]?.method).toBe("PATCH");
+
+    await setRecordPrimaryMedia(recordId, mediaId);
+    expect(vi.mocked(fetch).mock.calls[1][0]).toContain(
+      `/api/v1/media/records/${recordId}/attachments/${mediaId}/primary`,
+    );
+    expect(vi.mocked(fetch).mock.calls[1][1]?.method).toBe("POST");
+  });
+
+  it("reorders attachments and detaches with DELETE", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(ok({ items: [] }))
+      .mockResolvedValueOnce(ok({ success: true }));
+
+    await reorderRecordMedia(recordId, [secondMediaId, mediaId]);
+    expect(vi.mocked(fetch).mock.calls[0][0]).toContain(
+      `/api/v1/media/records/${recordId}/attachments/order`,
+    );
+    expect(vi.mocked(fetch).mock.calls[0][1]?.method).toBe("PUT");
+    expect(vi.mocked(fetch).mock.calls[0][1]?.body).toContain(secondMediaId);
+
+    await detachRecordMedia(recordId, mediaId);
+    expect(vi.mocked(fetch).mock.calls[1][0]).toContain(
+      `/api/v1/media/records/${recordId}/attachments/${mediaId}`,
+    );
+    expect(vi.mocked(fetch).mock.calls[1][1]?.method).toBe("DELETE");
   });
 });

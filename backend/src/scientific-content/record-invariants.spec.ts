@@ -1,10 +1,7 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  assertCategoryBranchActive,
-  assertRecordEditable,
-} from './record-invariants';
+import { assertCategoryBranchActive, assertRecordEditable } from './record-invariants';
 
 describe('record-invariants', () => {
   describe('assertCategoryBranchActive', () => {
@@ -60,7 +57,7 @@ describe('record-invariants', () => {
       );
     });
 
-    it.each(['published', 'archived'])(
+    it.each(['published', 'in_review', 'archived'])(
       'rejects when record status is %s',
       async (status) => {
         const query = vi.fn().mockResolvedValue([{ id: 'rec-1', status, category_id: null }]);

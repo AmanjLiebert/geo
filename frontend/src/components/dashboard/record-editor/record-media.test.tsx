@@ -1,0 +1,138 @@
+import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { RecordMedia } from "./record-media";
+import type { RecordMediaAttachment } from "@/lib/record-extras-api";
+
+const recordId = "11111111-1111-4111-8111-111111111111";
+
+describe("RecordMedia component", () => {
+  it("renders empty state and complete upload form with supported formats including video", () => {
+    const html = renderToStaticMarkup(
+      createElement(RecordMedia, { recordId, initialItems: [] }),
+    );
+
+    expect(html).toContain("Images, videos, and documents");
+    expect(html).toContain("No files attached yet.");
+    expect(html).toContain(
+      'accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"',
+    );
+    expect(html).toContain(
+      "Images up to 25 MB; PDFs up to 20 MB; Videos up to 50 MB.",
+    );
+    expect(html).toContain("Purpose");
+    expect(html).toContain("Caption (optional)");
+    expect(html).toContain("Alt text (for images)");
+    expect(html).toContain("Description (optional)");
+    expect(html).toContain("Rights statement");
+    expect(html).toContain("Credit (optional)");
+    expect(html).toContain("Licence (optional)");
+    expect(html).toContain("Set as primary image for this record");
+  });
+
+  it("renders a multi-attachment gallery with correct badges, metadata, and action controls", () => {
+    const sampleItems: RecordMediaAttachment[] = [
+      {
+        mediaAssetId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        purpose: "Outcrop overview",
+        position: 0,
+        caption: "Zagros mountain fold",
+        description: "Exposed Cretaceous limestone formation",
+        altText: "Steep limestone ridges under blue sky",
+        isPrimary: true,
+        mediaKind: "image",
+        processingStatus: "approved",
+        filename: "zagros-fold.jpg",
+        rightsStatement: "CC-BY-4.0 Geological Survey",
+        licence: "CC-BY-4.0",
+        credit: "Field Team Alpha",
+      },
+      {
+        mediaAssetId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        purpose: "Drone aerial sweep",
+        position: 1,
+        caption: "360 degree panoramic video",
+        description: "Drone survey showing fault line",
+        altText: null,
+        isPrimary: false,
+        mediaKind: "video",
+        processingStatus: "uploaded",
+        filename: "fault-survey.mp4",
+        rightsStatement: "Copyright 2026 Survey",
+        licence: null,
+        credit: null,
+      },
+      {
+        mediaAssetId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+        purpose: "Stratigraphic report",
+        position: 2,
+        caption: null,
+        description: "Field measurement table",
+        altText: null,
+        isPrimary: false,
+        mediaKind: "document",
+        processingStatus: "approved",
+        filename: "stratigraphy.pdf",
+        rightsStatement: "Open Access",
+        licence: null,
+        credit: null,
+      },
+      {
+        mediaAssetId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        purpose: "Thin section",
+        position: 3,
+        caption: "Cross-polarized light",
+        description: null,
+        altText: "Calcite twinning under polarized light",
+        isPrimary: false,
+        mediaKind: "image",
+        processingStatus: "approved",
+        filename: "thin-section.png",
+        rightsStatement: "CC-BY-4.0",
+        licence: null,
+        credit: null,
+      },
+    ];
+
+    const html = renderToStaticMarkup(
+      createElement(RecordMedia, { recordId, initialItems: sampleItems }),
+    );
+
+    // Filenames present
+    expect(html).toContain("zagros-fold.jpg");
+    expect(html).toContain("fault-survey.mp4");
+    expect(html).toContain("stratigraphy.pdf");
+    expect(html).toContain("thin-section.png");
+
+    // Badges
+    expect(html).toContain("★ Primary image");
+    expect(html).toContain("Image");
+    expect(html).toContain("Video");
+    expect(html).toContain("Document");
+    expect(html).toContain("Ready");
+    expect(html).toContain("Processing");
+
+    // Metadata
+    expect(html).toContain("Zagros mountain fold");
+    expect(html).toContain("Steep limestone ridges under blue sky");
+    expect(html).toContain("Exposed Cretaceous limestone formation");
+    expect(html).toContain("Drone aerial sweep");
+    expect(html).toContain("CC-BY-4.0 Geological Survey");
+
+    // Actions
+    // "View online" only for approved media
+    expect(html).toContain("View online");
+    // "Make primary image" only for non-primary images (thin-section.png, not zagros-fold.jpg, not video, not pdf)
+    expect(html).toContain("Make primary image");
+
+    // Reorder buttons with accessible labels
+    expect(html).toContain('aria-label="Move zagros-fold.jpg up"');
+    expect(html).toContain('aria-label="Move zagros-fold.jpg down"');
+    expect(html).toContain('aria-label="Move fault-survey.mp4 up"');
+    expect(html).toContain('aria-label="Move fault-survey.mp4 down"');
+
+    // Edit and Detach buttons
+    expect(html).toContain("Edit details");
+    expect(html).toContain("Detach");
+  });
+});

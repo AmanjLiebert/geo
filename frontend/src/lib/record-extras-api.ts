@@ -19,7 +19,11 @@ export type RecordMediaAttachment = {
   mediaAssetId: string;
   purpose: string;
   position: number;
-  mediaKind: "image" | "document";
+  caption?: string | null;
+  description?: string | null;
+  altText?: string | null;
+  isPrimary: boolean;
+  mediaKind: "image" | "document" | "video";
   processingStatus: string;
   filename: string;
   rightsStatement: string;
@@ -35,7 +39,13 @@ export type OnlineMediaPage = {
 
 export type MediaUploadRequest = {
   filename: string;
-  contentType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";
+  contentType:
+    | "image/jpeg"
+    | "image/png"
+    | "image/webp"
+    | "application/pdf"
+    | "video/mp4"
+    | "video/webm";
   byteSize: number;
   rightsStatement: string;
   licence?: string;
@@ -58,6 +68,17 @@ function invalidResponse(): never {
     "The scientific service returned an invalid response.",
     200,
     "server",
+  );
+}
+
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function optionalBoundedString(value: unknown, maximum: number): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === "string" && value.length <= maximum)
   );
 }
 
@@ -141,7 +162,7 @@ export function validateRelationships(value: unknown): RecordRelationship[] {
     if (
       !object(item) ||
       typeof item.id !== "string" ||
-      !["record", "research"].includes(String(item.targetType)) ||
+      (item.targetType !== "record" && item.targetType !== "research") ||
       typeof item.targetId !== "string" ||
       (item.targetTitle !== undefined &&
         item.targetTitle !== null &&
@@ -190,17 +211,52 @@ export function validateMediaAttachments(
     if (
       !object(item) ||
       typeof item.mediaAssetId !== "string" ||
+      !uuidPattern.test(item.mediaAssetId) ||
       typeof item.purpose !== "string" ||
-      typeof item.position !== "number" ||
-      !["image", "document"].includes(String(item.mediaKind)) ||
-      typeof item.processingStatus !== "string" ||
+      item.purpose.trim().length < 1 ||
+      item.purpose.length > 40 ||
+      !Number.isInteger(item.position) ||
+      Number(item.position) < 0 ||
+      Number(item.position) > 10_000 ||
+      !optionalBoundedString(item.caption, 160) ||
+      !optionalBoundedString(item.description, 2_000) ||
+      !optionalBoundedString(item.altText, 500) ||
+      typeof item.isPrimary !== "boolean" ||
+      !["image", "document", "video"].includes(String(item.mediaKind)) ||
+      ![
+        "pending",
+        "quarantined",
+        "processing",
+        "approved",
+        "rejected",
+        "failed",
+        "archived",
+      ].includes(String(item.processingStatus)) ||
       typeof item.filename !== "string" ||
+      item.filename.length < 1 ||
+      item.filename.length > 300 ||
       typeof item.rightsStatement !== "string" ||
-      (item.licence !== null && typeof item.licence !== "string") ||
-      (item.credit !== null && typeof item.credit !== "string")
+      item.rightsStatement.trim().length < 1 ||
+      item.rightsStatement.length > 2_000 ||
+      !optionalBoundedString(item.licence, 160) ||
+      !optionalBoundedString(item.credit, 1_000)
     )
       return invalidResponse();
-    return item as RecordMediaAttachment;
+    return {
+      mediaAssetId: item.mediaAssetId,
+      purpose: item.purpose,
+      position: item.position as number,
+      caption: (item.caption ?? null) as string | null,
+      description: (item.description ?? null) as string | null,
+      altText: (item.altText ?? null) as string | null,
+      isPrimary: item.isPrimary,
+      mediaKind: item.mediaKind as "image" | "document" | "video",
+      processingStatus: item.processingStatus as string,
+      filename: item.filename,
+      rightsStatement: item.rightsStatement,
+      licence: (item.licence ?? null) as string | null,
+      credit: (item.credit ?? null) as string | null,
+    };
   });
 }
 
@@ -211,6 +267,58 @@ export async function listRecordMedia(
     await requestRecordResource(
       `/api/v1/media/records/${encodeURIComponent(recordId)}/attachments`,
     ),
+  );
+}
+
+export async function updateRecordMediaAttachment(
+  recordId: string,
+  mediaAssetId: string,
+  data: {
+    purpose?: string;
+    caption?: string | null;
+    description?: string | null;
+    altText?: string | null;
+    position?: number;
+    isPrimary?: boolean;
+  },
+): Promise<void> {
+  await requestRecordResource(
+    `/api/v1/media/records/${encodeURIComponent(recordId)}/attachments/${encodeURIComponent(mediaAssetId)}`,
+    "PATCH",
+    data,
+  );
+}
+
+export async function setRecordPrimaryMedia(
+  recordId: string,
+  mediaAssetId: string,
+): Promise<void> {
+  await requestRecordResource(
+    `/api/v1/media/records/${encodeURIComponent(recordId)}/attachments/${encodeURIComponent(mediaAssetId)}/primary`,
+    "POST",
+  );
+}
+
+export async function reorderRecordMedia(
+  recordId: string,
+  mediaAssetIds: string[],
+): Promise<RecordMediaAttachment[]> {
+  return validateMediaAttachments(
+    await requestRecordResource(
+      `/api/v1/media/records/${encodeURIComponent(recordId)}/attachments/order`,
+      "PUT",
+      { mediaAssetIds },
+    ),
+  );
+}
+
+export async function detachRecordMedia(
+  recordId: string,
+  mediaAssetId: string,
+): Promise<void> {
+  await requestRecordResource(
+    `/api/v1/media/records/${encodeURIComponent(recordId)}/attachments/${encodeURIComponent(mediaAssetId)}`,
+    "DELETE",
   );
 }
 
@@ -230,7 +338,9 @@ export async function getOnlineMediaPages(
   const pages = response.items.map((item: unknown) => {
     if (
       !object(item) ||
-      typeof item.kind !== "string" ||
+      !["display", "thumbnail", "page", "playback"].includes(
+        String(item.kind),
+      ) ||
       (item.pageNumber !== null && typeof item.pageNumber !== "number") ||
       typeof item.url !== "string"
     )
@@ -278,20 +388,37 @@ export async function uploadRecordMedia(
   metadata: Omit<
     MediaUploadRequest,
     "filename" | "contentType" | "byteSize"
-  > & { purpose: string },
+  > & {
+    purpose: string;
+    caption?: string;
+    description?: string;
+    altText?: string;
+    position?: number;
+    isPrimary?: boolean;
+  },
 ): Promise<void> {
-  if (
-    !["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(
-      file.type,
-    )
-  )
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/pdf",
+    "video/mp4",
+    "video/webm",
+  ];
+  if (!allowedTypes.includes(file.type))
     throw new DashboardApiError(
-      "Choose a JPEG, PNG, WebP, or PDF file.",
+      "Choose a JPEG, PNG, WebP, PDF, MP4, or WebM file.",
       400,
       "validation",
     );
-  const maximum =
-    file.type === "application/pdf" ? 20 * 1024 * 1024 : 25 * 1024 * 1024;
+
+  let maximum = 25 * 1024 * 1024;
+  if (file.type === "application/pdf") {
+    maximum = 20 * 1024 * 1024;
+  } else if (file.type.startsWith("video/")) {
+    maximum = 50 * 1024 * 1024;
+  }
+
   if (file.size < 1 || file.size > maximum)
     throw new DashboardApiError(
       `Choose a file smaller than ${maximum / 1024 / 1024} MB.`,
@@ -345,7 +472,15 @@ export async function uploadRecordMedia(
   const attached = await requestRecordResource(
     `/api/v1/media/records/${encodeURIComponent(recordId)}/attachments`,
     "POST",
-    { mediaAssetId: ticket.mediaAssetId, purpose: metadata.purpose },
+    {
+      mediaAssetId: ticket.mediaAssetId,
+      purpose: metadata.purpose,
+      caption: metadata.caption?.trim() || undefined,
+      description: metadata.description?.trim() || undefined,
+      altText: metadata.altText?.trim() || undefined,
+      position: metadata.position,
+      isPrimary: metadata.isPrimary,
+    },
   );
   if (!object(attached) || attached.mediaAssetId !== ticket.mediaAssetId)
     invalidResponse();
