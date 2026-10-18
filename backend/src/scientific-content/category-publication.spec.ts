@@ -243,6 +243,7 @@ describe('category publication service', () => {
       q.sql.includes('INSERT INTO category_translations'),
     );
     expect(upsertTranslation).toBeDefined();
+    expect(upsertTranslation?.sql).not.toContain('updated_at');
     expect(upsertTranslation?.params).toEqual([
       'cat-1',
       'Updated Stratigraphy',

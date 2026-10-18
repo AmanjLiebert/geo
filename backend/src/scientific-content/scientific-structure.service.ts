@@ -701,10 +701,10 @@ export class ScientificStructureService {
       );
 
       await manager.query(
-        `INSERT INTO category_translations (category_id, locale, name, summary, description, updated_at)
-         VALUES ($1, 'en', $2, $3, $4, now())
+        `INSERT INTO category_translations (category_id, locale, name, summary, description)
+         VALUES ($1, 'en', $2, $3, $4)
          ON CONFLICT (category_id, locale) DO UPDATE
-         SET name = EXCLUDED.name, summary = EXCLUDED.summary, description = EXCLUDED.description, updated_at = now()`,
+         SET name = EXCLUDED.name, summary = EXCLUDED.summary, description = EXCLUDED.description`,
         [categoryId, title, summary, description],
       );
 
