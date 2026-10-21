@@ -12,22 +12,23 @@ describe("RecordMedia component", () => {
       createElement(RecordMedia, { recordId, initialItems: [] }),
     );
 
-    expect(html).toContain("Images, videos, and documents");
+    expect(html).toContain("Images and files");
+    expect(html).toContain("No files have been added.");
     expect(html).toContain("No files attached yet.");
+    expect(html).toContain("Drop a file here");
+    expect(html).toContain("Choose file");
     expect(html).toContain(
       'accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"',
     );
-    expect(html).toContain(
-      "Images up to 25 MB; PDFs up to 20 MB; Videos up to 50 MB.",
-    );
-    expect(html).toContain("Purpose");
-    expect(html).toContain("Caption (optional)");
-    expect(html).toContain("Alt text (for images)");
-    expect(html).toContain("Description (optional)");
-    expect(html).toContain("Rights statement");
-    expect(html).toContain("Credit (optional)");
-    expect(html).toContain("Licence (optional)");
-    expect(html).toContain("Set as primary image for this record");
+    expect(html).toContain("What does this file show?");
+    expect(html).toContain("Short caption (optional)");
+    expect(html).toContain("Describe the image for accessibility");
+    expect(html).toContain("Why may Geo-Kurdistan use this file?");
+    expect(html).toContain("Use this as the record’s main image");
+    expect(html).toContain("More file information");
+    expect(html).toContain("Detailed description (optional)");
+    expect(html).toContain("Credit line (optional)");
+    expect(html).toContain("Licence name (optional)");
   });
 
   it("renders a multi-attachment gallery with correct badges, metadata, and action controls", () => {
@@ -131,8 +132,11 @@ describe("RecordMedia component", () => {
     expect(html).toContain('aria-label="Move fault-survey.mp4 up"');
     expect(html).toContain('aria-label="Move fault-survey.mp4 down"');
 
-    // Edit and Detach buttons
-    expect(html).toContain("Edit details");
+    // Less-frequent controls remain available under the per-file Manage disclosure.
+    expect(html).toContain("Manage");
+    expect(html).toContain("Move earlier");
+    expect(html).toContain("Move later");
+    expect(html).toContain("Edit information");
     expect(html).toContain("Detach");
   });
 });

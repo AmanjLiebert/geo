@@ -1,7 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type FormEvent,
+} from "react";
+import {
+  FileText,
+  Film,
+  ImageIcon,
+  RefreshCw,
+  UploadCloud,
+} from "lucide-react";
 import { DashboardApiError } from "@/lib/dashboard-api";
+import { RecordThumbnail } from "@/components/dashboard/record-list/record-thumbnail";
 import {
   detachRecordMedia,
   getOnlineMediaPages,
@@ -43,6 +57,12 @@ export function RecordMedia({
   const [description, setDescription] = useState("");
   const [altText, setAltText] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [selectedPreviewUrl, setSelectedPreviewUrl] = useState<string | null>(
+    null,
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectedPreviewUrlRef = useRef<string | null>(null);
 
   // Operation states
   const [uploading, setUploading] = useState(false);
@@ -88,6 +108,15 @@ export function RecordMedia({
     };
   }, [recordId]);
 
+  useEffect(
+    () => () => {
+      if (selectedPreviewUrlRef.current) {
+        URL.revokeObjectURL(selectedPreviewUrlRef.current);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!view) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -101,6 +130,41 @@ export function RecordMedia({
       previouslyFocused?.focus();
     };
   }, [view]);
+
+  function chooseFile(selected: File | null) {
+    setError(null);
+    if (selectedPreviewUrlRef.current) {
+      URL.revokeObjectURL(selectedPreviewUrlRef.current);
+      selectedPreviewUrlRef.current = null;
+    }
+    if (selected && !ACCEPTED_TYPES.includes(selected.type)) {
+      setFile(null);
+      setSelectedPreviewUrl(null);
+      setIsPrimary(false);
+      setAltText("");
+      setError("Choose a JPEG, PNG, WebP, PDF, MP4, or WebM file.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setFile(selected);
+    if (selected?.type.startsWith("image/")) {
+      const previewUrl = URL.createObjectURL(selected);
+      selectedPreviewUrlRef.current = previewUrl;
+      setSelectedPreviewUrl(previewUrl);
+    } else {
+      setSelectedPreviewUrl(null);
+    }
+    if (!selected?.type.startsWith("image/")) {
+      setIsPrimary(false);
+      setAltText("");
+    }
+  }
+
+  function dropFile(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDragging(false);
+    chooseFile(event.dataTransfer.files?.[0] ?? null);
+  }
 
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -130,7 +194,7 @@ export function RecordMedia({
       });
       setItems(await listRecordMedia(recordId));
       // Reset only upon success; preserve inputs on failure
-      setFile(null);
+      chooseFile(null);
       setRights("");
       setCredit("");
       setLicence("");
@@ -139,10 +203,7 @@ export function RecordMedia({
       setDescription("");
       setAltText("");
       setIsPrimary(false);
-      const input = document.getElementById(
-        "record-media-file",
-      ) as HTMLInputElement | null;
-      if (input) input.value = "";
+      if (fileInputRef.current) fileInputRef.current.value = "";
       setMessage(
         "File received. It will be available to view after processing and approval.",
       );
@@ -304,26 +365,12 @@ export function RecordMedia({
     <section className={styles.stepCard} aria-labelledby="record-media-title">
       <div className={styles.stepHeader}>
         <h2 id="record-media-title" className={styles.stepTitle}>
-          Images, videos, and documents
+          Images and files
         </h2>
         <p className={styles.stepDescription}>
-          Add field photographs, geological videos, or supporting PDFs. Files
-          are scanned and processed before they can be viewed.
+          Show the record clearly with field photographs, supporting documents,
+          or approved video. Every file is checked before it becomes viewable.
         </p>
-      </div>
-
-      <div
-        className={styles.actionsBar}
-        style={{ borderTop: "none", paddingTop: 0 }}
-      >
-        <button
-          className={styles.buttonSecondary}
-          type="button"
-          onClick={() => void refreshFiles()}
-          disabled={refreshing}
-        >
-          {refreshing ? "Refreshing…" : "Refresh files"}
-        </button>
       </div>
 
       {error && (
@@ -337,6 +384,26 @@ export function RecordMedia({
         </p>
       )}
 
+      <div className={styles.mediaCollectionHeader}>
+        <div>
+          <h3>Attached files</h3>
+          <p>
+            {items.length === 0
+              ? "No files have been added."
+              : `${items.length} ${items.length === 1 ? "file" : "files"} attached`}
+          </p>
+        </div>
+        <button
+          className={styles.buttonGhost}
+          type="button"
+          onClick={() => void refreshFiles()}
+          disabled={refreshing}
+        >
+          <RefreshCw size={15} aria-hidden="true" />
+          {refreshing ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
       {items.length > 0 ? (
         <ul className={styles.galleryList} aria-label="Attached files">
           {items.map((item, index) => {
@@ -349,6 +416,32 @@ export function RecordMedia({
 
             return (
               <li key={item.mediaAssetId} className={styles.galleryCard}>
+                <div className={styles.mediaCardPreview}>
+                  {item.mediaKind === "image" &&
+                  item.processingStatus === "approved" ? (
+                    <RecordThumbnail
+                      mediaAssetId={item.mediaAssetId}
+                      alt={item.altText || item.caption || item.filename}
+                    />
+                  ) : (
+                    <div className={styles.mediaKindPlaceholder}>
+                      {item.mediaKind === "video" ? (
+                        <Film aria-hidden="true" />
+                      ) : item.mediaKind === "document" ? (
+                        <FileText aria-hidden="true" />
+                      ) : (
+                        <ImageIcon aria-hidden="true" />
+                      )}
+                      <span>
+                        {isFailed
+                          ? "Unavailable"
+                          : item.processingStatus === "approved"
+                            ? item.mediaKind
+                            : "Processing"}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <div className={styles.galleryCardHeader}>
                   <strong className={styles.galleryFilename}>
                     {item.filename}
@@ -389,30 +482,39 @@ export function RecordMedia({
                       <strong>Caption:</strong> {item.caption}
                     </div>
                   )}
-                  {item.description && (
-                    <div>
-                      <strong>Description:</strong> {item.description}
-                    </div>
-                  )}
-                  {item.altText && item.mediaKind === "image" && (
-                    <div>
-                      <strong>Alt text:</strong> {item.altText}
-                    </div>
-                  )}
-                  <div>
-                    <strong>Rights:</strong> {item.rightsStatement}
-                  </div>
-                  {item.credit && (
-                    <div>
-                      <strong>Credit:</strong> {item.credit}
-                    </div>
-                  )}
-                  {item.licence && (
-                    <div>
-                      <strong>Licence:</strong> {item.licence}
-                    </div>
-                  )}
                 </div>
+
+                <details className={styles.mediaMetadataDisclosure}>
+                  <summary>File information</summary>
+                  <dl>
+                    {item.description && (
+                      <>
+                        <dt>Description</dt>
+                        <dd>{item.description}</dd>
+                      </>
+                    )}
+                    {item.altText && item.mediaKind === "image" && (
+                      <>
+                        <dt>Alternative text</dt>
+                        <dd>{item.altText}</dd>
+                      </>
+                    )}
+                    <dt>Rights</dt>
+                    <dd>{item.rightsStatement}</dd>
+                    {item.credit && (
+                      <>
+                        <dt>Credit</dt>
+                        <dd>{item.credit}</dd>
+                      </>
+                    )}
+                    {item.licence && (
+                      <>
+                        <dt>Licence</dt>
+                        <dd>{item.licence}</dd>
+                      </>
+                    )}
+                  </dl>
+                </details>
 
                 <div className={styles.galleryCardActions}>
                   {item.processingStatus === "approved" && (
@@ -438,40 +540,47 @@ export function RecordMedia({
                         : "Make primary image"}
                     </button>
                   )}
-                  <button
-                    className={styles.buttonGhost}
-                    type="button"
-                    onClick={() => void moveAttachment(index, "up")}
-                    disabled={index === 0 || reordering}
-                    aria-label={`Move ${item.filename} up`}
-                  >
-                    ↑ Move up
-                  </button>
-                  <button
-                    className={styles.buttonGhost}
-                    type="button"
-                    onClick={() => void moveAttachment(index, "down")}
-                    disabled={index === items.length - 1 || reordering}
-                    aria-label={`Move ${item.filename} down`}
-                  >
-                    ↓ Move down
-                  </button>
-                  <button
-                    className={styles.buttonGhost}
-                    type="button"
-                    onClick={() => startEditing(item)}
-                    disabled={isEditing}
-                  >
-                    Edit details
-                  </button>
-                  <button
-                    className={styles.buttonGhost}
-                    type="button"
-                    onClick={() => setConfirmDetachAssetId(item.mediaAssetId)}
-                    disabled={isConfirmingDetach}
-                  >
-                    Detach
-                  </button>
+                  <details className={styles.mediaManageMenu}>
+                    <summary>Manage</summary>
+                    <div>
+                      <button
+                        className={styles.buttonGhost}
+                        type="button"
+                        onClick={() => void moveAttachment(index, "up")}
+                        disabled={index === 0 || reordering}
+                        aria-label={`Move ${item.filename} up`}
+                      >
+                        Move earlier
+                      </button>
+                      <button
+                        className={styles.buttonGhost}
+                        type="button"
+                        onClick={() => void moveAttachment(index, "down")}
+                        disabled={index === items.length - 1 || reordering}
+                        aria-label={`Move ${item.filename} down`}
+                      >
+                        Move later
+                      </button>
+                      <button
+                        className={styles.buttonGhost}
+                        type="button"
+                        onClick={() => startEditing(item)}
+                        disabled={isEditing}
+                      >
+                        Edit information
+                      </button>
+                      <button
+                        className={styles.buttonGhost}
+                        type="button"
+                        onClick={() =>
+                          setConfirmDetachAssetId(item.mediaAssetId)
+                        }
+                        disabled={isConfirmingDetach}
+                      >
+                        Detach
+                      </button>
+                    </div>
+                  </details>
                 </div>
 
                 {isEditing && (
@@ -595,34 +704,79 @@ export function RecordMedia({
         <p className={styles.stepDescription}>No files attached yet.</p>
       )}
 
-      <form className={styles.formSection} onSubmit={upload}>
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel} htmlFor="record-media-file">
-            File <span className={styles.requiredTag}>Required</span>
-          </label>
+      <form className={styles.mediaUploadForm} onSubmit={upload}>
+        <div className={styles.mediaUploadHeading}>
+          <div>
+            <span className={styles.stepNumber}>Add another file</span>
+            <h3>Upload protected media</h3>
+          </div>
+          <p>One file at a time. It stays private while it is checked.</p>
+        </div>
+
+        <div
+          className={
+            isDragging ? styles.mediaDropZoneActive : styles.mediaDropZone
+          }
+          onDragEnter={(event) => {
+            event.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragOver={(event) => event.preventDefault()}
+          onDragLeave={(event) => {
+            if (
+              !event.currentTarget.contains(event.relatedTarget as Node | null)
+            ) {
+              setIsDragging(false);
+            }
+          }}
+          onDrop={dropFile}
+        >
+          {selectedPreviewUrl ? (
+            /* Local preview only; uploaded originals remain private. */
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={selectedPreviewUrl}
+              alt="Selected upload preview"
+              className={styles.mediaSelectedPreview}
+            />
+          ) : (
+            <div className={styles.mediaDropIcon} aria-hidden="true">
+              <UploadCloud />
+            </div>
+          )}
+          <div className={styles.mediaDropCopy}>
+            <strong>{file ? file.name : "Drop a file here"}</strong>
+            <span>
+              {file
+                ? `${file.type || "Unknown type"} · ${(file.size / 1024 / 1024).toFixed(1)} MB`
+                : "or choose one from your computer"}
+            </span>
+            <label
+              className={styles.buttonSecondary}
+              htmlFor="record-media-file"
+            >
+              {file ? "Choose a different file" : "Choose file"}
+            </label>
+          </div>
           <input
+            ref={fileInputRef}
             id="record-media-file"
-            className={styles.input}
+            className={styles.mediaFileInput}
             type="file"
             accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"
             required
-            onChange={(event) => {
-              const selected = event.target.files?.[0] ?? null;
-              setFile(selected);
-              if (selected && !selected.type.startsWith("image/")) {
-                setIsPrimary(false);
-                setAltText("");
-              }
-            }}
+            onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
           />
-          <small className={styles.fieldHelp}>
-            Images up to 25 MB; PDFs up to 20 MB; Videos up to 50 MB.
-          </small>
         </div>
+        <small className={styles.fieldHelp}>
+          JPEG, PNG, or WebP up to 25 MB; PDF up to 20 MB; MP4 or WebM up to 50
+          MB.
+        </small>
 
         <div className={styles.fieldGroup}>
           <label className={styles.fieldLabel} htmlFor="record-media-purpose">
-            Purpose <span className={styles.requiredTag}>Required</span>
+            What does this file show?{" "}
+            <span className={styles.requiredTag}>Required</span>
           </label>
           <input
             id="record-media-purpose"
@@ -631,14 +785,14 @@ export function RecordMedia({
             required
             value={purpose}
             onChange={(event) => setPurpose(event.target.value)}
-            placeholder="E.g. Outcrop photograph, Thin section, Stratigraphy"
+            placeholder="Example: Outcrop overview or Thin section"
           />
         </div>
 
         <div className={styles.formGrid}>
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel} htmlFor="record-media-caption">
-              Caption (optional)
+              Short caption (optional)
             </label>
             <input
               id="record-media-caption"
@@ -646,11 +800,12 @@ export function RecordMedia({
               maxLength={160}
               value={caption}
               onChange={(event) => setCaption(event.target.value)}
+              placeholder="Shown with the image"
             />
           </div>
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel} htmlFor="record-media-alt">
-              Alt text (for images)
+              Describe the image for accessibility
             </label>
             <input
               id="record-media-alt"
@@ -659,31 +814,18 @@ export function RecordMedia({
               value={altText}
               disabled={!isChosenFileImage}
               onChange={(event) => setAltText(event.target.value)}
-              placeholder="Descriptive text for accessibility"
+              placeholder={
+                isChosenFileImage
+                  ? "What is visible in this image?"
+                  : "Available for images"
+              }
             />
           </div>
         </div>
 
         <div className={styles.fieldGroup}>
-          <label
-            className={styles.fieldLabel}
-            htmlFor="record-media-description"
-          >
-            Description (optional)
-          </label>
-          <textarea
-            id="record-media-description"
-            className={styles.textarea}
-            maxLength={2000}
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            placeholder="Additional geological context, methodology, or notes"
-          />
-        </div>
-
-        <div className={styles.fieldGroup}>
           <label className={styles.fieldLabel} htmlFor="record-media-rights">
-            Rights statement{" "}
+            Why may Geo-Kurdistan use this file?{" "}
             <span className={styles.requiredTag}>Required</span>
           </label>
           <input
@@ -693,34 +835,12 @@ export function RecordMedia({
             required
             value={rights}
             onChange={(event) => setRights(event.target.value)}
+            placeholder="Example: Photographed by our field team, used with permission"
           />
-        </div>
-
-        <div className={styles.formGrid}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="record-media-credit">
-              Credit (optional)
-            </label>
-            <input
-              id="record-media-credit"
-              className={styles.input}
-              maxLength={1000}
-              value={credit}
-              onChange={(event) => setCredit(event.target.value)}
-            />
-          </div>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="record-media-licence">
-              Licence (optional)
-            </label>
-            <input
-              id="record-media-licence"
-              className={styles.input}
-              maxLength={160}
-              value={licence}
-              onChange={(event) => setLicence(event.target.value)}
-            />
-          </div>
+          <small className={styles.fieldHelp}>
+            State who owns the file or what permission or licence allows its
+            use.
+          </small>
         </div>
 
         <label className={styles.checkboxLabel}>
@@ -729,13 +849,66 @@ export function RecordMedia({
             className={styles.checkboxInput}
             checked={isPrimary}
             disabled={!isChosenFileImage}
-            onChange={(e) => setIsPrimary(e.target.checked)}
+            onChange={(event) => setIsPrimary(event.target.checked)}
           />
           <span className={styles.checkboxText}>
-            Set as primary image for this record{" "}
+            Use this as the record’s main image{" "}
             {!file || isChosenFileImage ? "" : "(images only)"}
           </span>
         </label>
+
+        <details className={styles.mediaAdvancedFields}>
+          <summary>More file information</summary>
+          <div className={styles.fieldGroup}>
+            <label
+              className={styles.fieldLabel}
+              htmlFor="record-media-description"
+            >
+              Detailed description (optional)
+            </label>
+            <textarea
+              id="record-media-description"
+              className={styles.textarea}
+              maxLength={2000}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Additional geological context or methodology"
+            />
+          </div>
+          <div className={styles.formGrid}>
+            <div className={styles.fieldGroup}>
+              <label
+                className={styles.fieldLabel}
+                htmlFor="record-media-credit"
+              >
+                Credit line (optional)
+              </label>
+              <input
+                id="record-media-credit"
+                className={styles.input}
+                maxLength={1000}
+                value={credit}
+                onChange={(event) => setCredit(event.target.value)}
+              />
+            </div>
+            <div className={styles.fieldGroup}>
+              <label
+                className={styles.fieldLabel}
+                htmlFor="record-media-licence"
+              >
+                Licence name (optional)
+              </label>
+              <input
+                id="record-media-licence"
+                className={styles.input}
+                maxLength={160}
+                value={licence}
+                onChange={(event) => setLicence(event.target.value)}
+                placeholder="Example: CC BY 4.0"
+              />
+            </div>
+          </div>
+        </details>
 
         <div className={styles.actionsBar}>
           <button

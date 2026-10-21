@@ -949,27 +949,96 @@
 }
 
 /* Gallery cards and attachment details */
-.galleryList {
+.mediaCollectionHeader,
+.mediaUploadHeading {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
+}
+
+.mediaCollectionHeader h3,
+.mediaCollectionHeader p,
+.mediaUploadHeading h3,
+.mediaUploadHeading p {
+  margin: 0;
+}
+
+.mediaCollectionHeader h3,
+.mediaUploadHeading h3 {
+  font-size: 17px;
+}
+
+.mediaCollectionHeader p,
+.mediaUploadHeading p {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.galleryList {
+  display: grid;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .galleryCard {
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  grid-template-areas:
+    "preview header"
+    "preview meta"
+    "preview info"
+    "preview actions"
+    "edit edit";
+  align-items: start;
   gap: 12px;
-  padding: 16px;
+  padding: 12px;
   background: var(--limestone);
   border: 2px solid var(--carbon);
   border-radius: var(--neo-radius);
   box-shadow: 2px 2px 0 var(--carbon);
 }
 
+.mediaCardPreview {
+  grid-area: preview;
+  width: 132px;
+  aspect-ratio: 1 / 1;
+}
+
+.mediaKindPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: var(--shale);
+  color: var(--limestone);
+  text-align: center;
+}
+
+.mediaKindPlaceholder svg {
+  width: 28px;
+  height: 28px;
+}
+
+.mediaKindPlaceholder span {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .galleryCardHeader {
+  grid-area: header;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1026,6 +1095,7 @@
 }
 
 .galleryCardMeta {
+  grid-area: meta;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1034,7 +1104,58 @@
   line-height: 1.45;
 }
 
+.mediaMetadataDisclosure {
+  grid-area: info;
+  min-width: 0;
+  border-top: 1px solid var(--fossil);
+}
+
+.mediaMetadataDisclosure summary,
+.mediaManageMenu summary,
+.mediaAdvancedFields summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mediaMetadataDisclosure summary::before,
+.mediaAdvancedFields summary::before {
+  content: "+";
+  font-size: 16px;
+}
+
+.mediaMetadataDisclosure[open] summary::before,
+.mediaAdvancedFields[open] summary::before {
+  content: "−";
+}
+
+.mediaMetadataDisclosure dl {
+  display: grid;
+  grid-template-columns: minmax(86px, auto) minmax(0, 1fr);
+  gap: 6px 10px;
+  margin: 2px 0 10px;
+  font-size: 12px;
+}
+
+.mediaMetadataDisclosure dt {
+  font-weight: 800;
+}
+
+.mediaMetadataDisclosure dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
 .galleryCardActions {
+  grid-area: actions;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1043,7 +1164,31 @@
   border-top: 1px dashed var(--fossil);
 }
 
+.mediaManageMenu {
+  position: relative;
+}
+
+.mediaManageMenu summary {
+  min-height: 40px;
+  padding: 7px 11px;
+  border: 1.5px solid var(--carbon);
+  border-radius: 3px;
+  list-style: none;
+}
+
+.mediaManageMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.mediaManageMenu > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .inlineEditBox {
+  grid-area: edit;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1055,6 +1200,7 @@
 }
 
 .inlineConfirmBox {
+  grid-area: edit;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1063,6 +1209,100 @@
   border: 1.5px solid var(--iron);
   border-radius: var(--neo-radius);
   margin-top: 8px;
+}
+
+.mediaUploadForm {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  background: var(--fossil);
+}
+
+.mediaDropZone,
+.mediaDropZoneActive {
+  min-height: 144px;
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 16px;
+  border: 2px dashed var(--carbon);
+  border-radius: var(--neo-radius);
+  background: var(--limestone);
+}
+
+.mediaDropZoneActive {
+  border-style: solid;
+  background: color-mix(in srgb, var(--ochre) 28%, var(--limestone));
+  box-shadow: 3px 3px 0 var(--carbon);
+}
+
+.mediaDropIcon,
+.mediaSelectedPreview {
+  width: 108px;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+}
+
+.mediaDropIcon {
+  display: grid;
+  place-items: center;
+  background: var(--shale);
+  color: var(--limestone);
+}
+
+.mediaDropIcon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.mediaSelectedPreview {
+  display: block;
+  object-fit: cover;
+}
+
+.mediaDropCopy {
+  min-width: 0;
+  display: grid;
+  justify-items: start;
+  gap: 7px;
+}
+
+.mediaDropCopy strong,
+.mediaDropCopy span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mediaDropCopy span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.mediaFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mediaAdvancedFields {
+  border-top: 2px solid var(--limestone);
+  border-bottom: 2px solid var(--limestone);
+}
+
+.mediaAdvancedFields[open] {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 14px;
 }
 
 .inlineConfirmText {
@@ -1076,4 +1316,38 @@
   max-height: 75vh;
   background: #000;
   border-radius: 4px;
+}
+
+@media (max-width: 680px) {
+  .mediaCollectionHeader,
+  .mediaUploadHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .galleryCard {
+    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-areas:
+      "preview header"
+      "meta meta"
+      "info info"
+      "actions actions"
+      "edit edit";
+  }
+
+  .mediaCardPreview {
+    width: 88px;
+  }
+
+  .mediaDropZone,
+  .mediaDropZoneActive {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .mediaDropIcon,
+  .mediaSelectedPreview {
+    width: 76px;
+  }
 }
