@@ -62,6 +62,8 @@ Runtime tokens in `frontend/src/app/globals.css` are canonical:
 
 ## Dashboard information architecture
 
+Dashboard management screens use a browse-then-edit pattern. Collection screens prioritize search, filters, recognizable imagery, hierarchy, status, and a clear primary action. Creating or editing an item opens a focused workspace instead of inserting a large form above or inside the collection. Private media previews use authorized short-lived delivery and never expose storage locations.
+
 The record editor follows the scientific decision sequence:
 
 1. Select **Add record**.

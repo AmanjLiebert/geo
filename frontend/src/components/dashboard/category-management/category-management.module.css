@@ -1,0 +1,244 @@
+.imageFrame {
+  position: relative;
+  min-height: 240px;
+  overflow: hidden;
+  border: 2px solid var(--carbon);
+  border-radius: 5px;
+  background: var(--shale);
+}
+
+.imageFrameCompact {
+  min-height: 132px;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: var(--limestone);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.imageFieldset {
+  margin: 0;
+  padding: 18px;
+  border: 2px solid var(--carbon);
+  border-radius: 5px;
+}
+
+.imageFieldset legend {
+  padding-inline: 8px;
+  font-weight: 800;
+}
+
+.imageEditorGrid {
+  display: grid;
+  grid-template-columns: minmax(240px, .9fr) minmax(280px, 1.1fr);
+  gap: 20px;
+}
+
+.imageControls {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.dropZone {
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: 2px dashed var(--shale);
+  border-radius: 5px;
+  background: var(--fossil);
+  cursor: pointer;
+  text-align: center;
+}
+
+.dropZoneActive {
+  border-color: var(--iron);
+  background: var(--ochre);
+}
+
+.dropZone input {
+  max-width: 100%;
+}
+
+.fieldLabel,
+.checkboxLabel {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.checkboxLabel {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+
+.fieldLabel textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  font: inherit;
+  resize: vertical;
+}
+
+.secondaryButton {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: var(--limestone);
+  color: var(--carbon);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.workspace {
+  width: min(980px, 100%);
+  margin-inline: auto;
+  display: grid;
+  gap: 24px;
+}
+
+.workspaceHeader {
+  display: grid;
+  gap: 8px;
+}
+
+.workspaceHeader h1,
+.workspaceHeader p {
+  margin: 0;
+}
+
+.backLink {
+  width: fit-content;
+  color: var(--carbon);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.panel {
+  padding: clamp(18px, 3vw, 30px);
+  border: 2px solid var(--carbon);
+  border-radius: 5px;
+  background: var(--limestone);
+  box-shadow: 4px 4px 0 var(--carbon);
+}
+
+.form {
+  display: grid;
+  gap: 20px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 18px;
+}
+
+.form label {
+  display: grid;
+  gap: 8px;
+  color: var(--carbon);
+  font-weight: 800;
+}
+
+.form input,
+.form select,
+.form textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--carbon);
+  font: inherit;
+}
+
+.form textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 6px;
+}
+
+.primaryButton,
+.cancelButton {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 var(--carbon);
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primaryButton {
+  background: var(--iron);
+  color: #fff;
+}
+
+.cancelButton {
+  background: var(--limestone);
+  color: var(--carbon);
+}
+
+.primaryButton:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.error,
+.success {
+  margin: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+}
+
+.error {
+  border-color: var(--iron);
+  background: #fff4f0;
+}
+
+.success {
+  background: #edf4ef;
+}
+
+@media (max-width: 760px) {
+  .imageEditorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

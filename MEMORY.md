@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 5 / step 5B1 — record media gallery |
-| Task folder | `docs/agent-work/phase-5-step-5b1-record-media-gallery/` |
+| Task | Phase 5 / UX-1 — category explorer |
+| Task folder | `docs/agent-work/phase-5-ux1-category-explorer/` |
 | Status | `COMPLETE` |
-| Implementer | Antigravity, continued by Codex after quota interruption |
+| Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | A teacher or admin can manage multiple private record attachments with independent metadata, safe processing, display order, and one primary image without weakening draft, ownership, or publication protections. |
+| Plan gate | A teacher or admin can find, inspect, create, and edit categories through a searchable visual hierarchy and focused workspaces, with private image previews and existing publication/archive protections preserved. |
 
 ## Required file order
 

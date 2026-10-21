@@ -176,3 +176,28 @@ export async function uploadCategoryImage(file: File, rightsStatement: string): 
   if (!object(confirmed) || confirmed.mediaAssetId !== ticket.mediaAssetId || confirmed.status !== "quarantined") throw new DashboardApiError("The image could not be confirmed.", 200, "server");
   return ticket.mediaAssetId;
 }
+
+export async function getCategoryImagePreviewUrl(mediaAssetId: string): Promise<string | null> {
+  const response = await requestRecordResource(
+    `/api/v1/media/${encodeURIComponent(mediaAssetId)}/view`,
+    "POST",
+  );
+  if (!object(response) || response.disposition !== "inline" || !Array.isArray(response.items)) {
+    return null;
+  }
+  const candidates = response.items.filter(
+    (item): item is Record<string, unknown> =>
+      object(item) &&
+      ["thumbnail", "display"].includes(String(item.kind)) &&
+      typeof item.url === "string",
+  );
+  const chosen =
+    candidates.find((item) => item.kind === "thumbnail") ??
+    candidates.find((item) => item.kind === "display");
+  if (!chosen || typeof chosen.url !== "string") return null;
+  try {
+    return new URL(chosen.url).protocol === "https:" ? chosen.url : null;
+  } catch {
+    return null;
+  }
+}

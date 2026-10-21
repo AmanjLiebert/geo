@@ -3,6 +3,7 @@ import {
   changeCategoryArchive,
   getCategoryActions,
   getCategoryBadgeState,
+  getCategoryImagePreviewUrl,
   getCategoryReadiness,
   listManagedCategories,
   publishCategory,
@@ -96,6 +97,45 @@ describe("category management API", () => {
     expect(readiness.publishable).toBe(true);
     expect(readiness.issues).toEqual([]);
     expect(fetchMock.mock.calls[0]?.[0]).toContain("/api/v1/scientific-structure/categories/cat-1/readiness");
+  });
+
+  it("uses an authorized thumbnail before a larger category image", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          disposition: "inline",
+          items: [
+            { kind: "display", pageNumber: null, url: "https://media.example/display.jpg" },
+            { kind: "thumbnail", pageNumber: null, url: "https://media.example/thumb.jpg" },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getCategoryImagePreviewUrl("img-1")).resolves.toBe(
+      "https://media.example/thumb.jpg",
+    );
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/api/v1/media/img-1/view");
+    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe("POST");
+  });
+
+  it("rejects non-HTTPS category image previews", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            disposition: "inline",
+            items: [{ kind: "thumbnail", pageNumber: null, url: "http://media.example/thumb.jpg" }],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
+    );
+
+    await expect(getCategoryImagePreviewUrl("img-1")).resolves.toBeNull();
   });
 
   it.each([
