@@ -88,6 +88,7 @@ export function CategoryImageInput({
           >
             <strong>Drop an image here</strong>
             <span>or choose a JPEG, PNG, or WebP file</span>
+            <span className={styles.imageHint}>It will be displayed as a square and cropped to fill.</span>
             <input
               id={inputId}
               type="file"

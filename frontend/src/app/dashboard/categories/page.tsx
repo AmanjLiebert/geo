@@ -185,11 +185,18 @@ export default function CategoriesPage() {
           )}
           <div className={styles.actions}>
             {actions.canEdit && <Link className={styles.primaryAction} href={`/dashboard/categories/edit?categoryId=${encodeURIComponent(item.id)}`}>Edit category</Link>}
-            {actions.canPublish && <button type="button" disabled={busyId === item.id || actions.isPublishDisabled} onClick={() => void handlePublish(item)}>{actions.publishLabel}</button>}
-            {actions.canUnpublish && <button type="button" disabled={busyId === item.id} onClick={() => void handleUnpublish(item)}>Unpublish</button>}
-            {actions.canRemove && <button type="button" disabled={busyId === item.id} onClick={() => void handleArchive(item)}>Remove</button>}
-            {actions.canRestore && <button type="button" disabled={busyId === item.id || actions.isRestoreDisabled} onClick={() => void handleArchive(item)}>Restore</button>}
+            {actions.canPublish && <button className={styles.publishAction} type="button" disabled={busyId === item.id || actions.isPublishDisabled} onClick={() => void handlePublish(item)}>{actions.publishLabel}</button>}
+            {actions.canRestore && <button className={styles.restoreAction} type="button" disabled={busyId === item.id || actions.isRestoreDisabled} onClick={() => void handleArchive(item)}>Restore</button>}
           </div>
+          {(actions.canUnpublish || actions.canRemove) && (
+            <details className={styles.moreActions}>
+              <summary>More actions</summary>
+              <div className={styles.secondaryActions}>
+                {actions.canUnpublish && <button type="button" disabled={busyId === item.id} onClick={() => void handleUnpublish(item)}>Unpublish</button>}
+                {actions.canRemove && <button className={styles.dangerAction} type="button" disabled={busyId === item.id} onClick={() => void handleArchive(item)}>Remove</button>}
+              </div>
+            </details>
+          )}
           {reauthenticationCategoryId === item.id && <Link className={styles.identityLink} href={`/account?returnTo=${encodeURIComponent(`/dashboard/categories#category-${item.id}`)}`}>Confirm identity</Link>}
         </div>
       </article>

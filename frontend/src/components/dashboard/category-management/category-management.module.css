@@ -1,6 +1,9 @@
 .imageFrame {
   position: relative;
-  min-height: 240px;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+  align-self: start;
   overflow: hidden;
   border: 2px solid var(--carbon);
   border-radius: 5px;
@@ -8,7 +11,7 @@
 }
 
 .imageFrameCompact {
-  min-height: 132px;
+  aspect-ratio: 1 / 1;
 }
 
 .image {
@@ -44,7 +47,8 @@
 
 .imageEditorGrid {
   display: grid;
-  grid-template-columns: minmax(240px, .9fr) minmax(280px, 1.1fr);
+  grid-template-columns: minmax(220px, 360px) minmax(280px, 1fr);
+  align-items: start;
   gap: 20px;
 }
 
@@ -75,6 +79,11 @@
 
 .dropZone input {
   max-width: 100%;
+}
+
+.imageHint {
+  color: var(--soft-ink);
+  font-size: 13px;
 }
 
 .fieldLabel,

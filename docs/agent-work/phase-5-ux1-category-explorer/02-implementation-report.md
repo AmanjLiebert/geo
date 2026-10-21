@@ -20,3 +20,13 @@ Status: `IMPLEMENTED_AWAITING_REVIEW`
 - `docker compose up -d --build frontend proxy`: completed; local frontend and API healthy.
 - Live HTTP smoke: category list/create/edit routes returned 200; anonymous category management API returned 401.
 - Graphical browser automation: not run because the local computer-use kernel could not initialize.
+
+## Correction: stable category-card layout
+
+- Replaced auto-fitting child cards with stable full-width hierarchy rows.
+- Made every category image and editor preview a fixed 1:1 crop so card content cannot stretch it.
+- Prevented badges from squeezing titles and added responsive stacking before text becomes unreadable.
+- Kept the primary edit and publish/restore actions visible while moving destructive and infrequent lifecycle actions under “More actions.”
+- Added the reusable dashboard ergonomics rules to `DESIGN.md`.
+
+Focused verification: 21 category tests passed; frontend lint, TypeScript, production build, Docker health check, and category-route HTTP smoke passed.

@@ -18,3 +18,12 @@ Status: `COMPLETE`
 - Git whitespace check: passed before handoff.
 - Local containers: frontend and API healthy.
 - Manual signed-in visual and interaction confirmation remains for the user because graphical browser automation was unavailable.
+
+## Correction review
+
+- The image wrapper now derives height exclusively from `aspect-ratio: 1 / 1` and the image retains `object-fit: cover`.
+- Child categories render in one stable column; title/status layout stacks before labels can collapse the title to one character per line.
+- Secondary lifecycle controls remain keyboard-accessible inside a native disclosure, while the common task stays visible.
+- Mobile rules cap the square preview width and retain the existing 44-pixel control targets.
+- Focused tests (21), lint, TypeScript, production build, container health, and route smoke all passed.
+- Signed-in graphical confirmation remains the user’s final visual check because the computer-use kernel could not initialize.

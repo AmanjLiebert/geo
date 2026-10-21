@@ -190,6 +190,14 @@ Templates drive the form but are not edited by teachers or admins in routine use
 - Accessing restricted geometry must be a deliberate action with permission feedback; its automatic audit event does not require a client-facing audit screen.
 - Map-layer interfaces show source, licence, date/version, coordinate reference system, scale or resolution, and visibility.
 
+## Dashboard collection and editor ergonomics
+
+- Management lists use stable single-column rows for hierarchical content; they must not auto-fit cards into widths that squeeze titles, badges, or controls.
+- Category and record cover previews use a consistent 1:1 frame with `object-fit: cover`. Content must never determine preview height or stretch the surrounding card.
+- Preserve reading order: identity and title first, then state, summary, readiness information, and actions. Status badges wrap below the title before reducing title readability.
+- Give each card one obvious primary task. Put destructive and infrequent lifecycle controls behind a clearly labelled secondary disclosure while keeping keyboard access and 44-pixel targets.
+- At narrow widths, stack content without horizontal scrolling and cap image previews so they do not dominate the task.
+
 ## Empty collection and first-use states
 
 The system is designed to launch with categories and templates but zero geological records.
