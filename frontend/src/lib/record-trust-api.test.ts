@@ -52,6 +52,10 @@ describe("record trust API", () => {
         title: "Study",
         authors: [{ name: "Researcher" }],
         identifier: "10.1234/example",
+        publication: "Journal of Regional Geology",
+        publicationYear: 2026,
+        pagesOrFigure: "12–18",
+        rightsStatement: "Used as a bibliographic citation",
       }),
     ).toBe(referenceId);
     await addRecordEvidence(recordId, {
@@ -59,6 +63,11 @@ describe("record trust API", () => {
       evidenceKind: "published_source",
     });
     expect(vi.mocked(fetch).mock.calls[0][1]?.method).toBe("POST");
+    const createBody = JSON.parse(
+      String(vi.mocked(fetch).mock.calls[0][1]?.body),
+    );
+    expect(createBody.publicationYear).toBe(2026);
+    expect(createBody.pagesOrFigure).toBe("12–18");
     expect(vi.mocked(fetch).mock.calls[1][1]?.credentials).toBe("include");
     expect(vi.mocked(fetch).mock.calls[1][0]).toContain(
       `/api/v1/records/${recordId}/evidence`,
@@ -74,6 +83,7 @@ describe("record trust API", () => {
               id: referenceId,
               referenceId,
               referenceTitle: "Study",
+              sourceType: "journal",
               evidenceKind: "published_source",
               fieldKey: null,
               notes: null,

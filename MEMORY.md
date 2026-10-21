@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 5 / UX-4 — media workspace |
-| Task folder | `docs/agent-work/phase-5-ux4-media-workspace/` |
+| Task | Phase 5 / UX-5 — sources and evidence workspace |
+| Task folder | `docs/agent-work/phase-5-ux5-sources-workspace/` |
 | Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | A teacher or admin can see protected record attachments, add a supported file through a clear drop zone, and manage primary state and metadata without a long technical form. |
+| Plan gate | A teacher or admin can understand attached citations, add an appropriate source using source-specific prompts, or reuse a saved source and connect it to the record without handling internal evidence terminology. |
 
 ## Required file order
 

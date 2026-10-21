@@ -12,6 +12,7 @@ export type RecordEvidenceItem = {
   id: string;
   referenceId: string;
   referenceTitle: string;
+  sourceType: string;
   evidenceKind: string;
   fieldKey: string | null;
   notes: string | null;
@@ -63,6 +64,9 @@ export async function createReference(data: {
   sourceUrl?: string;
   identifier?: string;
   publication?: string;
+  publicationYear?: number;
+  pagesOrFigure?: string;
+  rightsStatement?: string;
 }): Promise<string> {
   const response = await requestRecordResource(
     "/api/v1/references",
@@ -86,6 +90,7 @@ export async function listRecordEvidence(
       typeof item.id !== "string" ||
       typeof item.referenceId !== "string" ||
       typeof item.referenceTitle !== "string" ||
+      typeof item.sourceType !== "string" ||
       typeof item.evidenceKind !== "string" ||
       (item.fieldKey !== null && typeof item.fieldKey !== "string") ||
       (item.notes !== null && typeof item.notes !== "string") ||

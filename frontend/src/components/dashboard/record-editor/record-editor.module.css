@@ -948,6 +948,272 @@
   margin-top: 16px;
 }
 
+/* Guided source and evidence workspace */
+.sourceCollectionHeader,
+.sourceFormHeader {
+  display: grid;
+  gap: 3px;
+}
+
+.sourceCollectionHeader h3,
+.sourceCollectionHeader p,
+.sourceFormHeader h3,
+.sourceFormHeader p,
+.sourceCitationBody p,
+.sourceEmptyState p,
+.sourceTargetPanel h3,
+.sourceTargetPanel p,
+.sourceMediaHint {
+  margin: 0;
+}
+
+.sourceCollectionHeader h3,
+.sourceFormHeader h3,
+.sourceTargetPanel h3 {
+  font-size: 17px;
+}
+
+.sourceCollectionHeader p,
+.sourceFormHeader p,
+.sourceTargetPanel p,
+.sourceEmptyState p {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sourceCitationList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sourceCitationCard {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  box-shadow: 2px 2px 0 var(--carbon);
+}
+
+.sourceCitationIcon,
+.sourceEmptyState > svg,
+.sourceSelectedSummary > svg {
+  width: 48px;
+  height: 48px;
+  padding: 11px;
+  color: var(--limestone);
+  background: var(--shale);
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+}
+
+.sourceCitationBody {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.sourceCitationHeading {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.sourceCitationHeading > strong {
+  min-width: min(220px, 100%);
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.sourceCitationBody p,
+.sourceCitationBody small {
+  color: var(--ink-soft);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.sourceEmptyState {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--fossil);
+  border: 2px dashed var(--carbon);
+  border-radius: var(--neo-radius);
+}
+
+.sourceEmptyState > div {
+  display: grid;
+  gap: 4px;
+}
+
+.sourceModeSwitch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sourceModeButton,
+.sourceModeButtonActive {
+  min-width: 0;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  color: var(--carbon);
+  text-align: start;
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  cursor: pointer;
+}
+
+.sourceModeButtonActive {
+  color: var(--limestone);
+  background: var(--shale);
+  box-shadow: 3px 3px 0 var(--iron);
+}
+
+.sourceModeButton:hover,
+.sourceModeButtonActive:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--carbon);
+}
+
+.sourceModeButton > svg,
+.sourceModeButtonActive > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sourceModeButton > span,
+.sourceModeButtonActive > span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.sourceModeButton strong,
+.sourceModeButton small,
+.sourceModeButtonActive strong,
+.sourceModeButtonActive small {
+  overflow-wrap: anywhere;
+}
+
+.sourceModeButton small,
+.sourceModeButtonActive small {
+  font-size: 11px;
+  opacity: 0.78;
+}
+
+.sourceForm {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  background: var(--fossil);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+}
+
+.sourceDetailsDisclosure,
+.sourceNotesDisclosure {
+  border-top: 1px solid var(--carbon);
+}
+
+.sourceDetailsDisclosure summary,
+.sourceNotesDisclosure summary {
+  min-height: var(--touch-target);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sourceDetailsDisclosure summary::before,
+.sourceNotesDisclosure summary::before {
+  content: "+";
+  font-size: 16px;
+}
+
+.sourceDetailsDisclosure[open] summary::before,
+.sourceNotesDisclosure[open] summary::before {
+  content: "−";
+}
+
+.sourceDetailsDisclosure[open],
+.sourceNotesDisclosure[open] {
+  display: grid;
+  gap: 14px;
+}
+
+.sourceTargetPanel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: var(--limestone);
+  border-inline-start: 4px solid var(--iron);
+}
+
+.sourceMediaHint {
+  padding: 11px 12px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--limestone);
+  border: 1px solid var(--carbon);
+}
+
+.sourceSearchRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.sourceSelectedSummary {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--limestone);
+  border: 2px solid var(--shale);
+  border-radius: var(--neo-radius);
+}
+
+.sourceSelectedSummary > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.sourceSelectedSummary strong,
+.sourceSelectedSummary span {
+  overflow-wrap: anywhere;
+}
+
+.sourceSelectedSummary span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
 /* Gallery cards and attachment details */
 .mediaCollectionHeader,
 .mediaUploadHeading {
@@ -1319,6 +1585,15 @@
 }
 
 @media (max-width: 680px) {
+  .sourceModeSwitch,
+  .sourceSearchRow {
+    grid-template-columns: 1fr;
+  }
+
+  .sourceSearchRow .buttonSecondary {
+    width: 100%;
+  }
+
   .mediaCollectionHeader,
   .mediaUploadHeading {
     align-items: stretch;
