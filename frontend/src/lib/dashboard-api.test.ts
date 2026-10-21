@@ -59,6 +59,8 @@ describe("dashboard-api", () => {
             title: "Limestone Bedding",
             status: "published" as const,
             isClassified: true,
+            categoryName: "Stratigraphic sections",
+            primaryImageMediaAssetId: "media-1",
             updatedAt: "2026-01-02T00:00:00.000Z",
           },
         ],
@@ -77,12 +79,13 @@ describe("dashboard-api", () => {
         limit: 20,
         offset: 0,
         status: "published",
+        query: "limestone",
       });
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [url, init] = vi.mocked(fetch).mock.calls[0];
       expect(url).toContain(
-        "/api/v1/records?limit=20&offset=0&status=published",
+        "/api/v1/records?limit=20&offset=0&status=published&query=limestone",
       );
       expect(init?.credentials).toBe("include");
       expect(init?.cache).toBe("no-store");

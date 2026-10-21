@@ -37,11 +37,13 @@ describe('RecordsService.list', () => {
     expect(capturedListSql).toContain('is_classified');
     expect(capturedListSql).toContain('r.updated_at');
     expect(capturedListSql).toContain('t.title');
+    expect(capturedListSql).toContain('category_t.name AS category_name');
+    expect(capturedListSql).toContain('primary_image_media_asset_id');
 
     expect(result.items).toHaveLength(1);
   });
 
-  it('returns items containing exactly id, title, status, isClassified, updatedAt', async () => {
+  it('returns only the compact dashboard record projection', async () => {
     const updatedAtDate = new Date('2026-03-15T08:30:00.000Z');
     const queryMock = vi.fn().mockImplementation((sql: string) => {
       if (sql.includes('COUNT(*)')) {
@@ -54,6 +56,8 @@ describe('RecordsService.list', () => {
           is_classified: true,
           updated_at: updatedAtDate,
           title: 'Classified Formation',
+          category_name: 'Stratigraphic sections',
+          primary_image_media_asset_id: 'media-1',
         },
         {
           id: 'rec-unclassified',
@@ -61,6 +65,8 @@ describe('RecordsService.list', () => {
           is_classified: false,
           updated_at: updatedAtDate,
           title: null,
+          category_name: null,
+          primary_image_media_asset_id: null,
         },
       ]);
     });
@@ -77,24 +83,44 @@ describe('RecordsService.list', () => {
     if (!firstItem || !secondItem) throw new Error('Expected items');
 
     expect(Object.keys(firstItem).sort()).toEqual(
-      ['id', 'isClassified', 'status', 'title', 'updatedAt'].sort(),
+      [
+        'categoryName',
+        'id',
+        'isClassified',
+        'primaryImageMediaAssetId',
+        'status',
+        'title',
+        'updatedAt',
+      ].sort(),
     );
     expect(firstItem).toEqual({
       id: 'rec-classified',
       title: 'Classified Formation',
       status: 'published',
       isClassified: true,
+      categoryName: 'Stratigraphic sections',
+      primaryImageMediaAssetId: 'media-1',
       updatedAt: '2026-03-15T08:30:00.000Z',
     });
 
     expect(Object.keys(secondItem).sort()).toEqual(
-      ['id', 'isClassified', 'status', 'title', 'updatedAt'].sort(),
+      [
+        'categoryName',
+        'id',
+        'isClassified',
+        'primaryImageMediaAssetId',
+        'status',
+        'title',
+        'updatedAt',
+      ].sort(),
     );
     expect(secondItem).toEqual({
       id: 'rec-unclassified',
       title: null,
       status: 'unclassified_draft',
       isClassified: false,
+      categoryName: null,
+      primaryImageMediaAssetId: null,
       updatedAt: '2026-03-15T08:30:00.000Z',
     });
   });
@@ -212,6 +238,27 @@ describe('RecordsService.list', () => {
 
     expect(countCall.sql).not.toContain('WHERE r.status');
     expect(countCall.params).toEqual([]);
+  });
+
+  it('searches titles and category names with escaped parameterized input', async () => {
+    const capturedCalls: Array<{ sql: string; params: unknown[] }> = [];
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      capturedCalls.push({ sql, params });
+      if (sql.includes('COUNT(*)')) return Promise.resolve([{ total: '0' }]);
+      return Promise.resolve([]);
+    });
+    const dataSource = { query: queryMock } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await service.list(20, 0, 'draft', '50%_limestone');
+
+    const [listCall, countCall] = capturedCalls;
+    expect(listCall?.sql).toContain("COALESCE(t.title, '') ILIKE $4");
+    expect(listCall?.sql).toContain("COALESCE(category_t.name, '') ILIKE $4");
+    expect(listCall?.sql).not.toContain('50%_limestone');
+    expect(listCall?.params).toEqual([20, 0, 'draft', '%50\\%\\_limestone%']);
+    expect(countCall?.sql).toContain("COALESCE(t.title, '') ILIKE $2");
+    expect(countCall?.params).toEqual(['draft', '%50\\%\\_limestone%']);
   });
 
   it('returns valid empty state when database contains zero records', async () => {

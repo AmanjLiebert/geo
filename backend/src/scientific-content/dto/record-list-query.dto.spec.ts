@@ -27,4 +27,20 @@ describe('record list query DTO validation', () => {
     const errors = await validate(dto);
     expect(errors).toHaveLength(0);
   });
+
+  it('trims and accepts a bounded title or category query', async () => {
+    const dto = plainToInstance(RecordListQueryDto, { query: '  limestone  ' });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+    expect(dto.query).toBe('limestone');
+  });
+
+  it.each(['a', '', 'x'.repeat(121), 42, ['rock'], { title: 'rock' }])(
+    'rejects an invalid search query: %j',
+    async (query) => {
+      const dto = plainToInstance(RecordListQueryDto, { query });
+      const errors = await validate(dto);
+      expect(errors.some((error) => error.property === 'query')).toBe(true);
+    },
+  );
 });

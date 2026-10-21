@@ -22,6 +22,8 @@ export type DashboardRecordItem = {
   title: string | null;
   status: ScientificRecordStatus;
   isClassified: boolean;
+  categoryName: string | null;
+  primaryImageMediaAssetId: string | null;
   updatedAt: string;
 };
 
@@ -216,6 +218,7 @@ export type ListRecordsOptions = {
   limit?: number;
   offset?: number;
   status?: ScientificRecordStatus;
+  query?: string;
   signal?: AbortSignal;
 };
 
@@ -330,7 +333,15 @@ export function validateRecordListResponse(
       );
     }
 
-    const { id, title, status, isClassified, updatedAt } = item;
+    const {
+      id,
+      title,
+      status,
+      isClassified,
+      categoryName,
+      primaryImageMediaAssetId,
+      updatedAt,
+    } = item;
 
     if (
       typeof id !== "string" ||
@@ -339,6 +350,8 @@ export function validateRecordListResponse(
       typeof status !== "string" ||
       !VALID_RECORD_STATUSES.has(status) ||
       typeof isClassified !== "boolean" ||
+      (categoryName !== null && typeof categoryName !== "string") ||
+      (primaryImageMediaAssetId !== null && typeof primaryImageMediaAssetId !== "string") ||
       !isValidIsoDate(updatedAt)
     ) {
       throw new DashboardApiError(
@@ -353,6 +366,8 @@ export function validateRecordListResponse(
       title,
       status: status as ScientificRecordStatus,
       isClassified,
+      categoryName,
+      primaryImageMediaAssetId,
       updatedAt,
     });
   }
@@ -1119,6 +1134,7 @@ export async function listDashboardRecords(
     limit: options.limit,
     offset: options.offset,
     status: options.status,
+    query: options.query,
   });
 
   try {

@@ -39,6 +39,8 @@ interface RecordListRow {
   is_classified: boolean;
   updated_at: Date;
   title: string | null;
+  category_name: string | null;
+  primary_image_media_asset_id: string | null;
 }
 
 interface TranslationRow {
@@ -97,12 +99,33 @@ export class RecordsService {
     private readonly trust: ScientificTrustService,
   ) {}
 
-  async list(limit = 50, offset = 0, status?: string) {
+  async list(limit = 50, offset = 0, status?: string, query?: string) {
     const safeLimit = Math.min(Math.max(limit, 1), 100);
     const safeOffset = Math.max(offset, 0);
     const values: unknown[] = [safeLimit, safeOffset];
-    const statusClause = status ? `WHERE r.status = $3` : '';
-    if (status) values.push(status);
+    const countValues: unknown[] = [];
+    const conditions: string[] = [];
+    const countConditions: string[] = [];
+    if (status) {
+      values.push(status);
+      countValues.push(status);
+      conditions.push(`r.status = $${values.length}`);
+      countConditions.push(`r.status = $${countValues.length}`);
+    }
+    if (query) {
+      const escapedQuery = query.replace(/[\\%_]/g, '\\$&');
+      const pattern = `%${escapedQuery}%`;
+      values.push(pattern);
+      countValues.push(pattern);
+      conditions.push(
+        `(COALESCE(t.title, '') ILIKE $${values.length} ESCAPE '\\' OR COALESCE(category_t.name, '') ILIKE $${values.length} ESCAPE '\\')`,
+      );
+      countConditions.push(
+        `(COALESCE(t.title, '') ILIKE $${countValues.length} ESCAPE '\\' OR COALESCE(category_t.name, '') ILIKE $${countValues.length} ESCAPE '\\')`,
+      );
+    }
+    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const countWhereClause = countConditions.length ? `WHERE ${countConditions.join(' AND ')}` : '';
 
     const rows = (await this.dataSource.query(
       `
@@ -111,7 +134,9 @@ export class RecordsService {
           r.status,
           (r.category_id IS NOT NULL AND r.record_type_id IS NOT NULL) AS is_classified,
           r.updated_at,
-          t.title
+            t.title,
+            category_t.name AS category_name,
+            primary_media.media_asset_id AS primary_image_media_asset_id
         FROM scientific_records r
         LEFT JOIN LATERAL (
           SELECT title FROM record_translations
@@ -119,15 +144,45 @@ export class RecordsService {
           ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, locale
           LIMIT 1
         ) t ON true
-        ${statusClause}
+          LEFT JOIN LATERAL (
+            SELECT name FROM category_translations
+            WHERE category_id = r.category_id
+            ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, locale
+            LIMIT 1
+          ) category_t ON true
+          LEFT JOIN LATERAL (
+            SELECT rm.media_asset_id
+            FROM record_media rm
+            JOIN media_assets m ON m.id = rm.media_asset_id
+            WHERE rm.record_id = r.id AND m.media_kind = 'image'
+            ORDER BY rm.is_primary DESC, rm.position, rm.media_asset_id
+            LIMIT 1
+          ) primary_media ON true
+          ${whereClause}
         ORDER BY r.updated_at DESC, r.id
         LIMIT $1 OFFSET $2
       `,
       values,
     )) as unknown as RecordListRow[];
     const countRows = (await this.dataSource.query(
-      `SELECT COUNT(*)::text AS total FROM scientific_records r ${status ? 'WHERE r.status = $1' : ''}`,
-      status ? [status] : [],
+      `
+        SELECT COUNT(*)::text AS total
+        FROM scientific_records r
+        LEFT JOIN LATERAL (
+          SELECT title FROM record_translations
+          WHERE record_id = r.id
+          ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, locale
+          LIMIT 1
+        ) t ON true
+        LEFT JOIN LATERAL (
+          SELECT name FROM category_translations
+          WHERE category_id = r.category_id
+          ORDER BY CASE WHEN locale = 'en' THEN 0 ELSE 1 END, locale
+          LIMIT 1
+        ) category_t ON true
+        ${countWhereClause}
+      `,
+      countValues,
     )) as unknown as CountRow[];
 
     return {
@@ -136,6 +191,8 @@ export class RecordsService {
         title: row.title,
         status: row.status,
         isClassified: Boolean(row.is_classified),
+        categoryName: row.category_name ?? null,
+        primaryImageMediaAssetId: row.primary_image_media_asset_id ?? null,
         updatedAt: new Date(row.updated_at).toISOString(),
       })),
       total: Number(countRows[0]?.total ?? 0),

@@ -354,11 +354,13 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         cookies: { gk_session: 'teacher-session' },
       });
       expect(response.statusCode).toBe(200);
-      expect(list).toHaveBeenCalledWith(
-        25,
-        10,
-        ...(path === '/api/v1/scientific-structure/requests' ? [] : [undefined]),
-      );
+      const optionalArguments =
+        path === '/api/v1/records'
+          ? [undefined, undefined]
+          : path === '/api/v1/research'
+            ? [undefined]
+            : [];
+      expect(list).toHaveBeenCalledWith(25, 10, ...optionalArguments);
     });
 
     it.each(paths)('denies visitor list access on %s', async (path) => {
@@ -382,8 +384,30 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         cookies: { gk_session: 'teacher-session' },
       });
       expect(response.statusCode).toBe(200);
-      expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, 'draft');
+      expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, 'draft', undefined);
     });
+
+    it('passes a validated, trimmed record search query to the service', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/records?query=%20limestone%20',
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, undefined, 'limestone');
+    });
+
+    it.each(['query=a', `query=${'x'.repeat(121)}`, 'query[]=rock'])(
+      'rejects invalid record search query %s',
+      async (query) => {
+        const response = await app.inject({
+          method: 'GET',
+          url: `/api/v1/records?${query}`,
+          cookies: { gk_session: 'teacher-session' },
+        });
+        expect(response.statusCode).toBe(400);
+      },
+    );
   });
 
   describe('Record attachment reads', () => {
