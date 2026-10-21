@@ -27,3 +27,11 @@ Status: `COMPLETE`
 - Mobile rules cap the square preview width and retain the existing 44-pixel control targets.
 - Focused tests (21), lint, TypeScript, production build, container health, and route smoke all passed.
 - Signed-in graphical confirmation remains the user’s final visual check because the computer-use kernel could not initialize.
+
+## Interaction redesign review
+
+- The initial state renders root categories only; child rows require an explicit expansion unless a search or filter needs to expose them.
+- The compact row model materially reduces scrolling while retaining title, summary, status, child count, preview, and authorized actions.
+- Image and no-image states share the same fixed 1:1 thumbnail geometry.
+- Edit is the sole routine row action; publication and destructive actions remain discoverable under the labelled Actions disclosure.
+- The production build, Docker health check, route smoke, lint, TypeScript, and 24 focused tests passed.

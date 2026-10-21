@@ -193,9 +193,10 @@ Templates drive the form but are not edited by teachers or admins in routine use
 ## Dashboard collection and editor ergonomics
 
 - Management lists use stable single-column rows for hierarchical content; they must not auto-fit cards into widths that squeeze titles, badges, or controls.
+- Large managed hierarchies open collapsed by default. Search and filters may reveal matching descendants automatically, but the default screen must prioritize scanning over showing every child.
 - Category and record cover previews use a consistent 1:1 frame with `object-fit: cover`. Content must never determine preview height or stretch the surrounding card.
 - Preserve reading order: identity and title first, then state, summary, readiness information, and actions. Status badges wrap below the title before reducing title readability.
-- Give each card one obvious primary task. Put destructive and infrequent lifecycle controls behind a clearly labelled secondary disclosure while keeping keyboard access and 44-pixel targets.
+- Give each row one obvious daily task. Put publication, destructive, and infrequent lifecycle controls behind a clearly labelled secondary disclosure while keeping keyboard access and 44-pixel targets.
 - At narrow widths, stack content without horizontal scrolling and cap image previews so they do not dominate the task.
 
 ## Empty collection and first-use states

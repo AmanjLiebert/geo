@@ -2,6 +2,14 @@ import type { CategoryDisplayState, ManagedCategory } from "./category-managemen
 
 export type CategoryBrowserStatus = "all" | CategoryDisplayState;
 
+export function shouldRevealCategoryChildren(
+  isManuallyExpanded: boolean,
+  rawQuery: string,
+  status: CategoryBrowserStatus,
+): boolean {
+  return isManuallyExpanded || rawQuery.trim().length > 0 || status !== "all";
+}
+
 function textMatches(item: ManagedCategory, query: string): boolean {
   if (!query) return true;
   return [item.name, item.summary ?? "", item.description ?? ""]

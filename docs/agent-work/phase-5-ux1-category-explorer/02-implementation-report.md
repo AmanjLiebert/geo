@@ -30,3 +30,13 @@ Status: `IMPLEMENTED_AWAITING_REVIEW`
 - Added the reusable dashboard ergonomics rules to `DESIGN.md`.
 
 Focused verification: 21 category tests passed; frontend lint, TypeScript, production build, Docker health check, and category-route HTTP smoke passed.
+
+## Interaction redesign
+
+- Replaced the expanded card wall with a compact hierarchy index designed around find, open, and edit.
+- Root branches now start collapsed; searches and status filters reveal matching descendants automatically.
+- Reduced every row to a square thumbnail, identity, state, one daily Edit action, and a labelled Actions popover for publication and removal workflows.
+- Kept readiness guidance inside the relevant action panel rather than consuming permanent list space.
+- Added focused tests for collapsed-default and search/filter reveal behavior.
+
+Verification: 24 focused category tests, lint, TypeScript, production build, container health, and category-route smoke passed.

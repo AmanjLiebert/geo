@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { ManagedCategory } from "./category-management-api";
-import { filterCategoryHierarchy } from "./category-browser-utils";
+import {
+  filterCategoryHierarchy,
+  shouldRevealCategoryChildren,
+} from "./category-browser-utils";
 
 const base = {
   summary: null,
@@ -40,5 +43,20 @@ describe("filterCategoryHierarchy", () => {
       "rocks",
       "sedimentary",
     ]);
+  });
+});
+
+describe("shouldRevealCategoryChildren", () => {
+  it("keeps category branches closed by default", () => {
+    expect(shouldRevealCategoryChildren(false, "", "all")).toBe(false);
+  });
+
+  it("reveals a branch when the user opens it", () => {
+    expect(shouldRevealCategoryChildren(true, "", "all")).toBe(true);
+  });
+
+  it("reveals matching children while searching or filtering", () => {
+    expect(shouldRevealCategoryChildren(false, "rock", "all")).toBe(true);
+    expect(shouldRevealCategoryChildren(false, "", "draft")).toBe(true);
   });
 });
