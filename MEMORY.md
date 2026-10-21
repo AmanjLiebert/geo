@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 5 / UX-2 — record explorer |
-| Task folder | `docs/agent-work/phase-5-ux2-record-explorer/` |
+| Task | Phase 5 / UX-3 — record workspace |
+| Task folder | `docs/agent-work/phase-5-ux3-record-workspace/` |
 | Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | A teacher or admin can search, filter, understand, and reopen the correct editable record from a compact protected index with category context and square private image previews. |
+| Plan gate | A teacher or admin can understand the active record, move among its guided work sections without excessive scrolling, and preserve in-progress inputs while backend behavior remains unchanged. |
 
 ## Required file order
 

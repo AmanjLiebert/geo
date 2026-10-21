@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, FileText, Lock, ShieldAlert } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ChevronRight,
+  Edit3,
+  FileText,
+  Lock,
+  ShieldAlert,
+} from "lucide-react";
 import Link from "@/components/safe-link";
 import {
   createRecord,
@@ -27,6 +35,11 @@ import { RecordMedia } from "./record-media";
 import { RecordEvidence } from "./record-evidence";
 import { RecordLocations } from "./record-locations";
 import {
+  defaultRecordWorkspaceSections,
+  RecordWorkspaceNav,
+  type RecordWorkspaceSectionId,
+} from "./record-workspace-nav";
+import {
   canChangeClassification,
   isRecordCategoryArchived,
   isRecordEditorReadOnly,
@@ -48,6 +61,10 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
   const [step, setStep] = useState<"structure" | "fields">(
     mode === "create" ? "structure" : "fields",
   );
+  const [activeWorkspaceSection, setActiveWorkspaceSection] =
+    useState<RecordWorkspaceSectionId>(
+      mode === "create" ? "scientific" : "details",
+    );
 
   const [categories, setCategories] = useState<StructureCategory[]>([]);
   const [recordTypes, setRecordTypes] = useState<CategoryRecordType[]>([]);
@@ -204,6 +221,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       setActiveTemplate(tmpl);
       setSelection(sel);
       setStep("fields");
+      setActiveWorkspaceSection("scientific");
       setLoading(false);
     } catch (err) {
       setError(
@@ -352,17 +370,40 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
     isCategoryArchived,
   );
 
+  const recordTitle =
+    recordDetail?.translations
+      .find((item) => item.locale === "en")
+      ?.title.trim() ||
+    (mode === "create" ? "Add scientific record" : "Untitled record");
+
+  const workspaceSections =
+    recordDetail?.status === "draft"
+      ? defaultRecordWorkspaceSections
+      : defaultRecordWorkspaceSections.filter(
+          (section) => section.id === "scientific",
+        );
+
+  const showEditWorkspace =
+    !loading &&
+    !error &&
+    !isReadOnly &&
+    mode === "edit" &&
+    step === "fields" &&
+    activeTemplate !== null &&
+    recordDetail !== null;
+
   return (
     <div className={styles.container}>
       {/* Page Header */}
       <header className={styles.header}>
+        <Link href="/dashboard/records" className={styles.backLink}>
+          <ArrowLeft size={16} aria-hidden="true" /> Records
+        </Link>
         <div className={styles.titleRow}>
           <div className={styles.titleMark} aria-hidden="true">
             <FileText />
           </div>
-          <h1 className={styles.title}>
-            {mode === "create" ? "Add scientific record" : "Edit draft record"}
-          </h1>
+          <h1 className={styles.title}>{recordTitle}</h1>
           {recordDetail && (
             <span
               className={styles.badge}
@@ -382,8 +423,8 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         </div>
         <p className={styles.subtitle}>
           {mode === "create"
-            ? "Choose a scientific category and record type to open the data-entry form. You can save the record as a draft from that form."
-            : "Update the scientific fields and supporting details for this draft record."}
+            ? "Choose where this record belongs, then save its scientific fields as a draft."
+            : "Build the record one section at a time. Changes stay private until the record is reviewed and published."}
         </p>
       </header>
 
@@ -394,7 +435,8 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
           <div className={styles.bannerContent}>
             <span className={styles.bannerTitle}>Category is archived</span>
             <p className={styles.bannerText}>
-              The scientific category for this record has been archived. Restore the category in category management to edit or publish this draft.
+              The scientific category for this record has been archived. Restore
+              the category in category management to edit or publish this draft.
             </p>
             <div style={{ marginTop: "12px" }}>
               <Link href="/dashboard/records" className={styles.button}>
@@ -519,10 +561,11 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         />
       )}
 
-      {/* Step 3: Template form */}
+      {/* Create mode keeps the generated scientific form focused after classification. */}
       {!loading &&
         !error &&
         !isReadOnly &&
+        mode === "create" &&
         step === "fields" &&
         activeTemplate && (
           <RecordTemplateForm
@@ -537,6 +580,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
             serverError={saveError}
             serverValidationIssues={saveValidationIssues}
             saveSuccessMessage={saveSuccessMessage}
+            showClassificationSummary
             onChangeClassification={
               canChangeClassification(mode, recordDetail?.status)
                 ? handleChangeClassification
@@ -547,32 +591,139 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
             onDirtyChange={setIsDirty}
           />
         )}
-      {!loading &&
-        !error &&
-        !isReadOnly &&
-        mode === "edit" &&
-        recordDetail && (
-          <RecordEnglishDetails
-            record={recordDetail}
-            onSaved={setRecordDetail}
-            onDirtyChange={setEnglishDetailsDirty}
-          />
-        )}
-      {!loading &&
-        !error &&
-        !isReadOnly &&
-        mode === "edit" &&
-        recordDetail?.status === "draft" && (
-          <>
-            <RecordEvidence
-              recordId={recordDetail.id}
-              fields={activeTemplate?.fields ?? []}
+
+      {showEditWorkspace && (
+        <>
+          <section
+            className={styles.workspaceContext}
+            aria-label="Record classification"
+          >
+            <div>
+              <span className={styles.workspaceEyebrow}>Classification</span>
+              <div className={styles.workspaceClassification}>
+                <strong>{categoryName}</strong>
+                {subcategoryName && (
+                  <>
+                    <ChevronRight size={14} aria-hidden="true" />
+                    <strong>{subcategoryName}</strong>
+                  </>
+                )}
+                <ChevronRight size={14} aria-hidden="true" />
+                <span>{recordTypeName}</span>
+              </div>
+            </div>
+            {canChangeClassification(mode, recordDetail.status) && (
+              <button
+                type="button"
+                className={styles.buttonGhost}
+                onClick={handleChangeClassification}
+                disabled={isSaving}
+              >
+                <Edit3 size={14} aria-hidden="true" /> Change
+              </button>
+            )}
+          </section>
+
+          <div className={styles.workspaceLayout}>
+            <RecordWorkspaceNav
+              sections={workspaceSections}
+              activeSection={activeWorkspaceSection}
+              onSelect={setActiveWorkspaceSection}
             />
-            <RecordLocations recordId={recordDetail.id} />
-            <RecordRelationships recordId={recordDetail.id} />
-            <RecordMedia recordId={recordDetail.id} />
-          </>
-        )}
+
+            <div className={styles.workspacePanels}>
+              {workspaceSections.some(
+                (section) => section.id === "details",
+              ) && (
+                <div
+                  id="record-panel-details"
+                  role="tabpanel"
+                  aria-labelledby="record-tab-details"
+                  hidden={activeWorkspaceSection !== "details"}
+                  className={styles.workspacePanel}
+                >
+                  <RecordEnglishDetails
+                    record={recordDetail}
+                    onSaved={setRecordDetail}
+                    onDirtyChange={setEnglishDetailsDirty}
+                  />
+                </div>
+              )}
+
+              <div
+                id="record-panel-scientific"
+                role="tabpanel"
+                aria-labelledby="record-tab-scientific"
+                hidden={activeWorkspaceSection !== "scientific"}
+                className={styles.workspacePanel}
+              >
+                <RecordTemplateForm
+                  template={activeTemplate}
+                  categoryName={categoryName}
+                  subcategoryName={subcategoryName}
+                  recordTypeName={recordTypeName}
+                  initialSlug={initialSlug}
+                  initialAttributes={initialAttributes}
+                  mode={mode}
+                  isSaving={isSaving}
+                  serverError={saveError}
+                  serverValidationIssues={saveValidationIssues}
+                  saveSuccessMessage={saveSuccessMessage}
+                  showClassificationSummary={false}
+                  onChangeClassification={undefined}
+                  onSubmit={handleFormSubmit}
+                  onCancel={handleCancel}
+                  onDirtyChange={setIsDirty}
+                />
+              </div>
+
+              {recordDetail.status === "draft" && (
+                <>
+                  <div
+                    id="record-panel-sources"
+                    role="tabpanel"
+                    aria-labelledby="record-tab-sources"
+                    hidden={activeWorkspaceSection !== "sources"}
+                    className={styles.workspacePanel}
+                  >
+                    <RecordEvidence
+                      recordId={recordDetail.id}
+                      fields={activeTemplate.fields}
+                    />
+                  </div>
+                  <div
+                    id="record-panel-location"
+                    role="tabpanel"
+                    aria-labelledby="record-tab-location"
+                    hidden={activeWorkspaceSection !== "location"}
+                    className={styles.workspacePanel}
+                  >
+                    <RecordLocations recordId={recordDetail.id} />
+                  </div>
+                  <div
+                    id="record-panel-related"
+                    role="tabpanel"
+                    aria-labelledby="record-tab-related"
+                    hidden={activeWorkspaceSection !== "related"}
+                    className={styles.workspacePanel}
+                  >
+                    <RecordRelationships recordId={recordDetail.id} />
+                  </div>
+                  <div
+                    id="record-panel-media"
+                    role="tabpanel"
+                    aria-labelledby="record-tab-media"
+                    hidden={activeWorkspaceSection !== "media"}
+                    className={styles.workspacePanel}
+                  >
+                    <RecordMedia recordId={recordDetail.id} />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

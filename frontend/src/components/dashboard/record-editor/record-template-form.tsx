@@ -1,7 +1,13 @@
 "use client";
 
 import { useId, useState } from "react";
-import { AlertTriangle, CheckCircle2, ChevronRight, Edit3, Save } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
+  Edit3,
+  Save,
+} from "lucide-react";
 import type { ActiveScientificTemplate } from "@/lib/dashboard-api";
 import {
   formatFieldValueForSubmit,
@@ -24,8 +30,12 @@ type RecordTemplateFormProps = {
   serverError?: string | null;
   serverValidationIssues?: Array<{ field?: string; message: string }>;
   saveSuccessMessage?: string | null;
+  showClassificationSummary?: boolean;
   onChangeClassification?: () => void;
-  onSubmit: (data: { slug?: string | null; attributes: Record<string, unknown> }) => void;
+  onSubmit: (data: {
+    slug?: string | null;
+    attributes: Record<string, unknown>;
+  }) => void;
   onCancel: () => void;
   onDirtyChange?: (dirty: boolean) => void;
 };
@@ -42,6 +52,7 @@ export function RecordTemplateForm({
   serverError,
   serverValidationIssues = [],
   saveSuccessMessage,
+  showClassificationSummary = true,
   onChangeClassification,
   onSubmit,
   onCancel,
@@ -69,7 +80,9 @@ export function RecordTemplateForm({
     return initial;
   });
 
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
+    {},
+  );
 
   function setDirty() {
     if (onDirtyChange) onDirtyChange(true);
@@ -82,7 +95,9 @@ export function RecordTemplateForm({
   }
 
   function handleMultiChoiceToggle(key: string, option: string) {
-    const currentList = Array.isArray(attributes[key]) ? (attributes[key] as string[]) : [];
+    const currentList = Array.isArray(attributes[key])
+      ? (attributes[key] as string[])
+      : [];
     const nextList = currentList.includes(option)
       ? currentList.filter((item) => item !== option)
       : [...currentList, option];
@@ -110,7 +125,9 @@ export function RecordTemplateForm({
       return clientValidationErrors[fieldKey];
     }
     // Match server issues
-    const serverIssue = serverValidationIssues.find((i) => i.field === fieldKey);
+    const serverIssue = serverValidationIssues.find(
+      (i) => i.field === fieldKey,
+    );
     return serverIssue ? serverIssue.message : null;
   }
 
@@ -156,37 +173,44 @@ export function RecordTemplateForm({
   }
 
   return (
-    <form id={formId} onSubmit={handleSubmit} className={styles.container} noValidate>
+    <form
+      id={formId}
+      onSubmit={handleSubmit}
+      className={styles.container}
+      noValidate
+    >
       {/* Classification summary banner */}
-      <section
-        className={styles.classificationSummary}
-        aria-label="Active scientific classification"
-      >
-        <div className={styles.summaryBadges}>
-          <span className={styles.summaryLabel}>Classification:</span>
-          <span className={styles.badgePrimary}>{categoryName}</span>
-          {subcategoryName && (
-            <>
-              <ChevronRight size={14} aria-hidden="true" />
-              <span className={styles.badgePrimary}>{subcategoryName}</span>
-            </>
-          )}
-          <ChevronRight size={14} aria-hidden="true" />
-          <span className={styles.badgeAccent}>{recordTypeName}</span>
-        </div>
+      {showClassificationSummary && (
+        <section
+          className={styles.classificationSummary}
+          aria-label="Active scientific classification"
+        >
+          <div className={styles.summaryBadges}>
+            <span className={styles.summaryLabel}>Classification:</span>
+            <span className={styles.badgePrimary}>{categoryName}</span>
+            {subcategoryName && (
+              <>
+                <ChevronRight size={14} aria-hidden="true" />
+                <span className={styles.badgePrimary}>{subcategoryName}</span>
+              </>
+            )}
+            <ChevronRight size={14} aria-hidden="true" />
+            <span className={styles.badgeAccent}>{recordTypeName}</span>
+          </div>
 
-        {onChangeClassification && (
-          <button
-            type="button"
-            className={styles.buttonGhost}
-            onClick={onChangeClassification}
-            disabled={isSaving}
-          >
-            <Edit3 size={14} aria-hidden="true" />
-            <span>Change classification</span>
-          </button>
-        )}
-      </section>
+          {onChangeClassification && (
+            <button
+              type="button"
+              className={styles.buttonGhost}
+              onClick={onChangeClassification}
+              disabled={isSaving}
+            >
+              <Edit3 size={14} aria-hidden="true" />
+              <span>Change classification</span>
+            </button>
+          )}
+        </section>
+      )}
 
       {/* Success notification banner */}
       {saveSuccessMessage && (
@@ -221,15 +245,19 @@ export function RecordTemplateForm({
       )}
 
       {/* Attributes Form Card */}
-      <section className={styles.stepCard} aria-labelledby="scientific-attributes-heading">
+      <section
+        className={styles.stepCard}
+        aria-labelledby="scientific-attributes-heading"
+      >
         <header className={styles.stepHeader}>
           <span className={styles.stepNumber}>Scientific attributes</span>
           <h2 id="scientific-attributes-heading" className={styles.stepTitle}>
             {template.name}
           </h2>
           <p className={styles.stepDescription}>
-            Complete the scientific facts for this draft record. Required fields are flagged and
-            displayed first. Additional attributes can be updated at any time before review.
+            Complete the scientific facts for this draft record. Required fields
+            are flagged and displayed first. Additional attributes can be
+            updated at any time before review.
           </p>
         </header>
 
@@ -259,7 +287,8 @@ export function RecordTemplateForm({
                 disabled={isSaving}
               />
               <span id={`${formId}-slug-help`} className={styles.fieldHelp}>
-                Use a unique URL-friendly identifier with lowercase letters, numbers, and hyphens, or leave it blank.
+                Use a unique URL-friendly identifier with lowercase letters,
+                numbers, and hyphens, or leave it blank.
               </span>
               {slugError && (
                 <span className={styles.fieldError} role="alert">
@@ -272,211 +301,317 @@ export function RecordTemplateForm({
           {/* Dynamic template fields grid */}
           {sortedFields.length === 0 ? (
             <p className={styles.fieldHelp} style={{ marginBottom: "16px" }}>
-              This general geological record uses the common sections below (record details, sources, locations, related items, and media) rather than category-specific attributes.
+              This general geological record uses the common sections below
+              (record details, sources, locations, related items, and media)
+              rather than category-specific attributes.
             </p>
           ) : (
             <div className={styles.formGrid}>
               {sortedFields.map((field) => {
-              const fieldError = getFieldError(field.stableKey);
-              const fieldId = `${formId}-field-${field.stableKey}`;
-              const helpId = `${fieldId}-help`;
-              const value = attributes[field.stableKey];
+                const fieldError = getFieldError(field.stableKey);
+                const fieldId = `${formId}-field-${field.stableKey}`;
+                const helpId = `${fieldId}-help`;
+                const value = attributes[field.stableKey];
 
-              return (
-                <div
-                  key={field.id}
-                  className={field.dataType === "long_text" ? styles.formGridFull : undefined}
-                >
-                  <div className={styles.fieldGroup}>
-                    <div className={styles.fieldLabelRow}>
-                      <label htmlFor={fieldId} className={styles.fieldLabel}>
-                        {field.label}
-                        {field.required && (
-                          <span className={styles.requiredTag} aria-label="Required field">
-                            Required *
-                          </span>
+                return (
+                  <div
+                    key={field.id}
+                    className={
+                      field.dataType === "long_text"
+                        ? styles.formGridFull
+                        : undefined
+                    }
+                  >
+                    <div className={styles.fieldGroup}>
+                      <div className={styles.fieldLabelRow}>
+                        <label htmlFor={fieldId} className={styles.fieldLabel}>
+                          {field.label}
+                          {field.required && (
+                            <span
+                              className={styles.requiredTag}
+                              aria-label="Required field"
+                            >
+                              Required *
+                            </span>
+                          )}
+                        </label>
+                        {field.unit && (
+                          <span className={styles.unitBadge}>{field.unit}</span>
                         )}
-                      </label>
-                      {field.unit && <span className={styles.unitBadge}>{field.unit}</span>}
-                    </div>
+                      </div>
 
-                    {/* text */}
-                    {field.dataType === "text" && (
-                      <input
-                        id={fieldId}
-                        type="text"
-                        className={fieldError ? styles.inputError : styles.input}
-                        value={typeof value === "string" ? value : ""}
-                        onChange={(e) => handleAttributeChange(field.stableKey, e.target.value)}
-                        onBlur={() =>
-                          setTouchedFields((prev) => ({ ...prev, [field.stableKey]: true }))
-                        }
-                        aria-describedby={field.helpText ? helpId : undefined}
-                        aria-invalid={Boolean(fieldError)}
-                        disabled={isSaving}
-                      />
-                    )}
-
-                    {/* long_text */}
-                    {field.dataType === "long_text" && (
-                      <textarea
-                        id={fieldId}
-                        rows={4}
-                        className={fieldError ? styles.textareaError : styles.textarea}
-                        value={typeof value === "string" ? value : ""}
-                        onChange={(e) => handleAttributeChange(field.stableKey, e.target.value)}
-                        onBlur={() =>
-                          setTouchedFields((prev) => ({ ...prev, [field.stableKey]: true }))
-                        }
-                        aria-describedby={field.helpText ? helpId : undefined}
-                        aria-invalid={Boolean(fieldError)}
-                        disabled={isSaving}
-                      />
-                    )}
-
-                    {/* integer */}
-                    {field.dataType === "integer" && (
-                      <input
-                        id={fieldId}
-                        type="number"
-                        step="1"
-                        className={fieldError ? styles.inputError : styles.input}
-                        value={value !== undefined && value !== null ? String(value) : ""}
-                        onChange={(e) => handleAttributeChange(field.stableKey, e.target.value)}
-                        onBlur={() =>
-                          setTouchedFields((prev) => ({ ...prev, [field.stableKey]: true }))
-                        }
-                        aria-describedby={field.helpText ? helpId : undefined}
-                        aria-invalid={Boolean(fieldError)}
-                        disabled={isSaving}
-                      />
-                    )}
-
-                    {/* decimal */}
-                    {field.dataType === "decimal" && (
-                      <input
-                        id={fieldId}
-                        type="number"
-                        step="any"
-                        className={fieldError ? styles.inputError : styles.input}
-                        value={value !== undefined && value !== null ? String(value) : ""}
-                        onChange={(e) => handleAttributeChange(field.stableKey, e.target.value)}
-                        onBlur={() =>
-                          setTouchedFields((prev) => ({ ...prev, [field.stableKey]: true }))
-                        }
-                        aria-describedby={field.helpText ? helpId : undefined}
-                        aria-invalid={Boolean(fieldError)}
-                        disabled={isSaving}
-                      />
-                    )}
-
-                    {/* boolean */}
-                    {field.dataType === "boolean" && (
-                      <label className={styles.checkboxLabel}>
+                      {/* text */}
+                      {field.dataType === "text" && (
                         <input
                           id={fieldId}
-                          type="checkbox"
-                          checked={Boolean(value)}
-                          onChange={(e) => handleAttributeChange(field.stableKey, e.target.checked)}
-                          className={styles.checkboxInput}
+                          type="text"
+                          className={
+                            fieldError ? styles.inputError : styles.input
+                          }
+                          value={typeof value === "string" ? value : ""}
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              field.stableKey,
+                              e.target.value,
+                            )
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({
+                              ...prev,
+                              [field.stableKey]: true,
+                            }))
+                          }
+                          aria-describedby={field.helpText ? helpId : undefined}
+                          aria-invalid={Boolean(fieldError)}
                           disabled={isSaving}
                         />
-                        <span className={styles.checkboxText}>
-                          {field.label}: {Boolean(value) ? "Yes / Confirmed" : "No / Unconfirmed"}
-                        </span>
-                      </label>
-                    )}
+                      )}
 
-                    {/* date */}
-                    {field.dataType === "date" && (
-                      <input
-                        id={fieldId}
-                        type="date"
-                        className={fieldError ? styles.inputError : styles.input}
-                        value={typeof value === "string" ? value : ""}
-                        onChange={(e) => handleAttributeChange(field.stableKey, e.target.value)}
-                        onBlur={() =>
-                          setTouchedFields((prev) => ({ ...prev, [field.stableKey]: true }))
-                        }
-                        aria-describedby={field.helpText ? helpId : undefined}
-                        aria-invalid={Boolean(fieldError)}
-                        disabled={isSaving}
-                      />
-                    )}
+                      {/* long_text */}
+                      {field.dataType === "long_text" && (
+                        <textarea
+                          id={fieldId}
+                          rows={4}
+                          className={
+                            fieldError ? styles.textareaError : styles.textarea
+                          }
+                          value={typeof value === "string" ? value : ""}
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              field.stableKey,
+                              e.target.value,
+                            )
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({
+                              ...prev,
+                              [field.stableKey]: true,
+                            }))
+                          }
+                          aria-describedby={field.helpText ? helpId : undefined}
+                          aria-invalid={Boolean(fieldError)}
+                          disabled={isSaving}
+                        />
+                      )}
 
-                    {/* choice */}
-                    {field.dataType === "choice" && (
-                      <select
-                        id={fieldId}
-                        className={fieldError ? styles.selectError : styles.select}
-                        value={typeof value === "string" ? value : ""}
-                        onChange={(e) => handleAttributeChange(field.stableKey, e.target.value)}
-                        onBlur={() =>
-                          setTouchedFields((prev) => ({ ...prev, [field.stableKey]: true }))
-                        }
-                        aria-describedby={field.helpText ? helpId : undefined}
-                        aria-invalid={Boolean(fieldError)}
-                        disabled={isSaving}
-                      >
-                        <option value="">Select an option…</option>
-                        {Array.isArray(field.validation.options) &&
-                          field.validation.options
-                            .filter((o): o is string => typeof o === "string")
-                            .map((opt) => (
-                              <option key={opt} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                      </select>
-                    )}
+                      {/* integer */}
+                      {field.dataType === "integer" && (
+                        <input
+                          id={fieldId}
+                          type="number"
+                          step="1"
+                          className={
+                            fieldError ? styles.inputError : styles.input
+                          }
+                          value={
+                            value !== undefined && value !== null
+                              ? String(value)
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              field.stableKey,
+                              e.target.value,
+                            )
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({
+                              ...prev,
+                              [field.stableKey]: true,
+                            }))
+                          }
+                          aria-describedby={field.helpText ? helpId : undefined}
+                          aria-invalid={Boolean(fieldError)}
+                          disabled={isSaving}
+                        />
+                      )}
 
-                    {/* multi_choice */}
-                    {field.dataType === "multi_choice" && (
-                      <fieldset className={styles.fieldset} aria-describedby={field.helpText ? helpId : undefined}>
-                        <legend className={styles.legend}>{field.label} selections</legend>
-                        <div className={styles.multiChoiceGrid}>
+                      {/* decimal */}
+                      {field.dataType === "decimal" && (
+                        <input
+                          id={fieldId}
+                          type="number"
+                          step="any"
+                          className={
+                            fieldError ? styles.inputError : styles.input
+                          }
+                          value={
+                            value !== undefined && value !== null
+                              ? String(value)
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              field.stableKey,
+                              e.target.value,
+                            )
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({
+                              ...prev,
+                              [field.stableKey]: true,
+                            }))
+                          }
+                          aria-describedby={field.helpText ? helpId : undefined}
+                          aria-invalid={Boolean(fieldError)}
+                          disabled={isSaving}
+                        />
+                      )}
+
+                      {/* boolean */}
+                      {field.dataType === "boolean" && (
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            id={fieldId}
+                            type="checkbox"
+                            checked={Boolean(value)}
+                            onChange={(e) =>
+                              handleAttributeChange(
+                                field.stableKey,
+                                e.target.checked,
+                              )
+                            }
+                            className={styles.checkboxInput}
+                            disabled={isSaving}
+                          />
+                          <span className={styles.checkboxText}>
+                            {field.label}:{" "}
+                            {Boolean(value)
+                              ? "Yes / Confirmed"
+                              : "No / Unconfirmed"}
+                          </span>
+                        </label>
+                      )}
+
+                      {/* date */}
+                      {field.dataType === "date" && (
+                        <input
+                          id={fieldId}
+                          type="date"
+                          className={
+                            fieldError ? styles.inputError : styles.input
+                          }
+                          value={typeof value === "string" ? value : ""}
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              field.stableKey,
+                              e.target.value,
+                            )
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({
+                              ...prev,
+                              [field.stableKey]: true,
+                            }))
+                          }
+                          aria-describedby={field.helpText ? helpId : undefined}
+                          aria-invalid={Boolean(fieldError)}
+                          disabled={isSaving}
+                        />
+                      )}
+
+                      {/* choice */}
+                      {field.dataType === "choice" && (
+                        <select
+                          id={fieldId}
+                          className={
+                            fieldError ? styles.selectError : styles.select
+                          }
+                          value={typeof value === "string" ? value : ""}
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              field.stableKey,
+                              e.target.value,
+                            )
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({
+                              ...prev,
+                              [field.stableKey]: true,
+                            }))
+                          }
+                          aria-describedby={field.helpText ? helpId : undefined}
+                          aria-invalid={Boolean(fieldError)}
+                          disabled={isSaving}
+                        >
+                          <option value="">Select an option…</option>
                           {Array.isArray(field.validation.options) &&
                             field.validation.options
                               .filter((o): o is string => typeof o === "string")
-                              .map((opt) => {
-                                const selectedList = Array.isArray(value) ? (value as string[]) : [];
-                                const isChecked = selectedList.includes(opt);
-                                return (
-                                  <label key={opt} className={styles.checkboxLabel}>
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={() => handleMultiChoiceToggle(field.stableKey, opt)}
-                                      className={styles.checkboxInput}
-                                      disabled={isSaving}
-                                    />
-                                    <span className={styles.checkboxText}>{opt}</span>
-                                  </label>
-                                );
-                              })}
-                        </div>
-                      </fieldset>
-                    )}
+                              .map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                        </select>
+                      )}
 
-                    {/* Help text */}
-                    {field.helpText && (
-                      <span id={helpId} className={styles.fieldHelp}>
-                        {field.helpText}
-                      </span>
-                    )}
+                      {/* multi_choice */}
+                      {field.dataType === "multi_choice" && (
+                        <fieldset
+                          className={styles.fieldset}
+                          aria-describedby={field.helpText ? helpId : undefined}
+                        >
+                          <legend className={styles.legend}>
+                            {field.label} selections
+                          </legend>
+                          <div className={styles.multiChoiceGrid}>
+                            {Array.isArray(field.validation.options) &&
+                              field.validation.options
+                                .filter(
+                                  (o): o is string => typeof o === "string",
+                                )
+                                .map((opt) => {
+                                  const selectedList = Array.isArray(value)
+                                    ? (value as string[])
+                                    : [];
+                                  const isChecked = selectedList.includes(opt);
+                                  return (
+                                    <label
+                                      key={opt}
+                                      className={styles.checkboxLabel}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() =>
+                                          handleMultiChoiceToggle(
+                                            field.stableKey,
+                                            opt,
+                                          )
+                                        }
+                                        className={styles.checkboxInput}
+                                        disabled={isSaving}
+                                      />
+                                      <span className={styles.checkboxText}>
+                                        {opt}
+                                      </span>
+                                    </label>
+                                  );
+                                })}
+                          </div>
+                        </fieldset>
+                      )}
 
-                    {/* Field error */}
-                    {fieldError && (
-                      <span className={styles.fieldError} role="alert">
-                        {fieldError}
-                      </span>
-                    )}
+                      {/* Help text */}
+                      {field.helpText && (
+                        <span id={helpId} className={styles.fieldHelp}>
+                          {field.helpText}
+                        </span>
+                      )}
+
+                      {/* Field error */}
+                      {fieldError && (
+                        <span className={styles.fieldError} role="alert">
+                          {fieldError}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
 
           {/* Form Actions */}
           <div className={styles.actionsBar}>
@@ -492,9 +627,19 @@ export function RecordTemplateForm({
             </div>
 
             <div className={styles.actionGroup}>
-              <button type="submit" className={styles.buttonPrimary} disabled={isSaving}>
+              <button
+                type="submit"
+                className={styles.buttonPrimary}
+                disabled={isSaving}
+              >
                 <Save aria-hidden="true" />
-                <span>{isSaving ? "Saving draft…" : mode === "create" ? "Save draft record" : "Save changes"}</span>
+                <span>
+                  {isSaving
+                    ? "Saving draft…"
+                    : mode === "create"
+                      ? "Save draft record"
+                      : "Save changes"}
+                </span>
               </button>
             </div>
           </div>
