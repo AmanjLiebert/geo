@@ -7,12 +7,19 @@ import {
   Images,
   Link2,
   MapPin,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 import styles from "./record-editor.module.css";
 
 export type RecordWorkspaceSectionId =
-  "details" | "scientific" | "sources" | "location" | "related" | "media";
+  | "details"
+  | "scientific"
+  | "sources"
+  | "location"
+  | "related"
+  | "media"
+  | "review";
 
 export type RecordWorkspaceSection = {
   id: RecordWorkspaceSectionId;
@@ -27,6 +34,7 @@ const icons: Record<RecordWorkspaceSectionId, LucideIcon> = {
   location: MapPin,
   related: Link2,
   media: Images,
+  review: ClipboardCheck,
 };
 
 export const defaultRecordWorkspaceSections: RecordWorkspaceSection[] = [
@@ -59,6 +67,11 @@ export const defaultRecordWorkspaceSections: RecordWorkspaceSection[] = [
     id: "media",
     label: "Images and files",
     description: "Visual evidence and documents",
+  },
+  {
+    id: "review",
+    label: "Review and publish",
+    description: "Readiness and approval",
   },
 ];
 

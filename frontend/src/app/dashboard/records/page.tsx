@@ -136,17 +136,18 @@ export default function DashboardRecordsPage() {
         <ul className={styles.recordList} aria-label="Scientific records">
           {records.map((record) => {
             const editable = record.status === "draft" || record.status === "unclassified_draft";
+            const manageable = record.status === "in_review" || record.status === "published";
             const editUrl = `/dashboard/records/edit?recordId=${encodeURIComponent(record.id)}`;
             return (
               <li key={record.id} className={styles.recordRow}>
                 <div className={styles.thumbnail}><RecordThumbnail mediaAssetId={record.primaryImageMediaAssetId} alt={record.title ? `${record.title} preview` : "Record preview"} /></div>
                 <div className={styles.identity}>
-                  <h2>{editable ? <Link href={editUrl}>{record.title || "Untitled record"}</Link> : record.title || "Untitled record"}</h2>
+                  <h2>{editable || manageable ? <Link href={editUrl}>{record.title || "Untitled record"}</Link> : record.title || "Untitled record"}</h2>
                   <p>{record.categoryName || "Not classified"}</p>
                 </div>
                 <div className={styles.state}><span className={`${styles.badge} ${getStatusClass(record.status)}`}>{formatRecordStatus(record.status)}</span>{!record.isClassified && <span className={styles.needsClassification}>Needs category</span>}</div>
                 <time className={styles.updated} dateTime={record.updatedAt}><span>Updated</span>{formatDate(record.updatedAt)}</time>
-                <div className={styles.actions}>{editable && <Link href={editUrl} className={styles.editButton}>{record.status === "unclassified_draft" ? "Classify" : "Edit"}</Link>}</div>
+                <div className={styles.actions}>{(editable || manageable) && <Link href={editUrl} className={styles.editButton}>{record.status === "unclassified_draft" ? "Classify" : record.status === "in_review" ? "Review" : record.status === "published" ? "Manage" : "Edit"}</Link>}</div>
               </li>
             );
           })}

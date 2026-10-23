@@ -217,8 +217,9 @@ describe('ScientificTrustService record attachments', () => {
     expect(await service.listEvidence(recordId)).toEqual({ items: [] });
     const [sql, params] = query.mock.calls[1] as [string, unknown[]];
     expect(sql).not.toMatch(/SELECT\s+\*/i);
-    expect(sql).not.toContain('created_by_user_id');
-    expect(params).toEqual([recordId]);
+    expect(sql).not.toContain('"createdByUserId"');
+    expect(sql).toContain('AS "canVerify"');
+    expect(params).toEqual([recordId, null]);
   });
 
   it('rejects evidence writes when category branch is archived, and allows them after restoration', async () => {

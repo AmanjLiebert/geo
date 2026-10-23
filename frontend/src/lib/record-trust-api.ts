@@ -17,6 +17,7 @@ export type RecordEvidenceItem = {
   fieldKey: string | null;
   notes: string | null;
   verificationStatus: string;
+  canVerify: boolean;
 };
 export type RecordLocationItem = {
   id: string;
@@ -57,6 +58,14 @@ export async function searchReferences(
   });
 }
 
+export async function verifyReference(referenceId: string): Promise<void> {
+  const response = await requestRecordResource(
+    `/api/v1/references/${encodeURIComponent(referenceId)}/verify`,
+    "POST",
+  );
+  if (!object(response) || typeof response.id !== "string") invalid();
+}
+
 export async function createReference(data: {
   sourceType: string;
   title: string;
@@ -94,7 +103,8 @@ export async function listRecordEvidence(
       typeof item.evidenceKind !== "string" ||
       (item.fieldKey !== null && typeof item.fieldKey !== "string") ||
       (item.notes !== null && typeof item.notes !== "string") ||
-      typeof item.verificationStatus !== "string"
+      typeof item.verificationStatus !== "string" ||
+      typeof item.canVerify !== "boolean"
     )
       return invalid();
     return item as RecordEvidenceItem;

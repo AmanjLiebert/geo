@@ -34,6 +34,7 @@ import { RecordRelationships } from "./record-relationships";
 import { RecordMedia } from "./record-media";
 import { RecordEvidence } from "./record-evidence";
 import { RecordLocations } from "./record-locations";
+import { RecordReviewPanel } from "./record-review-panel";
 import {
   defaultRecordWorkspaceSections,
   RecordWorkspaceNav,
@@ -99,6 +100,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
 
   const [isDirty, setIsDirty] = useState(false);
   const [englishDetailsDirty, setEnglishDetailsDirty] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Warn on navigation or tab close if form has unsaved edits
   useEffect(() => {
@@ -118,6 +120,9 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
     let ignore = false;
 
     async function loadData() {
+      setLoading(true);
+      setError(null);
+      setActiveTemplate(null);
       try {
         const catRes = await listStructureCategories();
         if (ignore) return;
@@ -204,7 +209,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
     return () => {
       ignore = true;
     };
-  }, [mode, recordId]);
+  }, [mode, recordId, reloadKey]);
 
   // Handle classification confirmation from Step 1 & 2
   async function handleConfirmStructure(sel: StructureSelection) {
@@ -526,30 +531,41 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
 
       {/* Non-editable record state for published, archived, or in-review records */}
       {!loading && !error && isNonEditable && recordDetail && (
-        <div className={styles.bannerError} role="status">
-          <ShieldAlert className={styles.bannerIcon} aria-hidden="true" />
-          <div className={styles.bannerContent}>
-            <span className={styles.bannerTitle}>
-              {recordDetail.status === "published"
-                ? "This scientific record is published"
-                : recordDetail.status === "archived"
-                  ? "This scientific record is archived"
-                  : "This scientific record is in review"}
-            </span>
-            <p className={styles.bannerText}>
-              {recordDetail.status === "published"
-                ? "Published scientific records cannot be modified in the draft editor."
-                : recordDetail.status === "archived"
-                  ? "Archived records are preserved in read-only state and cannot be modified."
-                  : "Records currently under peer review cannot be modified as drafts."}
-            </p>
-            <div style={{ marginTop: "12px" }}>
-              <Link href="/dashboard/records" className={styles.button}>
-                Return to records list
-              </Link>
+        <>
+          <div className={styles.bannerError} role="status">
+            <ShieldAlert className={styles.bannerIcon} aria-hidden="true" />
+            <div className={styles.bannerContent}>
+              <span className={styles.bannerTitle}>
+                {recordDetail.status === "published"
+                  ? "This scientific record is published"
+                  : recordDetail.status === "archived"
+                    ? "This scientific record is archived"
+                    : "This scientific record is in review"}
+              </span>
+              <p className={styles.bannerText}>
+                {recordDetail.status === "published"
+                  ? "The published version is read-only until it is returned to draft."
+                  : recordDetail.status === "archived"
+                    ? "Archived records are preserved in read-only state."
+                    : "The draft is locked while its publication decision is pending."}
+              </p>
+              {recordDetail.status === "archived" && (
+                <div style={{ marginTop: "12px" }}>
+                  <Link href="/dashboard/records" className={styles.button}>
+                    Return to records list
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+          {(recordDetail.status === "in_review" || recordDetail.status === "published") && (
+            <RecordReviewPanel
+              recordId={recordDetail.id}
+              status={recordDetail.status}
+              onRecordChanged={() => setReloadKey((value) => value + 1)}
+            />
+          )}
+        </>
       )}
 
       {/* Step 1 & 2: Guided Structure Selection (Create mode or Unclassified draft) */}
@@ -717,6 +733,20 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                     className={styles.workspacePanel}
                   >
                     <RecordMedia recordId={recordDetail.id} />
+                  </div>
+                  <div
+                    id="record-panel-review"
+                    role="tabpanel"
+                    aria-labelledby="record-tab-review"
+                    hidden={activeWorkspaceSection !== "review"}
+                    className={styles.workspacePanel}
+                  >
+                    <RecordReviewPanel
+                      recordId={recordDetail.id}
+                      status={recordDetail.status}
+                      onRecordChanged={() => setReloadKey((value) => value + 1)}
+                      onSelectSection={setActiveWorkspaceSection}
+                    />
                   </div>
                 </>
               )}

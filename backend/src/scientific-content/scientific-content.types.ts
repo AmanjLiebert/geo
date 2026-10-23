@@ -9,6 +9,7 @@ export enum ScientificRecordStatus {
 export enum ContentTranslationStatus {
   DRAFT = 'draft',
   REVIEWED = 'reviewed',
+  PUBLISHED = 'published',
 }
 
 export enum FieldDataType {

@@ -24,8 +24,10 @@ describe("RecordWorkspaceNav", () => {
     expect(html).toContain("Location");
     expect(html).toContain("Related items");
     expect(html).toContain("Images and files");
+    expect(html).toContain("Review and publish");
     expect(html).toContain('aria-selected="true"');
     expect(html).toContain('aria-controls="record-panel-media"');
+    expect(html).toContain('aria-controls="record-panel-review"');
     expect(html).not.toContain('tabindex="-1"');
   });
 });

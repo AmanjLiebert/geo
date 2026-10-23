@@ -48,8 +48,8 @@ export class ScientificTrustController {
 
   @Get('records/:id/evidence')
   @Header('Cache-Control', 'private, no-store')
-  listEvidence(@Param('id', ParseUUIDPipe) id: string) {
-    return this.trust.listEvidence(id);
+  listEvidence(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) id: string) {
+    return this.trust.listEvidence(id, auth.user.id);
   }
 
   @Post('records/:id/locations')

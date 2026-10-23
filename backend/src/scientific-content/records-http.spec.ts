@@ -45,6 +45,11 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     get: vi.fn(),
     update: vi.fn(),
     upsertTranslation: vi.fn(),
+    readiness: vi.fn(),
+    submitForReview: vi.fn(),
+    publish: vi.fn(),
+    requestChanges: vi.fn(),
+    unpublish: vi.fn(),
   };
 
   const mockResearchService = { list: vi.fn() };
@@ -58,6 +63,8 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     addLocation: vi.fn(),
     addRelationship: vi.fn(),
     createReference: vi.fn(),
+    verifyReference: vi.fn(),
+    publicationIssues: vi.fn(),
   };
   const mockMediaService = {
     listRecordAttachments: vi.fn(),
@@ -231,6 +238,14 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     mockTrustService.listRelationships.mockResolvedValue({ items: [] });
     mockMediaService.listRecordAttachments.mockResolvedValue({ items: [] });
     mockRecordsService.upsertTranslation.mockResolvedValue({ id: validRecordId });
+    mockRecordsService.readiness.mockResolvedValue({
+      recordId: validRecordId,
+      status: 'draft',
+      isOwner: true,
+      readyForReview: true,
+      publishableByCurrentUser: false,
+      issues: [],
+    });
     mockTrustService.addRelationship.mockResolvedValue({ id: validRecordId });
     mockTrustService.createReference.mockResolvedValue({ id: validRecordId });
     mockTrustService.addLocation.mockResolvedValue({ id: validRecordId });
@@ -277,6 +292,10 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       updatedAt: '2026-03-01T00:00:00.000Z',
       translations: [],
     });
+    mockRecordsService.submitForReview.mockResolvedValue({ id: validRecordId });
+    mockRecordsService.publish.mockResolvedValue({ id: validRecordId });
+    mockRecordsService.requestChanges.mockResolvedValue({ id: validRecordId });
+    mockRecordsService.unpublish.mockResolvedValue({ id: validRecordId });
     mockScientificStructureService.listCategories.mockResolvedValue({
       items: [
         {
@@ -981,6 +1000,114 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       expect(response.statusCode).toBe(401);
     });
   });
+  describe('record readiness and publication lifecycle boundary', () => {
+    it.each(['teacher-session', 'admin-session'])(
+      'allows %s to read actionable readiness',
+      async (session) => {
+        const response = await app.inject({
+          method: 'GET',
+          url: `/api/v1/records/${validRecordId}/readiness`,
+          cookies: { gk_session: session },
+        });
+        expect(response.statusCode).toBe(200);
+        expect(mockRecordsService.readiness).toHaveBeenCalledWith(
+          session === 'admin-session' ? 'admin-1' : 'teacher-1',
+          validRecordId,
+        );
+      },
+    );
+
+    it('denies readiness to visitors and signed-out users', async () => {
+      const visitor = await app.inject({
+        method: 'GET',
+        url: `/api/v1/records/${validRecordId}/readiness`,
+        cookies: { gk_session: 'visitor-session' },
+      });
+      const signedOut = await app.inject({
+        method: 'GET',
+        url: `/api/v1/records/${validRecordId}/readiness`,
+      });
+      expect(visitor.statusCode).toBe(403);
+      expect(signedOut.statusCode).toBe(401);
+    });
+
+    it('allows a CSRF-protected review submission', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/records/${validRecordId}/submit-review`,
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+      });
+      expect(response.statusCode).toBe(201);
+      expect(mockRecordsService.submitForReview).toHaveBeenCalledWith('teacher-1', validRecordId);
+    });
+
+    it.each(['submit-review', 'request-changes', 'unpublish'])(
+      'rejects %s without CSRF',
+      async (action) => {
+        const response = await app.inject({
+          method: 'POST',
+          url: `/api/v1/records/${validRecordId}/${action}`,
+          cookies: { gk_session: 'teacher-session' },
+          payload: action === 'request-changes' ? { reason: 'Clarify the source.' } : undefined,
+        });
+        expect(response.statusCode).toBe(403);
+      },
+    );
+
+    it('allows an independent reviewer to return a record with a bounded reason', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/records/${validRecordId}/request-changes`,
+        cookies: { gk_session: 'admin-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+        payload: { reason: 'Clarify the cited field observation.' },
+      });
+      expect(response.statusCode).toBe(201);
+      expect(mockRecordsService.requestChanges).toHaveBeenCalledWith(
+        'admin-1',
+        validRecordId,
+        'Clarify the cited field observation.',
+      );
+    });
+
+    it('rejects an empty return reason at the request boundary', async () => {
+      for (const reason of ['', '   ']) {
+        const response = await app.inject({
+          method: 'POST',
+          url: `/api/v1/records/${validRecordId}/request-changes`,
+          cookies: { gk_session: 'admin-session', gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+          payload: { reason },
+        });
+        expect(response.statusCode).toBe(400);
+      }
+    });
+
+    it.each(['publish', 'unpublish'])('requires recent authentication for %s', async (action) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/v1/records/${validRecordId}/${action}`,
+        cookies: { gk_session: 'stale-teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+      });
+      expect(response.statusCode).toBe(403);
+    });
+
+    it.each(['publish', 'unpublish'])(
+      'allows a recently authenticated authorized user to %s',
+      async (action) => {
+        const response = await app.inject({
+          method: 'POST',
+          url: `/api/v1/records/${validRecordId}/${action}`,
+          cookies: { gk_session: 'admin-session', gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+        });
+        expect(response.statusCode).toBe(201);
+      },
+    );
+  });
+
   describe('category creation boundary', () => {
     const payload = {
       title: 'New category',

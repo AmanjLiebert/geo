@@ -16,6 +16,7 @@ import { CurrentAuth, HighRiskAction, RequirePermissions } from '../identity/acc
 import { AuthContext } from '../identity/auth-context';
 import { CreateRecordDto } from './dto/create-record.dto';
 import { RecordListQueryDto } from './dto/record-list-query.dto';
+import { RequestRecordChangesDto } from './dto/request-record-changes.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 import { localePattern, UpsertRecordTranslationDto } from './dto/upsert-record-translation.dto';
 import { RecordsService } from './records.service';
@@ -78,6 +79,12 @@ export class RecordsController {
     return this.records.validate(recordId);
   }
 
+  @Get(':id/readiness')
+  @Header('Cache-Control', 'private, no-store')
+  readiness(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) recordId: string) {
+    return this.records.readiness(auth.user.id, recordId);
+  }
+
   @Post(':id/submit-review')
   submitForReview(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) recordId: string) {
     return this.records.submitForReview(auth.user.id, recordId);
@@ -88,6 +95,23 @@ export class RecordsController {
   @HighRiskAction()
   publish(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) recordId: string) {
     return this.records.publish(auth.user.id, recordId);
+  }
+
+  @Post(':id/request-changes')
+  @RequirePermissions(Permission.PUBLISH_SCIENTIFIC_CONTENT)
+  requestChanges(
+    @CurrentAuth() auth: AuthContext,
+    @Param('id', ParseUUIDPipe) recordId: string,
+    @Body() input: RequestRecordChangesDto,
+  ) {
+    return this.records.requestChanges(auth.user.id, recordId, input.reason);
+  }
+
+  @Post(':id/unpublish')
+  @RequirePermissions(Permission.PUBLISH_SCIENTIFIC_CONTENT)
+  @HighRiskAction()
+  unpublish(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) recordId: string) {
+    return this.records.unpublish(auth.user.id, recordId);
   }
 
   @Post(':id/archive')

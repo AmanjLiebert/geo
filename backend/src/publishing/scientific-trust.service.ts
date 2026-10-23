@@ -163,16 +163,17 @@ export class ScientificTrustService {
     return { id, recordId, ...input };
   }
 
-  async listEvidence(recordId: string) {
+  async listEvidence(recordId: string, actorUserId?: string) {
     await this.assertRecordExists(this.dataSource, recordId);
     const rows = (await this.dataSource.query(
       `SELECT e.id, e.reference_id AS "referenceId", e.evidence_kind AS "evidenceKind",
          e.claim_key AS "claimKey", e.field_key AS "fieldKey", e.notes, e.created_at AS "createdAt",
          r.title AS "referenceTitle", r.source_type AS "sourceType",
-         r.verification_status AS "verificationStatus"
+         r.verification_status AS "verificationStatus",
+         (r.created_by_user_id IS DISTINCT FROM $2::uuid) AS "canVerify"
        FROM record_evidence e JOIN scientific_references r ON r.id = e.reference_id
        WHERE e.record_id = $1 ORDER BY e.created_at, e.id`,
-      [recordId],
+      [recordId, actorUserId ?? null],
     )) as unknown as Record<string, unknown>[];
     return { items: rows };
   }
@@ -333,8 +334,12 @@ export class ScientificTrustService {
     return { items: rows };
   }
 
-  async publicationIssues(recordId: string, reviewerUserId?: string) {
-    const rows = (await this.dataSource.query(
+  async publicationIssues(
+    recordId: string,
+    reviewerUserId?: string,
+    executor: DataSource | EntityManager = this.dataSource,
+  ) {
+    const rows = (await executor.query(
       `SELECT id, owner_user_id, category_id, record_type_id, template_version_id
        FROM scientific_records WHERE id = $1`,
       [recordId],
@@ -357,7 +362,7 @@ export class ScientificTrustService {
       });
     }
     if (record.category_id) {
-      const categoryRows = (await this.dataSource.query(
+      const categoryRows = (await executor.query(
         `SELECT 1 FROM categories c LEFT JOIN categories p ON p.id = c.parent_id
          WHERE c.id = $1 AND c.status = 'active' AND c.publication_status = 'published'
            AND (p.id IS NULL OR (p.status = 'active' AND p.publication_status = 'published'))`,
@@ -378,19 +383,27 @@ export class ScientificTrustService {
         message: 'The author cannot publish their own record.',
       });
     }
-    const translations = (await this.dataSource.query(
-      `SELECT count(*)::int AS count FROM record_translations WHERE record_id = $1 AND status = 'reviewed'`,
-      [recordId],
+    const independentReviewerId =
+      reviewerUserId && reviewerUserId !== record.owner_user_id ? reviewerUserId : null;
+    const translations = (await executor.query(
+      `SELECT count(*)::int AS count
+       FROM record_translations
+       WHERE record_id = $1 AND locale = 'en'
+         AND length(btrim(title)) > 0
+         AND length(btrim(COALESCE(summary, ''))) > 0
+         AND length(btrim(COALESCE(description, ''))) > 0
+         AND ($2::uuid IS NULL OR translator_user_id IS DISTINCT FROM $2::uuid)`,
+      [recordId, independentReviewerId],
     )) as unknown as Array<{ count: number }>;
     if ((translations[0]?.count ?? 0) < 1) {
       issues.push({
         field: 'translations',
-        code: 'reviewed_required',
-        message: 'At least one reviewed translation is required.',
+        code: 'complete_english_details_required',
+        message: 'Complete English title, summary, and description are required.',
       });
     }
     if (record.record_type_id) {
-      const evidence = (await this.dataSource.query(
+      const evidence = (await executor.query(
         `WITH policy AS (
           SELECT COALESCE(minimum_verified_references, 1) AS minimum,
                  COALESCE(required_evidence_kinds, '[]'::jsonb) AS kinds
@@ -412,7 +425,7 @@ export class ScientificTrustService {
         });
       }
       for (const kind of policy?.kinds ?? []) {
-        const kindRows = (await this.dataSource.query(
+        const kindRows = (await executor.query(
           `SELECT 1 FROM record_evidence e JOIN scientific_references r ON r.id = e.reference_id
            WHERE e.record_id = $1 AND e.evidence_kind = $2 AND r.verification_status = 'verified' LIMIT 1`,
           [recordId, kind],
@@ -425,16 +438,63 @@ export class ScientificTrustService {
           });
       }
     }
-    const media = (await this.dataSource.query(
-      `SELECT count(*)::int AS count FROM record_media rm JOIN media_assets m ON m.id = rm.media_asset_id
-       WHERE rm.record_id = $1 AND m.processing_status <> 'approved'`,
+    const media = (await executor.query(
+      `SELECT
+         count(*) FILTER (WHERE rm.is_primary)::int AS primary_count,
+         count(*) FILTER (WHERE m.processing_status <> 'approved')::int AS unapproved_count,
+         count(*) FILTER (
+           WHERE rm.is_primary AND (
+             m.media_kind <> 'image'
+             OR
+             m.processing_status <> 'approved'
+             OR length(btrim(COALESCE(m.rights_statement, ''))) = 0
+             OR length(btrim(COALESCE(rm.alt_text, ''))) < 5
+           )
+         )::int AS invalid_primary_count
+       FROM record_media rm
+       JOIN media_assets m ON m.id = rm.media_asset_id
+       WHERE rm.record_id = $1`,
       [recordId],
-    )) as unknown as Array<{ count: number }>;
-    if ((media[0]?.count ?? 0) > 0) {
+    )) as unknown as Array<{
+      primary_count: number;
+      unapproved_count: number;
+      invalid_primary_count: number;
+    }>;
+    if ((media[0]?.primary_count ?? 0) !== 1) {
+      issues.push({
+        field: 'media',
+        code: 'primary_image_required',
+        message: 'Choose one primary image.',
+      });
+    }
+    if ((media[0]?.invalid_primary_count ?? 0) > 0) {
+      issues.push({
+        field: 'media',
+        code: 'primary_image_incomplete',
+        message: 'The primary image needs approval, usage rights, and accessible alternative text.',
+      });
+    }
+    if ((media[0]?.unapproved_count ?? 0) > 0) {
       issues.push({
         field: 'media',
         code: 'not_approved',
         message: 'All attached media must be approved.',
+      });
+    }
+    const locations = (await executor.query(
+      `SELECT count(*)::int AS invalid_count
+       FROM record_locations
+       WHERE record_id = $1 AND (
+         (visibility IN ('public', 'approximate') AND public_geometry IS NULL)
+         OR (visibility = 'embargoed' AND embargo_until IS NULL)
+       )`,
+      [recordId],
+    )) as unknown as Array<{ invalid_count: number }>;
+    if ((locations[0]?.invalid_count ?? 0) > 0) {
+      issues.push({
+        field: 'location',
+        code: 'invalid_public_policy',
+        message: 'Complete the public location or embargo settings.',
       });
     }
     return { valid: issues.length === 0, issues };

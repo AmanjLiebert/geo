@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 5 / UX-5 — sources and evidence workspace |
-| Task folder | `docs/agent-work/phase-5-ux5-sources-workspace/` |
+| Task | Phase 5 / Step 5B2 — record readiness, review, publication, and unpublication |
+| Task folder | `docs/agent-work/phase-5-step-5b2-record-publication/` |
 | Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | A teacher or admin can understand attached citations, add an appropriate source using source-specific prompts, or reuse a saved source and connect it to the record without handling internal evidence terminology. |
+| Plan gate | Only a complete record can enter review; an independent authorized user can publish it; return-for-changes and unpublish preserve all work and history. |
 
 ## Required file order
 

@@ -1584,6 +1584,136 @@
   border-radius: 4px;
 }
 
+.reviewPanel {
+  display: grid;
+  gap: 20px;
+  max-width: 960px;
+  padding: clamp(20px, 3vw, 32px);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  background: var(--paper);
+  box-shadow: 7px 7px 0 var(--shale);
+}
+
+.reviewHeading,
+.reviewActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.reviewHeading h2,
+.reviewDecisionGrid h3 {
+  margin: 4px 0 0;
+}
+
+.reviewReady,
+.reviewNeedsWork {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1.5px solid var(--carbon);
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.reviewReady {
+  background: var(--shale);
+  color: var(--paper);
+}
+
+.reviewNeedsWork {
+  background: var(--ochre);
+}
+
+.reviewReady svg,
+.reviewNeedsWork svg,
+.reviewActions button svg,
+.reviewDecisionGrid button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.reviewChecklist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reviewChecklist li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--fossil);
+  background: var(--limestone);
+}
+
+.reviewChecklist li svg {
+  width: 18px;
+  color: var(--iron);
+}
+
+.reviewChecklist button {
+  min-height: 38px;
+  border: 1.5px solid var(--carbon);
+  background: var(--paper);
+  font-weight: 800;
+}
+
+.reviewDecisionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.reviewDecisionGrid > div,
+.reviewDecisionGrid form {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 18px;
+  border: 1.5px solid var(--carbon);
+  background: var(--limestone);
+}
+
+.reviewDecisionGrid textarea {
+  min-height: 110px;
+  resize: vertical;
+  padding: 10px;
+  border: 1.5px solid var(--carbon);
+  background: var(--paper);
+  font: inherit;
+}
+
+.reviewDecisionGrid label {
+  font-weight: 800;
+}
+
+.reviewNotice,
+.reviewError,
+.reviewLoading {
+  margin: 0;
+  padding: 14px;
+  border-left: 4px solid var(--shale);
+  background: var(--limestone);
+}
+
+.reviewError {
+  border-left-color: var(--iron);
+}
+
+.reviewError p {
+  margin: 0 0 8px;
+}
+
 @media (max-width: 680px) {
   .sourceModeSwitch,
   .sourceSearchRow {
@@ -1624,5 +1754,24 @@
   .mediaDropIcon,
   .mediaSelectedPreview {
     width: 76px;
+  }
+
+  .reviewHeading,
+  .reviewActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reviewDecisionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewChecklist li {
+    grid-template-columns: 20px minmax(0, 1fr);
+  }
+
+  .reviewChecklist button {
+    grid-column: 2;
+    justify-self: start;
   }
 }

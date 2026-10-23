@@ -88,6 +88,7 @@ describe("record trust API", () => {
               fieldKey: null,
               notes: null,
               verificationStatus: "verified",
+              canVerify: false,
             },
           ],
         }),

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { BookOpen, Plus, Search } from "lucide-react";
+import { BookOpen, Plus, Search, ShieldCheck } from "lucide-react";
 import { DashboardApiError, type TemplateField } from "@/lib/dashboard-api";
 import {
   addRecordEvidence,
   createReference,
   listRecordEvidence,
   searchReferences,
+  verifyReference,
   type RecordEvidenceItem,
   type ReferenceChoice,
 } from "@/lib/record-trust-api";
@@ -96,6 +97,26 @@ export function RecordEvidence({
 
   async function refreshEvidence() {
     setEvidence(await listRecordEvidence(recordId));
+  }
+
+  async function verifySource(referenceIdToVerify: string) {
+    clearFeedback();
+    setBusy(true);
+    try {
+      await verifyReference(referenceIdToVerify);
+      await refreshEvidence();
+      setMessage("Source verified.");
+    } catch (cause) {
+      setError(
+        cause instanceof DashboardApiError && cause.kind === "forbidden"
+          ? "Confirm your identity from Account, then try again."
+          : cause instanceof DashboardApiError
+            ? cause.message
+            : "The source could not be verified.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function searchSavedSources() {
@@ -348,6 +369,16 @@ export function RecordEvidence({
                     {fieldLabel ? `Only ${fieldLabel}` : "Whole record"}
                   </p>
                   {item.notes && <small>{item.notes}</small>}
+                  {item.verificationStatus !== "verified" && item.canVerify && (
+                    <button
+                      type="button"
+                      className={styles.buttonSecondary}
+                      disabled={busy}
+                      onClick={() => void verifySource(item.referenceId)}
+                    >
+                      <ShieldCheck aria-hidden="true" /> Verify source
+                    </button>
+                  )}
                 </div>
               </li>
             );
