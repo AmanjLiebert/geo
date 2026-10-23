@@ -8,7 +8,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Phase 6 / Step 6A — minimal public scientific read APIs |
 | Task folder | `docs/agent-work/phase-6-step-6a-public-scientific-api/` |
-| Status | `READY_FOR_IMPLEMENTATION` |
+| Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
 | Plan gate | Signed-out visitors can read only active, published scientific categories and published records through minimal public-safe projections; drafts, private geometry, internal identifiers, and private media details remain unreachable. |
