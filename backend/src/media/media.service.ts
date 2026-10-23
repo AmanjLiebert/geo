@@ -14,6 +14,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'node:crypto';
+import { Readable } from 'node:stream';
 import { DataSource } from 'typeorm';
 import { Environment } from '../config/environment';
 import { JobQueueService } from '../jobs/job-queue.service';
@@ -582,6 +583,51 @@ export class MediaService {
     }
 
     return { items, expiresInSeconds: 120, disposition: 'inline' };
+  }
+
+  async publicInlineImage(mediaAssetId: string) {
+    const client = this.requireStorage();
+    const media = await this.dataSource.query<
+      Array<{ id: string; media_kind: string; processing_status: string }>
+    >(
+      `SELECT id, media_kind, processing_status
+       FROM media_assets
+       WHERE id = $1`,
+      [mediaAssetId],
+    );
+    if (!media[0] || media[0].media_kind !== 'image' || media[0].processing_status !== 'approved') {
+      throw new NotFoundException('Approved public image not found.');
+    }
+
+    const derivatives = await this.dataSource.query<
+      Array<{ storage_key: string; content_type: string }>
+    >(
+      `SELECT storage_key, content_type
+       FROM media_derivatives
+       WHERE media_asset_id = $1
+         AND derivative_kind IN ('display', 'thumbnail')
+       ORDER BY CASE derivative_kind WHEN 'display' THEN 0 ELSE 1 END,
+         page_number NULLS FIRST
+       LIMIT 1`,
+      [mediaAssetId],
+    );
+    const derivative = derivatives[0];
+    if (!derivative) {
+      throw new NotFoundException('Approved public image not found.');
+    }
+
+    const object = await client.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: derivative.storage_key }),
+    );
+    if (!(object.Body instanceof Readable)) {
+      throw new ServiceUnavailableException('Public image is temporarily unavailable.');
+    }
+
+    return {
+      stream: object.Body,
+      contentType: object.ContentType || derivative.content_type,
+      contentLength: object.ContentLength,
+    };
   }
 
   async getRecordMediaPublicationReadiness(recordId: string) {

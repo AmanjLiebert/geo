@@ -119,7 +119,7 @@ describe('category listing query', () => {
     await expect(service.listCategories('en')).resolves.toEqual({ items: [] });
 
     const sql = query.mock.calls[0]?.[0] as string;
-    expect(sql).toContain("cae.target_id = c.id::text");
+    expect(sql).toContain('cae.target_id = c.id::text');
     expect(sql).not.toContain('cae.target_id::uuid');
   });
 });
