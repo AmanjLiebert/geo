@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "@/components/safe-link";
-import { Archive, ArrowRight, BookOpenText, Compass, Mail, MapPinned, type LucideIcon } from "lucide-react";
+import { Archive, ArrowRight, BookOpenText, Compass, MapPinned, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { NeoBadge } from "./neo-badge";
 import { HomePreviewNotice } from "./home-preview-notice";
@@ -50,24 +50,21 @@ export function SiteFooter() {
         <div className="brutal-footer-grid">
           <section className="brutal-footer-brand-panel" aria-label="About Geo-Kurdistan">
             <BrutalBrand light />
-            <p>A public place to explore the geology and geological heritage of the Kurdistan Region. Scientific descriptions remain subject to teacher review.</p>
-            <NeoBadge className="brutal-footer-badge" variant="clay">Visitor showcase</NeoBadge>
+            <p>A public place to explore published geological records and research from the Kurdistan Region.</p>
+            <NeoBadge className="brutal-footer-badge" variant="clay">Geological archive</NeoBadge>
             <div className="brutal-footer-shortcuts" aria-label="Archive shortcuts">
               <Link href="/explore" aria-label="Browse all geological collections"><Archive aria-hidden="true" /></Link>
               <Link href="/maps" aria-label="Open the geological map"><MapPinned aria-hidden="true" /></Link>
               <Link href="/research" aria-label="Open the research library"><BookOpenText aria-hidden="true" /></Link>
-              <a href="mailto:hello@geo-kurdistan.example" aria-label="Email Geo-Kurdistan"><Mail aria-hidden="true" /></a>
             </div>
           </section>
 
           <nav className="brutal-footer-directory" aria-label="Footer navigation">
             <section>
-              <h3>Collections</h3>
-              <Link href="/explore/geological-items">Geological items</Link>
-              <Link href="/explore/formations">Formations</Link>
-              <Link href="/explore/rocks">Rocks</Link>
-              <Link href="/explore/minerals">Minerals</Link>
-              <Link href="/explore/fossils">Fossils</Link>
+              <h3>Catalogue</h3>
+              <Link href="/explore">Published collections</Link>
+              <Link href="/maps">Geological map</Link>
+              <Link href="/search">Search archive</Link>
             </section>
             <section>
               <h3>Explore</h3>
@@ -79,24 +76,21 @@ export function SiteFooter() {
             <section>
               <h3>Resources</h3>
               <Link href="/research">Research library</Link>
-              <Link href="/shop">Study objects</Link>
-              <Link href="/explore/formations">Regional formations</Link>
-              <Link href="/explore/geological-items">Archive records</Link>
+              <Link href="/field">Field notes</Link>
+              <Link href="/explore">Geological records</Link>
             </section>
             <section>
               <h3>Project</h3>
               <Link href="/about">About the project</Link>
-              <a href="mailto:hello@geo-kurdistan.example">Email the project</a>
+              <Link href="/account">Account</Link>
               <span>English interface</span>
-              <span>Kurdish / planned</span>
-              <span>Teacher review in progress</span>
             </section>
           </nav>
         </div>
       </div>
       <div className="brutal-footer-end">
         <span><i aria-hidden="true" />© 2026 Geo-Kurdistan</span>
-        <div><span>Visitor showcase</span><span>Scientific copy pending teacher review</span></div>
+        <div><span>Public geological archive</span><span>Published scientific records</span></div>
       </div>
     </footer>
   );

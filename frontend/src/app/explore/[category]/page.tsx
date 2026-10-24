@@ -1,25 +1,41 @@
 import type { Metadata } from "next";
 import { ExploreRoute } from "@/components/explore-route";
-import { getCategoryBySlug, listCategories } from "@/content/repository";
+import { listPublicCategories } from "@/lib/public-scientific-api";
 
-export function generateStaticParams() {
-  return listCategories().map((category) => ({ category: category.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps<"/explore/[category]">): Promise<Metadata> {
   const { category: slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = (await listPublicCategories()).find((item) => item.slug === slug);
   if (!category) return { title: "Explore" };
+  const description = category.summary ?? category.description ?? "Published geological collection.";
   return {
     title: category.name,
-    description: category.description,
+    description,
     alternates: { canonical: `/explore/${category.slug}` },
-    openGraph: { title: `${category.name} | Geo-Kurdistan`, description: category.description, images: [category.image.src] },
-    twitter: { card: "summary_large_image", title: `${category.name} | Geo-Kurdistan`, description: category.description, images: [category.image.src] },
+    openGraph: {
+      title: `${category.name} | Geo-Kurdistan`,
+      description,
+      images: category.image ? [category.image.viewEndpoint] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${category.name} | Geo-Kurdistan`,
+      description,
+      images: category.image ? [category.image.viewEndpoint] : [],
+    },
   };
 }
 
-export default async function CategoryPage({ params }: PageProps<"/explore/[category]">) {
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: PageProps<"/explore/[category]">) {
   const { category } = await params;
-  return <ExploreRoute selectedCategorySlug={category} searchParams={{}} />;
+  return (
+    <ExploreRoute
+      selectedCategorySlug={category}
+      searchParams={await searchParams}
+    />
+  );
 }

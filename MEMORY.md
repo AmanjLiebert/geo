@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / Step 6A — minimal public scientific read APIs |
-| Task folder | `docs/agent-work/phase-6-step-6a-public-scientific-api/` |
-| Status | `COMPLETE` |
+| Task | Phase 6 / Step 6B — connect public Explore to published scientific data |
+| Task folder | `docs/agent-work/phase-6-step-6b-real-explore/` |
+| Status | `READY_FOR_IMPLEMENTATION` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | Signed-out visitors can read only active, published scientific categories and published records through minimal public-safe projections; drafts, private geometry, internal identifiers, and private media details remain unreachable. |
+| Plan gate | Explore, category, and record routes render real published API data at runtime, preserve the established interface, handle empty/unavailable states honestly, and contain no showcase geological records or private data. |
 
 ## Required file order
 

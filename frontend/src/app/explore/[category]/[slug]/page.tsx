@@ -1,25 +1,45 @@
 import type { Metadata } from "next";
 import { ExploreRoute } from "@/components/explore-route";
-import { getRecordBySlug, listRecords } from "@/content/repository";
+import { getPublicRecord, listPublicRecords } from "@/lib/public-scientific-api";
 
-export function generateStaticParams() {
-  return listRecords().map((record) => ({ category: record.category, slug: record.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps<"/explore/[category]/[slug]">): Promise<Metadata> {
   const { category, slug } = await params;
-  const record = getRecordBySlug(category, slug);
-  if (!record) return { title: "Geological record" };
+  const summary = (await listPublicRecords(category)).find(
+    (record) => (record.slug ?? record.publicId) === slug,
+  );
+  if (!summary) return { title: "Geological record" };
+  const record = await getPublicRecord(summary.publicId);
+  const description = record.summary ?? record.description ?? "Published geological record.";
   return {
-    title: record.name,
-    description: record.summary,
-    alternates: { canonical: `/explore/${record.category}/${record.slug}` },
-    openGraph: { title: `${record.name} | Geo-Kurdistan`, description: record.summary, images: [record.image.src] },
-    twitter: { card: "summary_large_image", title: `${record.name} | Geo-Kurdistan`, description: record.summary, images: [record.image.src] },
+    title: record.title,
+    description,
+    alternates: { canonical: `/explore/${category}/${slug}` },
+    openGraph: {
+      title: `${record.title} | Geo-Kurdistan`,
+      description,
+      images: record.image ? [record.image.viewEndpoint] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${record.title} | Geo-Kurdistan`,
+      description,
+      images: record.image ? [record.image.viewEndpoint] : [],
+    },
   };
 }
 
-export default async function RecordPage({ params }: PageProps<"/explore/[category]/[slug]">) {
+export default async function RecordPage({
+  params,
+  searchParams,
+}: PageProps<"/explore/[category]/[slug]">) {
   const { category, slug } = await params;
-  return <ExploreRoute selectedCategorySlug={category} selectedRecordSlug={slug} searchParams={{}} />;
+  return (
+    <ExploreRoute
+      selectedCategorySlug={category}
+      selectedRecordSlug={slug}
+      searchParams={await searchParams}
+    />
+  );
 }

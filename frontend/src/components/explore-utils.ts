@@ -110,7 +110,7 @@ export function filterExploreRecords(records: GeologicalRecord[], categorySlug: 
       ...(record.classification ?? []),
     ].filter(Boolean).join(" "));
 
-    return record.category === categorySlug
+    return (record.categoryPath ?? [record.category]).includes(categorySlug)
       && (!search || haystack.includes(search))
       && includes(record.recordType, normalize(query.type))
       && includes(record.region, normalize(query.region))

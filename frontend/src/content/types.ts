@@ -1,4 +1,4 @@
-export type RecordStatus = "Reviewed mock" | "Pending teacher review";
+export type RecordStatus = "Reviewed mock" | "Pending teacher review" | "Published";
 
 export interface MediaAsset {
   src: string;
@@ -9,6 +9,7 @@ export interface MediaAsset {
 
 export interface GeologicalCategory {
   slug: string;
+  parentSlug?: string;
   name: string;
   eyebrow: string;
   description: string;
@@ -35,6 +36,7 @@ export interface GeologicalRecord {
   slug: string;
   name: string;
   category: string;
+  categoryPath?: string[];
   recordType: string;
   recordId: string;
   summary: string;
@@ -46,6 +48,7 @@ export interface GeologicalRecord {
   formation?: string;
   classification?: string[];
   status: RecordStatus;
+  publishedAt?: string;
   image: MediaAsset;
   mediaStatus?: "record" | "reference";
   gallery?: MediaAsset[];

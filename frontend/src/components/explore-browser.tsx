@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type SyntheticEvent } from "react";
 import {
   ArrowRight,
@@ -34,7 +35,6 @@ import {
   getRecordNavigation,
   getRecordPreviewFacts,
   paginateRecords,
-  parseExploreQuery,
   type ExploreQueryState,
 } from "./explore-utils";
 
@@ -68,15 +68,6 @@ const emptyQuery: ExploreQueryState = {
 
 const COLLECTIONS_PER_PAGE = 6;
 
-function readLocationState() {
-  const parts = window.location.pathname.split("/").filter(Boolean);
-  return {
-    categorySlug: parts[0] === "explore" ? parts[1] : undefined,
-    recordSlug: parts[0] === "explore" ? parts[2] : undefined,
-    query: parseExploreQuery(Object.fromEntries(new URLSearchParams(window.location.search))),
-  };
-}
-
 function CollectionChooser({
   collections,
   onSelect,
@@ -86,9 +77,10 @@ function CollectionChooser({
   onSelect: (slug: string) => void;
   compact?: boolean;
 }) {
+  const rootCollections = collections.filter(({ category }) => !category.parentSlug);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const filtered = collections.filter(({ category }) => [category.name, category.description, ...category.themes]
+  const filtered = rootCollections.filter(({ category }) => [category.name, category.description, ...category.themes]
     .join(" ").toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
   const totalPages = Math.max(1, Math.ceil(filtered.length / COLLECTIONS_PER_PAGE));
   const safePage = Math.min(page, totalPages);
@@ -102,12 +94,12 @@ function CollectionChooser({
   return <section className={`catalog-chooser${compact ? " catalog-chooser--compact" : ""}`} aria-labelledby={compact ? "collection-dialog-title" : "collection-chooser-title"}>
     <header>
       <div><p className="eyebrow">Geological catalogue</p><h2 id={compact ? "collection-dialog-title" : "collection-chooser-title"}>Choose a collection</h2></div>
-      <NeoBadge className="catalog-chooser-summary-badge">{collections.length} collections · {collections.reduce((total, item) => total + item.count, 0)} records</NeoBadge>
+      <NeoBadge className="catalog-chooser-summary-badge">{rootCollections.length} collections · {rootCollections.reduce((total, item) => total + item.count, 0)} records</NeoBadge>
     </header>
-    {collections.length > COLLECTIONS_PER_PAGE && <label className="catalog-chooser-search"><GeoSearchIcon aria-hidden="true" /><span className="sr-only">Find a collection</span><input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Find a collection" /></label>}
+    {rootCollections.length > COLLECTIONS_PER_PAGE && <label className="catalog-chooser-search"><GeoSearchIcon aria-hidden="true" /><span className="sr-only">Find a collection</span><input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Find a collection" /></label>}
     <div className="catalog-chooser-grid">
       {visible.map(({ category, count }) => <button type="button" className="catalog-collection-button" onClick={() => onSelect(category.slug)} key={category.slug}>
-        <span className="catalog-collection-image"><Image src={category.image.src} alt="" fill sizes="(max-width: 620px) 100vw, (max-width: 1120px) 50vw, (max-width: 1504px) 33vw, 480px" /></span>
+        <span className="catalog-collection-image">{category.image.src ? <Image src={category.image.src} alt="" fill sizes="(max-width: 620px) 100vw, (max-width: 1120px) 50vw, (max-width: 1504px) 33vw, 480px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</span>
         <span className="catalog-collection-body">
           <span className="catalog-collection-meta"><NeoBadge className="catalog-collection-count-badge">{count} records</NeoBadge><small>Collection</small></span>
           <strong className="catalog-collection-title">{category.name}</strong>
@@ -116,7 +108,7 @@ function CollectionChooser({
         </span>
       </button>)}
     </div>
-    {!visible.length && <div className="catalog-chooser-empty"><GeoArchiveIcon aria-hidden="true" /><strong>No collection matches “{search}”.</strong><button type="button" data-ui-action="secondary" className="catalog-action catalog-action--secondary" onClick={() => updateSearch("")}>Clear search</button></div>}
+    {!visible.length && <div className="catalog-chooser-empty"><GeoArchiveIcon aria-hidden="true" /><strong>{rootCollections.length ? `No collection matches “${search}”.` : "No published collections yet."}</strong>{rootCollections.length > 0 && <button type="button" data-ui-action="secondary" className="catalog-action catalog-action--secondary" onClick={() => updateSearch("")}>Clear search</button>}</div>}
     {totalPages > 1 && <nav className="catalog-chooser-pagination" aria-label="Collection pages">
       <button type="button" data-ui-action="pagination" data-ui-size="icon" className="catalog-action catalog-action--secondary catalog-action--icon" onClick={() => setPage(Math.max(1, safePage - 1))} disabled={safePage === 1} aria-label="Previous collection page"><ChevronLeft aria-hidden="true" /></button>
       <span>Page {safePage} of {totalPages}</span>
@@ -144,7 +136,7 @@ function CollectionGuide({ category }: { category: GeologicalCategory }) {
     </button>
     <div className="catalog-collection-guide-panel" id={panelId}>
       <div className="catalog-collection-guide-panel-inner">
-        <div className="catalog-collection-introduction-image"><Image src={category.image.src} alt={category.image.alt} fill sizes="(max-width: 760px) 100vw, 300px" /></div>
+        <div className="catalog-collection-introduction-image">{category.image.src ? <Image src={category.image.src} alt={category.image.alt} fill sizes="(max-width: 760px) 100vw, 300px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</div>
         <div className="catalog-collection-introduction-copy"><p className="eyebrow">Collection guide</p><h3 id="catalog-collection-about-title">About {category.name}</h3><p>{category.overview}</p><ul>{category.themes.map((theme) => <li key={theme}>{theme}</li>)}</ul></div>
         <dl>{category.facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
       </div>
@@ -199,8 +191,8 @@ function RecordReader({
   const { record, detail, gallery } = bundle;
   const [fullscreen, setFullscreen] = useState(false);
   const image = gallery[activeImage] ?? gallery[0];
-  const previousImage = activeImage === 0 ? gallery.length - 1 : activeImage - 1;
-  const nextImage = activeImage === gallery.length - 1 ? 0 : activeImage + 1;
+  const previousImage = gallery.length ? (activeImage === 0 ? gallery.length - 1 : activeImage - 1) : 0;
+  const nextImage = gallery.length ? (activeImage === gallery.length - 1 ? 0 : activeImage + 1) : 0;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -221,21 +213,21 @@ function RecordReader({
     </nav>
 
     <header className="catalog-record-page-header">
-      <div className="catalog-record-kicker"><NeoBadge>{record.recordType}</NeoBadge><NeoBadge variant="dark">{record.recordId}</NeoBadge><NeoBadge variant="clay">{record.status}</NeoBadge></div>
+      <div className="catalog-record-kicker"><NeoBadge>{record.recordType}</NeoBadge><NeoBadge variant="clay">{record.status}</NeoBadge></div>
       <h2 id="catalog-reader-title">{record.name}</h2>
       <p>{record.summary}</p>
-      <dl>
-        <div><dt>Locality</dt><dd>{record.locality}</dd></div>
-        <div><dt>Region</dt><dd>{record.region}</dd></div>
+      {(record.locality || record.region || record.geologicalAge || record.formation) && <dl>
+        {record.locality && <div><dt>Locality</dt><dd>{record.locality}</dd></div>}
+        {record.region && <div><dt>Region</dt><dd>{record.region}</dd></div>}
         {record.geologicalAge && <div><dt>Age</dt><dd>{record.geologicalAge}</dd></div>}
         {record.formation && <div><dt>Formation</dt><dd>{record.formation}</dd></div>}
-      </dl>
+      </dl>}
     </header>
 
     <div className="catalog-record-reading-layout">
-      <aside className="catalog-record-gallery-card" aria-label={`${record.name} gallery`}>
-        <header><span>Record gallery</span><strong>{activeImage + 1} / {gallery.length}</strong></header>
-        <div className="catalog-record-gallery-stage">
+      <aside className="catalog-record-gallery-card" aria-label={`${record.name} media`}>
+        <header><span>Record image</span>{image && <strong>{activeImage + 1} / {gallery.length}</strong>}</header>
+        {image ? <><div className="catalog-record-gallery-stage">
           <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 820px) 100vw, 420px" />
           {gallery.length > 1 && <>
             <button type="button" data-ui-action="pagination" data-ui-size="icon" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--previous" onClick={() => onImage(previousImage)} aria-label="Previous image"><ChevronLeft aria-hidden="true" /></button>
@@ -243,11 +235,11 @@ function RecordReader({
           </>}
           <button type="button" data-ui-action="secondary" className="catalog-record-gallery-zoom" onClick={() => setFullscreen(true)}><ZoomIn aria-hidden="true" /> Open image</button>
         </div>
-        <div className="catalog-record-gallery-thumbnails">
+        {gallery.length > 1 && <div className="catalog-record-gallery-thumbnails">
           {gallery.map((item, index) => <button type="button" className={index === activeImage ? "active" : ""} onClick={() => onImage(index)} aria-label={`Show image ${index + 1}: ${item.caption}`} aria-pressed={index === activeImage} key={`${item.src}-${index}`}><Image src={item.src} alt="" fill sizes="70px" /></button>)}
-        </div>
+        </div>}
         <p>{image.caption}</p>
-        {image.credit && <small>{image.credit}</small>}
+        {image.credit && <small>{image.credit}</small>}</> : <div className="catalog-record-gallery-stage catalog-record-gallery-stage--empty"><span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No published image</small></span></div>}
       </aside>
 
       <article className="catalog-record-article">
@@ -261,15 +253,15 @@ function RecordReader({
           if (section.kind === "references") return <section key={`${section.title}-${index}`}><p className="eyebrow">References</p><h3>{section.title}</h3><ReferenceList items={section.items} /></section>;
           return <section key={`${section.title}-${index}`}><p className="eyebrow">Interpretation</p><h3>{section.title}</h3>{section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section>;
         })}
-        <section><p className="eyebrow">Editorial note</p><h3>Source and review status</h3><p>{record.sourceNote}</p><aside className="catalog-review-note"><strong>Showcase record</strong><p>Scientific wording remains editable until regional experts complete review.</p></aside></section>
+        <section><p className="eyebrow">Publication</p><h3>Published record</h3><p>{record.sourceNote}</p>{record.publishedAt && <p>Published {new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(record.publishedAt))}.</p>}</section>
       </article>
     </div>
 
     {relatedBundles.length > 0 && <section className="catalog-record-related" aria-labelledby="catalog-related-title">
       <header><p className="eyebrow">Related evidence</p><h3 id="catalog-related-title">Continue exploring</h3></header>
-      <div>{relatedBundles.map(({ bundle: related, reason }) => <button type="button" onClick={() => onRelated(related.record)} key={related.record.slug}><span className="catalog-record-related-image"><Image src={related.record.image.src} alt="" fill sizes="180px" /></span><span><small>{reason}</small><strong>{related.record.name}</strong><b>{related.record.recordId}</b></span><ArrowRight aria-hidden="true" /></button>)}</div>
+      <div>{relatedBundles.map(({ bundle: related, reason }) => <button type="button" onClick={() => onRelated(related.record)} key={related.record.slug}><span className="catalog-record-related-image">{related.record.image.src ? <Image src={related.record.image.src} alt="" fill sizes="180px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /></span>}</span><span><small>{reason}</small><strong>{related.record.name}</strong></span><ArrowRight aria-hidden="true" /></button>)}</div>
     </section>}
-    {fullscreen && <FullscreenImage image={image} recordName={record.name} onClose={() => setFullscreen(false)} />}
+    {fullscreen && image && <FullscreenImage image={image} recordName={record.name} onClose={() => setFullscreen(false)} />}
   </section>;
 }
 
@@ -281,18 +273,19 @@ export function ExploreBrowser({
   initialRecordSlug,
   initialQuery,
 }: ExploreBrowserProps) {
+  const router = useRouter();
   const records = useMemo(() => recordBundles.map((bundle) => bundle.record), [recordBundles]);
-  const [categorySlug, setCategorySlug] = useState(initialCategorySlug);
-  const [recordSlug, setRecordSlug] = useState(initialRecordSlug);
   const [query, setQuery] = useState(initialQuery);
   const [searchDraft, setSearchDraft] = useState(initialQuery.q);
   const collectionScrollRef = useRef(0);
   const searchMenuRef = useRef<HTMLDetailsElement>(null);
   const filterMenuRef = useRef<HTMLDetailsElement>(null);
 
+  const categorySlug = initialCategorySlug;
+  const recordSlug = initialRecordSlug;
   const category = collections.find((item) => item.category.slug === categorySlug)?.category;
-  const selectedBundle = recordBundles.find((bundle) => bundle.record.category === categorySlug && bundle.record.slug === recordSlug);
-  const categoryRecords = category ? records.filter((record) => record.category === category.slug) : [];
+  const selectedBundle = recordBundles.find((bundle) => (bundle.record.categoryPath ?? [bundle.record.category]).includes(categorySlug ?? "") && bundle.record.slug === recordSlug);
+  const categoryRecords = category ? records.filter((record) => (record.categoryPath ?? [record.category]).includes(category.slug)) : [];
   const filteredRecords = category ? filterExploreRecords(records, category.slug, query) : [];
   const pagination = paginateRecords(filteredRecords, query.page);
   const navigationRecords = selectedBundle && filteredRecords.some((record) => record.slug === selectedBundle.record.slug) ? filteredRecords : categoryRecords;
@@ -303,26 +296,14 @@ export function ExploreBrowser({
   const commitView = useCallback((nextCategory: string | undefined, nextRecord: string | undefined, nextQuery: ExploreQueryState, mode: "push" | "replace" = "push", scroll = true) => {
     const pathname = nextRecord ? `/explore/${nextCategory}/${nextRecord}` : nextCategory ? `/explore/${nextCategory}` : "/explore";
     const href = buildExploreHref(pathname, nextQuery);
-    window.history[mode === "push" ? "pushState" : "replaceState"]({}, "", href);
-    setCategorySlug(nextCategory);
-    setRecordSlug(nextRecord);
-    setQuery(nextQuery);
-    setSearchDraft(nextQuery.q);
-    if (scroll) requestAnimationFrame(() => document.getElementById("catalog-explorer-surface")?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  }, []);
-
-  useEffect(() => {
-    const syncLocation = () => {
-      const state = readLocationState();
-      setCategorySlug(state.categorySlug);
-      setRecordSlug(state.recordSlug);
-      setQuery(state.query);
-      setSearchDraft(state.query.q);
-    };
-    syncLocation();
-    window.addEventListener("popstate", syncLocation);
-    return () => window.removeEventListener("popstate", syncLocation);
-  }, []);
+    const pathChanged = nextCategory !== categorySlug || nextRecord !== recordSlug;
+    router[mode](href, { scroll: pathChanged ? scroll : false });
+    if (!pathChanged) {
+      setQuery(nextQuery);
+      setSearchDraft(nextQuery.q);
+      if (scroll) requestAnimationFrame(() => document.getElementById("catalog-explorer-surface")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [categorySlug, recordSlug, router]);
 
   const openCollection = (slug: string) => {
     commitView(slug, undefined, emptyQuery);
@@ -332,7 +313,7 @@ export function ExploreBrowser({
     if (mode === "push") collectionScrollRef.current = window.scrollY;
     const index = filteredRecords.findIndex((candidate) => candidate.slug === record.slug);
     const page = index >= 0 ? Math.floor(index / EXPLORE_PAGE_SIZE) + 1 : query.page;
-    commitView(record.category, record.slug, { ...query, page, image: undefined }, mode);
+    commitView(category?.slug ?? record.category, record.slug, { ...query, page, image: undefined }, mode);
   };
   const closeRecord = () => {
     if (!category) return;
@@ -355,13 +336,14 @@ export function ExploreBrowser({
   }) ?? [];
   const hasRefinements = Boolean(query.q || exploreFilterKeys.some((key) => query[key]));
   const activeFilterCount = exploreFilterKeys.filter((key) => query[key]).length;
+  const rootCollections = collections.filter((item) => !item.category.parentSlug);
 
   return <main className={`catalog-explorer-page${selectedBundle ? " catalog-explorer-page--reader" : category ? " catalog-explorer-page--collection" : ""}`}>
     {!category && <header className="catalog-explorer-header">
       <div className="shell">
         <div><span><GeoArchiveIcon aria-hidden="true" /></span><div><p>Geological catalogue</p><h1>Explore</h1></div></div>
         <p>Choose a collection and move through its evidence without losing your place.</p>
-        <dl><div><dt>Collections</dt><dd>{String(collections.length).padStart(2, "0")}</dd></div><div><dt>Records</dt><dd>{records.length}</dd></div></dl>
+        <dl><div><dt>Collections</dt><dd>{String(rootCollections.length).padStart(2, "0")}</dd></div><div><dt>Records</dt><dd>{rootCollections.reduce((total, item) => total + item.count, 0)}</dd></div></dl>
       </div>
     </header>}
 
@@ -400,11 +382,11 @@ export function ExploreBrowser({
         {pagination.items.length ? <div className="catalog-record-grid">{pagination.items.map((record) => {
           const facts = getRecordPreviewFacts(record);
           return <article className="catalog-record-card" key={record.slug}>
-            <div className="catalog-record-image"><Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 460px) 100vw, (max-width: 820px) 50vw, (max-width: 1944px) 33vw, 640px" />{record.mediaStatus === "reference" && <NeoBadge className="catalog-record-ref-badge">Reference image</NeoBadge>}<NeoBadge variant="dark" className="catalog-record-id-badge">{record.recordId}</NeoBadge></div>
+            <div className="catalog-record-image">{record.image.src ? <Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 460px) 100vw, (max-width: 820px) 50vw, (max-width: 1944px) 33vw, 640px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</div>
             <div className="catalog-record-card-copy"><p className="catalog-record-type">{record.recordType}</p><h3>{record.name}</h3><p>{record.summary}</p><dl>{facts.slice(0, 3).map((fact) => <div key={`${fact.label}-${fact.value}`}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>
             <button type="button" className="catalog-record-open" onClick={() => openRecord(record)}><span>Open record</span><em><ArrowRight aria-hidden="true" /></em></button>
           </article>;
-        })}</div> : <div className="catalog-empty-results"><GeoArchiveIcon aria-hidden="true" /><h3>No records match this view.</h3><p>Remove a refinement or use a broader term.</p>{hasRefinements && <button type="button" data-ui-action="primary" className="catalog-action catalog-action--primary" onClick={() => updateQuery({ ...emptyQuery })}>Clear refinements</button>}</div>}
+        })}</div> : <div className="catalog-empty-results"><GeoArchiveIcon aria-hidden="true" /><h3>{hasRefinements ? "No records match this view." : "No published records yet."}</h3><p>{hasRefinements ? "Remove a refinement or use a broader term." : "This collection is ready for future published records."}</p>{hasRefinements && <button type="button" data-ui-action="primary" className="catalog-action catalog-action--primary" onClick={() => updateQuery({ ...emptyQuery })}>Clear refinements</button>}</div>}
 
         {pagination.totalPages > 1 && <footer className="catalog-pagination-footer">
           <nav className="catalog-record-pagination" aria-label="Record pages">

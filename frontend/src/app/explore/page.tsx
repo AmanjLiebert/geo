@@ -3,9 +3,11 @@ import { ExploreRoute } from "@/components/explore-route";
 
 export const metadata: Metadata = {
   title: "Explore collections",
-  description: "Browse every geological collection and record in the Geo-Kurdistan showcase.",
+  description: "Browse published geological collections and records from Geo-Kurdistan.",
 };
 
-export default function ExplorePage() {
-  return <ExploreRoute searchParams={{}} />;
+export const dynamic = "force-dynamic";
+
+export default async function ExplorePage({ searchParams }: PageProps<"/explore">) {
+  return <ExploreRoute searchParams={await searchParams} />;
 }
