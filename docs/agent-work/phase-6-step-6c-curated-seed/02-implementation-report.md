@@ -2,6 +2,8 @@
 
 Status: IMPLEMENTED_AWAITING_REVIEW
 
+Implementation commit: `2c46f25702afd6f9e7ed76520056ac7ce6a988c5`
+
 ## Delivered
 
 - Added a separately invoked curated-catalog command; the production bootstrap seed is unchanged.
