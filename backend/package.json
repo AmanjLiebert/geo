@@ -23,6 +23,8 @@
     "db:revert": "tsx src/database/revert.ts",
     "db:seed": "tsx src/database/seed.ts",
     "db:seed:prod": "node dist/database/seed.js",
+    "db:seed:catalog": "tsx src/database/seed-curated-scientific-catalog.ts",
+    "db:seed:catalog:prod": "node dist/database/seed-curated-scientific-catalog.js",
     "auth:create-initial-admin": "tsx src/identity/create-initial-admin.ts",
     "auth:create-initial-admin:prod": "node dist/identity/create-initial-admin.js",
     "job:proof": "tsx src/jobs/proof.ts",

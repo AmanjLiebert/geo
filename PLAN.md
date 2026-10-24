@@ -543,6 +543,11 @@ Completion gate:
 - Drafts, restricted coordinates, private media, and unpublished translations cannot be reached publicly.
 - Frontend tests, lint, and production build pass.
 
+Development dataset rule:
+
+- A separately invoked, idempotent development seed may add a curated scientific review dataset after the real public API is connected. It must never run as part of the production bootstrap seed, reset existing data, overwrite user-authored rows, or represent seeded drafts as human-reviewed or published content.
+- Every seeded record must use the managed taxonomy and active template that exist in PostgreSQL, include a traceable source, and use only a semantically matching local image with recorded licence and credit. Unsupported geological interpretation stays explicitly provisional and unpublished.
+
 ### Phase 7 — Search and discovery
 
 Tasks:

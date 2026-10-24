@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / Step 6B — connect public Explore to published scientific data |
-| Task folder | `docs/agent-work/phase-6-step-6b-real-explore/` |
+| Task | Phase 6 / Step 6C — additive curated scientific development dataset |
+| Task folder | `docs/agent-work/phase-6-step-6c-curated-seed/` |
 | Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | Explore, category, and record routes render real published API data at runtime, preserve the established interface, handle empty/unavailable states honestly, and contain no showcase geological records or private data. |
+| Plan gate | An explicit, idempotent command adds 36 source-traceable scientific drafts and correctly attributed matching media without resetting, overwriting, publishing, or inventing human review of existing content. |
 
 ## Required file order
 
