@@ -545,7 +545,7 @@ Completion gate:
 
 Development dataset rule:
 
-- A separately invoked, idempotent development seed may add a curated scientific review dataset after the real public API is connected. It must never run as part of the production bootstrap seed, reset existing data, overwrite user-authored rows, or represent seeded drafts as human-reviewed or published content.
+- A separately invoked, idempotent development seed may add a curated scientific review dataset after the real public API is connected. It must never run as part of the production bootstrap seed, reset existing data, or overwrite user-authored rows. Promotion of that task-owned dataset is permitted only through a separate explicit command requested by the product owner, using the normal evidence, independent-review, media, category, translation, revision, and audit checks; it must never happen during bootstrap.
 - Every seeded record must use the managed taxonomy and active template that exist in PostgreSQL, include a traceable source, and use only a semantically matching local image with recorded licence and credit. Unsupported geological interpretation stays explicitly provisional and unpublished.
 
 ### Phase 7 — Search and discovery

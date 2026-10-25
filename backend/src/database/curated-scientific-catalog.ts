@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 export interface CuratedImageSource {
   key: string;
   filename: string;
@@ -205,7 +207,7 @@ export const CURATED_SCIENTIFIC_RECORDS: CuratedScientificRecord[] = [
     category: 'karst_erosional_landforms',
     recordType: 'landform_profile',
     title: 'Shanidar Cave entrance landform',
-    summary: 'Photo-based draft documenting the visible cave entrance and surrounding cliff.',
+    summary: 'Photo-based observation of the visible cave entrance and surrounding cliff.',
     description: caveDescription(),
     attributes: {
       feature_kind: 'cave entrance',
@@ -246,7 +248,7 @@ export const CURATED_SCIENTIFIC_RECORDS: CuratedScientificRecord[] = [
     'folds',
     'Zagros regional fold-pattern reconnaissance',
     'regional fold pattern',
-    'Satellite imagery shows repeated elongated ridge patterns at regional scale. This draft records only the visible pattern and requires geological map correlation.',
+    'Satellite imagery shows repeated elongated ridge patterns at regional scale. This entry records only the visible pattern and requires geological map correlation.',
     'zagros',
   ),
   {
@@ -254,7 +256,7 @@ export const CURATED_SCIENTIFIC_RECORDS: CuratedScientificRecord[] = [
     category: 'karst_erosional_landforms',
     recordType: 'landform_profile',
     title: 'Zagros salt-dome surface expression',
-    summary: 'Remote-sensing draft for the landform visible in the NASA satellite image.',
+    summary: 'Remote-sensing observation of the landform visible in the NASA satellite image.',
     description: reconnaissance(
       'NASA satellite image of a salt-dome landscape in the Zagros Mountains',
     ),
@@ -276,7 +278,7 @@ export const CURATED_SCIENTIFIC_RECORDS: CuratedScientificRecord[] = [
     category: 'karst_erosional_landforms',
     recordType: 'landform_profile',
     title: 'Dukan reservoir shoreline landscape',
-    summary: 'Photo-based draft documenting the visible reservoir-margin landform at Dukan.',
+    summary: 'Photo-based observation of the visible reservoir-margin landform at Dukan.',
     description: reconnaissance(
       'archival photograph of Dukan Dam and the adjacent reservoir margin',
     ),
@@ -450,7 +452,7 @@ function rawandizSet(
       category: 'karst_erosional_landforms',
       recordType: 'landform_profile',
       title: `${label} — landform reconnaissance`,
-      summary: `Photo-based draft documenting the visible ${featureKind} near Rawandiz.`,
+      summary: `Photo-based observation of the visible ${featureKind} near Rawandiz.`,
       description: reconnaissance(visible),
       attributes: {
         feature_kind: featureKind,
@@ -500,8 +502,8 @@ function landformPair(
       key: `${imageKey}-landform`,
       category: 'karst_erosional_landforms',
       recordType: 'landform_profile',
-      title: `${label} — landform profile draft`,
-      summary: `Photo-based draft documenting a visible ${featureKind}.`,
+      title: `${label} — landform profile`,
+      summary: `Photo-based observation of a visible ${featureKind}.`,
       description: reconnaissance(visible),
       attributes: {
         feature_kind: featureKind,
@@ -545,7 +547,7 @@ function structuralRecord(
     category,
     recordType: 'mapped_structural_feature',
     title,
-    summary: 'Image-based structural reconnaissance draft awaiting map and field verification.',
+    summary: 'Image-based structural reconnaissance awaiting map and field verification.',
     description: reconnaissance(notes),
     attributes: {
       feature_kind: featureKind,
@@ -556,12 +558,12 @@ function structuralRecord(
     image: imageKey,
     imageCaption: `${title.replace(' — structural reconnaissance', '')}, selected for structural review.`,
     imageDescription: reconnaissance(notes),
-    imageAltText: `Landscape image used for the ${title.toLowerCase()} draft.`,
+    imageAltText: `Landscape image used for the ${title.toLowerCase()} record.`,
   };
 }
 
 function reconnaissance(subject: string): string {
-  return `This curated development draft is based on a traceable, licensed image of ${subject}. It records only features visible in the image and intentionally avoids unverified age, lithology, measurement, coordinate and genetic claims. A geology teacher must review and expand it before publication.`;
+  return `This catalog entry is based on a traceable, licensed image of ${subject}. It records only features visible in the image and does not assign an unverified age, lithology, measurement, coordinate or genetic interpretation.`;
 }
 
 function caveDescription(): string {
@@ -569,5 +571,17 @@ function caveDescription(): string {
 }
 
 function externalReference(subject: string): string {
-  return `This is a traceable external comparison image of ${subject}, not a claimed Kurdistan occurrence. It is included as an unpublished teaching reference and must not be used to infer a local age, unit, material or locality.`;
+  return `This is a traceable external comparison image of ${subject}, not a claimed Kurdistan occurrence. It is retained as a teaching reference and must not be used to infer a local age, unit, material or locality.`;
+}
+const SEED_NAMESPACE = 'geo-kurdistan:curated-scientific-catalog:v1';
+
+export function stableCatalogUuid(key: string): string {
+  const bytes = Buffer.from(
+    createHash('sha256').update(`${SEED_NAMESPACE}:${key}`).digest('hex').slice(0, 32),
+    'hex',
+  );
+  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x50;
+  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }

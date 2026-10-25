@@ -10,6 +10,7 @@ import {
   CURATED_IMAGE_SOURCES,
   CURATED_SCIENTIFIC_RECORDS,
   CuratedImageSource,
+  stableCatalogUuid,
 } from './curated-scientific-catalog';
 
 interface StructureRow {
@@ -24,19 +25,7 @@ interface UserRow {
   id: string;
 }
 
-const SEED_NAMESPACE = 'geo-kurdistan:curated-scientific-catalog:v1';
 const isDryRun = process.argv.includes('--dry-run');
-
-export function stableSeedUuid(key: string): string {
-  const bytes = Buffer.from(
-    createHash('sha256').update(`${SEED_NAMESPACE}:${key}`).digest('hex').slice(0, 32),
-    'hex',
-  );
-  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x50;
-  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80;
-  const hex = bytes.toString('hex');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
 
 async function seedCuratedCatalog(): Promise<void> {
   assertCatalogIntegrity();
@@ -77,7 +66,7 @@ async function seedCuratedCatalog(): Promise<void> {
            ) VALUES ($1, 'image_repository', $2::jsonb, $3, 'Wikimedia Commons / source repository', $4, $5, 'unverified', $6)
            ON CONFLICT (id) DO NOTHING`,
           [
-            stableSeedUuid(`reference:${image.key}`),
+            stableCatalogUuid(`reference:${image.key}`),
             JSON.stringify([image.creator]),
             image.title,
             image.sourceUrl,
@@ -90,9 +79,9 @@ async function seedCuratedCatalog(): Promise<void> {
       for (const record of CURATED_SCIENTIFIC_RECORDS) {
         const structure = structureMap.get(`${record.category}:${record.recordType}`);
         if (!structure) throw new Error(`Missing structure for ${record.key}.`);
-        const recordId = stableSeedUuid(`record:${record.key}`);
-        const mediaAssetId = stableSeedUuid(`media:${record.image}`);
-        const referenceId = stableSeedUuid(`reference:${record.image}`);
+        const recordId = stableCatalogUuid(`record:${record.key}`);
+        const mediaAssetId = stableCatalogUuid(`media:${record.image}`);
+        const referenceId = stableCatalogUuid(`reference:${record.image}`);
 
         await manager.query(
           `INSERT INTO scientific_records (
@@ -102,7 +91,7 @@ async function seedCuratedCatalog(): Promise<void> {
            ON CONFLICT (id) DO NOTHING`,
           [
             recordId,
-            stableSeedUuid(`public-record:${record.key}`),
+            stableCatalogUuid(`public-record:${record.key}`),
             `curated-${record.key}`,
             structure.category_id,
             structure.record_type_id,
@@ -139,7 +128,7 @@ async function seedCuratedCatalog(): Promise<void> {
            ) VALUES ($1,$2,$3,'visual_source',$4,$5)
            ON CONFLICT (id) DO NOTHING`,
           [
-            stableSeedUuid(`evidence:${record.key}`),
+            stableCatalogUuid(`evidence:${record.key}`),
             recordId,
             referenceId,
             'Traceable source for the attached documentary image; scientific interpretation remains unverified.',
@@ -160,7 +149,7 @@ async function seedCuratedCatalog(): Promise<void> {
     });
 
     const taskRecordIds = CURATED_SCIENTIFIC_RECORDS.map((record) =>
-      stableSeedUuid(`record:${record.key}`),
+      stableCatalogUuid(`record:${record.key}`),
     );
     const counts = await appDataSource.query<
       Array<{ records: string; media: string; references: string }>
@@ -171,8 +160,8 @@ async function seedCuratedCatalog(): Promise<void> {
          (SELECT count(*) FROM scientific_references WHERE id = ANY($3::uuid[]))::text AS references`,
       [
         taskRecordIds,
-        CURATED_IMAGE_SOURCES.map((image) => stableSeedUuid(`media:${image.key}`)),
-        CURATED_IMAGE_SOURCES.map((image) => stableSeedUuid(`reference:${image.key}`)),
+        CURATED_IMAGE_SOURCES.map((image) => stableCatalogUuid(`media:${image.key}`)),
+        CURATED_IMAGE_SOURCES.map((image) => stableCatalogUuid(`reference:${image.key}`)),
       ],
     );
     process.stdout.write(
@@ -259,7 +248,7 @@ async function ensureMediaAsset(
   assetDirectory: string,
   image: CuratedImageSource,
 ): Promise<void> {
-  const id = stableSeedUuid(`media:${image.key}`);
+  const id = stableCatalogUuid(`media:${image.key}`);
   const sourceBytes = await readFile(path.join(assetDirectory, image.filename));
   const originalKey = `quarantine/curated-catalog-v1/${id}.jpg`;
   const displayKey = `processed/curated-catalog-v1/${id}/display.webp`;
@@ -304,7 +293,7 @@ async function ensureMediaAsset(
          ) VALUES ($1,$2,$3,NULL,$4,'image/webp',$5,$6,$6,$7)
          ON CONFLICT (id) DO NOTHING`,
         [
-          stableSeedUuid(`derivative:${image.key}:${derivative.kind}`),
+          stableCatalogUuid(`derivative:${image.key}:${derivative.kind}`),
           id,
           derivative.kind,
           derivative.key,

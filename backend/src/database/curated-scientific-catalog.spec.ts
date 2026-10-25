@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CURATED_IMAGE_SOURCES, CURATED_SCIENTIFIC_RECORDS } from './curated-scientific-catalog';
+import {
+  CURATED_IMAGE_SOURCES,
+  CURATED_SCIENTIFIC_RECORDS,
+  stableCatalogUuid,
+} from './curated-scientific-catalog';
 
 describe('curated scientific catalog', () => {
   it('contains exactly 36 unique unpublished review records', () => {
@@ -25,7 +29,19 @@ describe('curated scientific catalog', () => {
       expect(record.attributes).not.toHaveProperty('observed_on');
       expect(record.attributes).not.toHaveProperty('value');
       expect(record.attributes).not.toHaveProperty('geologic_age');
-      expect(record.description).toMatch(/review|reference/i);
+      expect(record.description).toMatch(/traceable|licensed/i);
+      expect(`${record.title} ${record.summary} ${record.description}`).not.toMatch(
+        /development draft|unpublished teaching|teacher must review/i,
+      );
     }
+  });
+
+  it('derives stable task-owned UUIDs', () => {
+    expect(stableCatalogUuid('record:shanidar-cave')).toBe(
+      stableCatalogUuid('record:shanidar-cave'),
+    );
+    expect(stableCatalogUuid('record:shanidar-cave')).not.toBe(
+      stableCatalogUuid('record:different-record'),
+    );
   });
 });
