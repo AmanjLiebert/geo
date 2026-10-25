@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / Step 6C — additive curated scientific development dataset |
-| Task folder | `docs/agent-work/phase-6-step-6c-curated-seed/` |
+| Task | Phase 6 / Step 6D — explicitly review and publish the curated scientific dataset |
+| Task folder | `docs/agent-work/phase-6-step-6d-curated-publication/` |
 | Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | An explicit, idempotent command adds 36 source-traceable scientific drafts and correctly attributed matching media without resetting, overwriting, publishing, or inventing human review of existing content. |
+| Plan gate | An explicit, idempotent command promotes only the 36 task-owned curated drafts through the existing evidence, independent-review, translation, category, media, revision, audit, and publication checks; public Explore then exposes 37 records without changing unrelated rows. |
 
 ## Required file order
 
