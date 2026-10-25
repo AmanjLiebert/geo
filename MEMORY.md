@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / Step 6D — explicitly review and publish the curated scientific dataset |
-| Task folder | `docs/agent-work/phase-6-step-6d-curated-publication/` |
+| Task | Phase 6 / Step 6E — accept deterministic public record identifiers in Explore |
+| Task folder | `docs/agent-work/phase-6-step-6e-public-id-validation/` |
 | Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | An explicit, idempotent command promotes only the 36 task-owned curated drafts through the existing evidence, independent-review, translation, category, media, revision, audit, and publication checks; public Explore then exposes 37 records without changing unrelated rows. |
+| Plan gate | Every published collection route accepts valid deterministic UUIDv5 public record identifiers, malformed identifiers remain rejected, all public category routes render without server-component errors, and the public projection remains minimal. |
 
 ## Required file order
 
