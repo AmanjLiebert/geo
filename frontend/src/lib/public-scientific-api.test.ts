@@ -53,6 +53,25 @@ describe("public scientific API", () => {
     ).toBe(true);
   });
 
+  it("accepts canonical UUIDv4 and deterministic UUIDv5 public identifiers", () => {
+    expect(publicScientificValidators.recordSummary(record)).toBe(true);
+    expect(
+      publicScientificValidators.recordSummary({
+        ...record,
+        publicId: "2d09f6c8-f467-5c5b-8442-453e210393ce",
+      }),
+    ).toBe(true);
+    expect(
+      publicScientificValidators.recordSummary({
+        ...record,
+        publicId: "00000000-0000-0000-0000-000000000000",
+      }),
+    ).toBe(false);
+    expect(
+      publicScientificValidators.recordSummary({ ...record, publicId: "not-a-public-id" }),
+    ).toBe(false);
+  });
+
   it("rejects signed, external, or otherwise non-public image locations", () => {
     expect(
       publicScientificValidators.category({
