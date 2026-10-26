@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / Step 6F — owner publication and published-record correction |
-| Task folder | `docs/agent-work/phase-6-step-6f-record-owner-publishing/` |
-| Status | `COMPLETE` |
+| Task | Phase 6 / UX-6 — record workspace clarity and visibility |
+| Task folder | `docs/agent-work/phase-6-ux6-record-workspace-clarity/` |
+| Status | `READY_FOR_IMPLEMENTATION` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | A teacher or admin may publish their own complete scientific record; all non-review readiness rules remain enforced; a published record has an explicit audited action that returns it to editable draft state; visitors remain denied. |
+| Plan gate | Teachers see all saved record data in one understandable workspace, including read-only published/in-review records; repeated location/media inputs are removed; section completion and save results are visible where the action occurs; backend validation remains unchanged. |
 
 ## Required file order
 

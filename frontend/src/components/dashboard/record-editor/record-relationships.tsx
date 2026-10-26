@@ -16,7 +16,15 @@ import styles from "./record-editor.module.css";
 type Target = { id: string; title: string };
 const PAGE_SIZE = 50;
 
-export function RecordRelationships({ recordId }: { recordId: string }) {
+export function RecordRelationships({
+  recordId,
+  readOnly = false,
+  onCountChange,
+}: {
+  recordId: string;
+  readOnly?: boolean;
+  onCountChange?: (count: number) => void;
+}) {
   const [items, setItems] = useState<RecordRelationship[]>([]);
   const [targets, setTargets] = useState<Target[]>([]);
   const [targetType, setTargetType] = useState<"record" | "research">("record");
@@ -43,7 +51,12 @@ export function RecordRelationships({ recordId }: { recordId: string }) {
     };
   }, [recordId]);
 
+  useEffect(() => onCountChange?.(items.length), [items.length, onCountChange]);
+
   useEffect(() => {
+    if (readOnly) {
+      return;
+    }
     let active = true;
     const query =
       targetType === "record"
@@ -72,7 +85,7 @@ export function RecordRelationships({ recordId }: { recordId: string }) {
     return () => {
       active = false;
     };
-  }, [targetType, recordId]);
+  }, [targetType, recordId, readOnly]);
 
   async function loadMore() {
     setLoadingTargets(true);
@@ -166,98 +179,100 @@ export function RecordRelationships({ recordId }: { recordId: string }) {
       {items.length === 0 && (
         <p className={styles.stepDescription}>No related items yet.</p>
       )}
-      <form className={styles.formSection} onSubmit={add}>
-        <div className={styles.formGrid}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="related-kind">
-              Connect to
-            </label>
-            <select
-              className={styles.select}
-              id="related-kind"
-              value={targetType}
-              disabled={loadingTargets}
-              onChange={(event) => {
-                setTargets([]);
-                setLoadedTargetCount(0);
-                setTargetId("");
-                setLoadingTargets(true);
-                setTargetType(event.target.value as "record" | "research");
-              }}
-            >
-              <option value="record">Scientific record</option>
-              <option value="research">Research publication</option>
-            </select>
-          </div>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="related-target">
-              Item
-            </label>
-            <select
-              className={styles.select}
-              id="related-target"
-              required
-              value={targetId}
-              onChange={(event) => setTargetId(event.target.value)}
-              disabled={loadingTargets || targets.length === 0}
-            >
-              <option value="">
-                {loadingTargets
-                  ? "Loading items…"
-                  : targets.length === 0
-                    ? "No items available"
-                    : "Choose an item"}
-              </option>
-              {targets.map((target) => (
-                <option key={target.id} value={target.id}>
-                  {target.title}
+      {!readOnly && (
+        <form className={styles.formSection} onSubmit={add}>
+          <div className={styles.formGrid}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel} htmlFor="related-kind">
+                Connect to
+              </label>
+              <select
+                className={styles.select}
+                id="related-kind"
+                value={targetType}
+                disabled={loadingTargets}
+                onChange={(event) => {
+                  setTargets([]);
+                  setLoadedTargetCount(0);
+                  setTargetId("");
+                  setLoadingTargets(true);
+                  setTargetType(event.target.value as "record" | "research");
+                }}
+              >
+                <option value="record">Scientific record</option>
+                <option value="research">Research publication</option>
+              </select>
+            </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel} htmlFor="related-target">
+                Item
+              </label>
+              <select
+                className={styles.select}
+                id="related-target"
+                required
+                value={targetId}
+                onChange={(event) => setTargetId(event.target.value)}
+                disabled={loadingTargets || targets.length === 0}
+              >
+                <option value="">
+                  {loadingTargets
+                    ? "Loading items…"
+                    : targets.length === 0
+                      ? "No items available"
+                      : "Choose an item"}
                 </option>
-              ))}
-            </select>
+                {targets.map((target) => (
+                  <option key={target.id} value={target.id}>
+                    {target.title}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-        {loadedTargetCount < totalTargets && (
-          <button
-            className={styles.buttonSecondary}
-            type="button"
-            onClick={loadMore}
-            disabled={loadingTargets}
-          >
-            Load more items
-          </button>
-        )}
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel} htmlFor="relationship-notes">
-            Why are they related? (optional)
-          </label>
-          <textarea
-            id="relationship-notes"
-            className={styles.textarea}
-            maxLength={2000}
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-          />
-        </div>
-        {error && (
-          <p className={styles.bannerError} role="alert">
-            {error}
-          </p>
-        )}
-        {message && (
-          <p className={styles.bannerSuccess} role="status">
-            {message}
-          </p>
-        )}
-        <div className={styles.actionsBar}>
-          <button
-            className={styles.buttonPrimary}
-            type="submit"
-            disabled={saving || !targetId}
-          >
-            {saving ? "Adding…" : "Add related item"}
-          </button>
-        </div>
-      </form>
+          {loadedTargetCount < totalTargets && (
+            <button
+              className={styles.buttonSecondary}
+              type="button"
+              onClick={loadMore}
+              disabled={loadingTargets}
+            >
+              Load more items
+            </button>
+          )}
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel} htmlFor="relationship-notes">
+              Why are they related? (optional)
+            </label>
+            <textarea
+              id="relationship-notes"
+              className={styles.textarea}
+              maxLength={2000}
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          </div>
+          {error && (
+            <p className={styles.bannerError} role="alert">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className={styles.bannerSuccess} role="status">
+              {message}
+            </p>
+          )}
+          <div className={styles.actionsBar}>
+            <button
+              className={styles.buttonPrimary}
+              type="submit"
+              disabled={saving || !targetId}
+            >
+              {saving ? "Adding…" : "Add related item"}
+            </button>
+          </div>
+        </form>
+      )}
     </section>
   );
 }

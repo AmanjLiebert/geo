@@ -20,15 +20,47 @@ describe("RecordMedia component", () => {
     expect(html).toContain(
       'accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"',
     );
-    expect(html).toContain("What does this file show?");
-    expect(html).toContain("Short caption (optional)");
-    expect(html).toContain("Describe the image for accessibility");
+    expect(html).toContain("What does this file show or contain?");
+    expect(html).toContain("used as image alternative text");
+    expect(html).not.toContain("Short caption (optional)");
+    expect(html).not.toContain("Describe the image for accessibility");
     expect(html).toContain("Why may Geo-Kurdistan use this file?");
     expect(html).toContain("Use this as the record’s main image");
     expect(html).toContain("More file information");
-    expect(html).toContain("Detailed description (optional)");
     expect(html).toContain("Credit line (optional)");
     expect(html).toContain("Licence name (optional)");
+  });
+
+  it("keeps saved media visible but hides mutation controls in read-only mode", () => {
+    const item: RecordMediaAttachment = {
+      mediaAssetId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      purpose: "Outcrop overview",
+      position: 0,
+      caption: "Saved field image",
+      description: "Limestone contact",
+      altText: "Limestone contact in an exposed face",
+      isPrimary: true,
+      mediaKind: "image",
+      processingStatus: "approved",
+      filename: "contact.jpg",
+      rightsStatement: "Field team permission",
+      licence: null,
+      credit: null,
+    };
+    const html = renderToStaticMarkup(
+      createElement(RecordMedia, {
+        recordId,
+        initialItems: [item],
+        readOnly: true,
+      }),
+    );
+
+    expect(html).toContain("contact.jpg");
+    expect(html).toContain("Saved field image");
+    expect(html).toContain("View online");
+    expect(html).not.toContain("Upload protected media");
+    expect(html).not.toContain("Make primary image");
+    expect(html).not.toContain("Manage");
   });
 
   it("renders a multi-attachment gallery with correct badges, metadata, and action controls", () => {

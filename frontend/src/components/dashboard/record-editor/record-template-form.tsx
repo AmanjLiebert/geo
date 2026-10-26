@@ -212,38 +212,6 @@ export function RecordTemplateForm({
         </section>
       )}
 
-      {/* Success notification banner */}
-      {saveSuccessMessage && (
-        <div className={styles.bannerSuccess} role="status" aria-live="polite">
-          <CheckCircle2 className={styles.bannerIcon} aria-hidden="true" />
-          <div className={styles.bannerContent}>
-            <span className={styles.bannerTitle}>Changes saved</span>
-            <p className={styles.bannerText}>{saveSuccessMessage}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Server error banner */}
-      {serverError && (
-        <div className={styles.bannerError} role="alert">
-          <AlertTriangle className={styles.bannerIcon} aria-hidden="true" />
-          <div className={styles.bannerContent}>
-            <span className={styles.bannerTitle}>Could not save draft</span>
-            <p className={styles.bannerText}>{serverError}</p>
-            {serverValidationIssues.length > 0 && (
-              <ul className={styles.errorList}>
-                {serverValidationIssues.map((issue, idx) => (
-                  <li key={idx}>
-                    {issue.field ? <strong>{issue.field}: </strong> : null}
-                    {issue.message}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Attributes Form Card */}
       <section
         className={styles.stepCard}
@@ -642,6 +610,47 @@ export function RecordTemplateForm({
                 </span>
               </button>
             </div>
+          </div>
+
+          <div className={styles.saveFeedback} aria-live="polite">
+            {saveSuccessMessage && (
+              <div className={styles.bannerSuccess} role="status">
+                <CheckCircle2
+                  className={styles.bannerIcon}
+                  aria-hidden="true"
+                />
+                <div className={styles.bannerContent}>
+                  <span className={styles.bannerTitle}>Changes saved</span>
+                  <p className={styles.bannerText}>{saveSuccessMessage}</p>
+                </div>
+              </div>
+            )}
+            {serverError && (
+              <div className={styles.bannerError} role="alert">
+                <AlertTriangle
+                  className={styles.bannerIcon}
+                  aria-hidden="true"
+                />
+                <div className={styles.bannerContent}>
+                  <span className={styles.bannerTitle}>
+                    Could not save draft
+                  </span>
+                  <p className={styles.bannerText}>{serverError}</p>
+                  {serverValidationIssues.length > 0 && (
+                    <ul className={styles.errorList}>
+                      {serverValidationIssues.map((issue, idx) => (
+                        <li key={idx}>
+                          {issue.field ? (
+                            <strong>{issue.field}: </strong>
+                          ) : null}
+                          {issue.message}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

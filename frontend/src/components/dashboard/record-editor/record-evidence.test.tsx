@@ -41,4 +41,15 @@ describe("RecordEvidence component", () => {
     expect(html).not.toContain("Evidence type");
     expect(html).not.toContain("published_source");
   });
+
+  it("hides source mutation controls in read-only mode", () => {
+    const html = renderToStaticMarkup(
+      createElement(RecordEvidence, { recordId, fields: [], readOnly: true }),
+    );
+
+    expect(html).toContain("Sources connected to this record");
+    expect(html).not.toContain("Add a new source");
+    expect(html).not.toContain("Use a saved source");
+    expect(html).not.toContain("Save and connect source");
+  });
 });

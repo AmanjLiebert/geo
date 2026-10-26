@@ -14,10 +14,12 @@ export function RecordEnglishDetails({
   record,
   onSaved,
   onDirtyChange,
+  readOnly = false,
 }: {
   record: ScientificRecordDetail;
   onSaved: (record: ScientificRecordDetail) => void;
   onDirtyChange: (dirty: boolean) => void;
+  readOnly?: boolean;
 }) {
   const existing = record.translations.find((item) => item.locale === "en");
   const [saved, setSaved] = useState<EnglishDetails>({
@@ -36,6 +38,38 @@ export function RecordEnglishDetails({
 
   useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
+
+  if (readOnly) {
+    return (
+      <section
+        className={styles.stepCard}
+        aria-labelledby="record-details-title"
+      >
+        <div className={styles.stepHeader}>
+          <h2 id="record-details-title" className={styles.stepTitle}>
+            Record details
+          </h2>
+          <p className={styles.stepDescription}>
+            Saved public-facing record text.
+          </p>
+        </div>
+        <dl className={styles.readOnlyStack}>
+          <div className={styles.readOnlyItem}>
+            <dt>Title</dt>
+            <dd>{existing?.title || "Not added"}</dd>
+          </div>
+          <div className={styles.readOnlyItem}>
+            <dt>Short summary</dt>
+            <dd>{existing?.summary || "Not added"}</dd>
+          </div>
+          <div className={styles.readOnlyItem}>
+            <dt>Description</dt>
+            <dd>{existing?.description || "Not added"}</dd>
+          </div>
+        </dl>
+      </section>
+    );
+  }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,7 +112,14 @@ export function RecordEnglishDetails({
           Add the English title and explanation for this record.
         </p>
         <p className={styles.fieldHelp}>
-          Details status: {existing?.status === "reviewed" ? "Reviewed" : existing?.status === "published" ? "Published" : existing ? "Draft" : "Not added"}
+          Details status:{" "}
+          {existing?.status === "reviewed"
+            ? "Reviewed"
+            : existing?.status === "published"
+              ? "Published"
+              : existing
+                ? "Draft"
+                : "Not added"}
         </p>
       </div>
       <form className={styles.formSection} onSubmit={save}>

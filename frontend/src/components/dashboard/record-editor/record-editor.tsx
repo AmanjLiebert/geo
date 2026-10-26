@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -35,8 +35,9 @@ import { RecordMedia } from "./record-media";
 import { RecordEvidence } from "./record-evidence";
 import { RecordLocations } from "./record-locations";
 import { RecordReviewPanel } from "./record-review-panel";
+import { RecordScientificSummary } from "./record-scientific-summary";
 import {
-  defaultRecordWorkspaceSections,
+  getRecordWorkspaceSections,
   RecordWorkspaceNav,
   type RecordWorkspaceSectionId,
 } from "./record-workspace-nav";
@@ -101,6 +102,18 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
   const [isDirty, setIsDirty] = useState(false);
   const [englishDetailsDirty, setEnglishDetailsDirty] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [sectionCounts, setSectionCounts] = useState<
+    Partial<Record<RecordWorkspaceSectionId, number>>
+  >({});
+
+  const updateSectionCount = useCallback(
+    (section: RecordWorkspaceSectionId, count: number) => {
+      setSectionCounts((current) =>
+        current[section] === count ? current : { ...current, [section]: count },
+      );
+    },
+    [],
+  );
 
   // Warn on navigation or tab close if form has unsaved edits
   useEffect(() => {
@@ -139,17 +152,6 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
           setRecordDetail(record);
           setInitialAttributes(record.attributes ?? {});
           setInitialSlug(record.slug ?? "");
-
-          // Check if record is non-editable (published, archived, or in_review)
-          if (
-            record.status === "published" ||
-            record.status === "archived" ||
-            record.status === "in_review" ||
-            isRecordCategoryArchived(record.categoryId, catRes.items)
-          ) {
-            setLoading(false);
-            return;
-          }
 
           if (record.categoryId && record.recordTypeId) {
             let tmpl: ActiveScientificTemplate;
@@ -381,21 +383,60 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       ?.title.trim() ||
     (mode === "create" ? "Add scientific record" : "Untitled record");
 
-  const workspaceSections =
-    recordDetail?.status === "draft"
-      ? defaultRecordWorkspaceSections
-      : defaultRecordWorkspaceSections.filter(
-          (section) => section.id === "scientific",
-        );
+  const workspaceSections = getRecordWorkspaceSections(recordDetail?.status);
 
-  const showEditWorkspace =
+  const showWorkspace =
     !loading &&
     !error &&
-    !isReadOnly &&
     mode === "edit" &&
     step === "fields" &&
     activeTemplate !== null &&
     recordDetail !== null;
+
+  const sectionSummaries = useMemo(() => {
+    const translation = recordDetail?.translations.find(
+      (item) => item.locale === "en",
+    );
+    const activeFields =
+      activeTemplate?.fields.filter((field) => field.status === "active") ?? [];
+    const completedFields = activeFields.filter((field) => {
+      const value = recordDetail?.attributes?.[field.stableKey];
+      return (
+        value !== null &&
+        value !== undefined &&
+        value !== "" &&
+        (!Array.isArray(value) || value.length > 0)
+      );
+    }).length;
+    const countLabel = (
+      section: RecordWorkspaceSectionId,
+      singular: string,
+      plural: string,
+    ) => {
+      const count = sectionCounts[section];
+      return count === undefined
+        ? "Loading…"
+        : count === 0
+          ? "Not added"
+          : `${count} ${count === 1 ? singular : plural}`;
+    };
+    return {
+      details: translation?.title?.trim() ? "Saved" : "Not added",
+      scientific: activeFields.length
+        ? `${completedFields} of ${activeFields.length} completed`
+        : "No extra fields",
+      sources: countLabel("sources", "source", "sources"),
+      location: countLabel("location", "location", "locations"),
+      related: countLabel("related", "connection", "connections"),
+      media: countLabel("media", "file", "files"),
+      review:
+        recordDetail?.status === "published"
+          ? "Published"
+          : recordDetail?.status === "in_review"
+            ? "Ready for decision"
+            : "Check readiness",
+    } satisfies Partial<Record<RecordWorkspaceSectionId, string>>;
+  }, [activeTemplate, recordDetail, sectionCounts]);
 
   return (
     <div className={styles.container}>
@@ -558,13 +599,6 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
               )}
             </div>
           </div>
-          {(recordDetail.status === "in_review" || recordDetail.status === "published") && (
-            <RecordReviewPanel
-              recordId={recordDetail.id}
-              status={recordDetail.status}
-              onRecordChanged={() => setReloadKey((value) => value + 1)}
-            />
-          )}
         </>
       )}
 
@@ -608,7 +642,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
           />
         )}
 
-      {showEditWorkspace && (
+      {showWorkspace && (
         <>
           <section
             className={styles.workspaceContext}
@@ -628,16 +662,17 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                 <span>{recordTypeName}</span>
               </div>
             </div>
-            {canChangeClassification(mode, recordDetail.status) && (
-              <button
-                type="button"
-                className={styles.buttonGhost}
-                onClick={handleChangeClassification}
-                disabled={isSaving}
-              >
-                <Edit3 size={14} aria-hidden="true" /> Change
-              </button>
-            )}
+            {!isReadOnly &&
+              canChangeClassification(mode, recordDetail.status) && (
+                <button
+                  type="button"
+                  className={styles.buttonGhost}
+                  onClick={handleChangeClassification}
+                  disabled={isSaving}
+                >
+                  <Edit3 size={14} aria-hidden="true" /> Change
+                </button>
+              )}
           </section>
 
           <div className={styles.workspaceLayout}>
@@ -645,6 +680,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
               sections={workspaceSections}
               activeSection={activeWorkspaceSection}
               onSelect={setActiveWorkspaceSection}
+              summaries={sectionSummaries}
             />
 
             <div className={styles.workspacePanels}>
@@ -662,6 +698,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                     record={recordDetail}
                     onSaved={setRecordDetail}
                     onDirtyChange={setEnglishDetailsDirty}
+                    readOnly={isReadOnly}
                   />
                 </div>
               )}
@@ -673,67 +710,96 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                 hidden={activeWorkspaceSection !== "scientific"}
                 className={styles.workspacePanel}
               >
-                <RecordTemplateForm
-                  template={activeTemplate}
-                  categoryName={categoryName}
-                  subcategoryName={subcategoryName}
-                  recordTypeName={recordTypeName}
-                  initialSlug={initialSlug}
-                  initialAttributes={initialAttributes}
-                  mode={mode}
-                  isSaving={isSaving}
-                  serverError={saveError}
-                  serverValidationIssues={saveValidationIssues}
-                  saveSuccessMessage={saveSuccessMessage}
-                  showClassificationSummary={false}
-                  onChangeClassification={undefined}
-                  onSubmit={handleFormSubmit}
-                  onCancel={handleCancel}
-                  onDirtyChange={setIsDirty}
-                />
+                {isReadOnly ? (
+                  <RecordScientificSummary
+                    template={activeTemplate}
+                    attributes={recordDetail.attributes ?? {}}
+                  />
+                ) : (
+                  <RecordTemplateForm
+                    template={activeTemplate}
+                    categoryName={categoryName}
+                    subcategoryName={subcategoryName}
+                    recordTypeName={recordTypeName}
+                    initialSlug={initialSlug}
+                    initialAttributes={initialAttributes}
+                    mode={mode}
+                    isSaving={isSaving}
+                    serverError={saveError}
+                    serverValidationIssues={saveValidationIssues}
+                    saveSuccessMessage={saveSuccessMessage}
+                    showClassificationSummary={false}
+                    onChangeClassification={undefined}
+                    onSubmit={handleFormSubmit}
+                    onCancel={handleCancel}
+                    onDirtyChange={setIsDirty}
+                  />
+                )}
               </div>
 
-              {recordDetail.status === "draft" && (
-                <>
-                  <div
-                    id="record-panel-sources"
-                    role="tabpanel"
-                    aria-labelledby="record-tab-sources"
-                    hidden={activeWorkspaceSection !== "sources"}
-                    className={styles.workspacePanel}
-                  >
-                    <RecordEvidence
-                      recordId={recordDetail.id}
-                      fields={activeTemplate.fields}
-                    />
-                  </div>
-                  <div
-                    id="record-panel-location"
-                    role="tabpanel"
-                    aria-labelledby="record-tab-location"
-                    hidden={activeWorkspaceSection !== "location"}
-                    className={styles.workspacePanel}
-                  >
-                    <RecordLocations recordId={recordDetail.id} />
-                  </div>
-                  <div
-                    id="record-panel-related"
-                    role="tabpanel"
-                    aria-labelledby="record-tab-related"
-                    hidden={activeWorkspaceSection !== "related"}
-                    className={styles.workspacePanel}
-                  >
-                    <RecordRelationships recordId={recordDetail.id} />
-                  </div>
-                  <div
-                    id="record-panel-media"
-                    role="tabpanel"
-                    aria-labelledby="record-tab-media"
-                    hidden={activeWorkspaceSection !== "media"}
-                    className={styles.workspacePanel}
-                  >
-                    <RecordMedia recordId={recordDetail.id} />
-                  </div>
+              <>
+                <div
+                  id="record-panel-sources"
+                  role="tabpanel"
+                  aria-labelledby="record-tab-sources"
+                  hidden={activeWorkspaceSection !== "sources"}
+                  className={styles.workspacePanel}
+                >
+                  <RecordEvidence
+                    recordId={recordDetail.id}
+                    fields={activeTemplate.fields}
+                    readOnly={isReadOnly}
+                    onCountChange={(count) =>
+                      updateSectionCount("sources", count)
+                    }
+                  />
+                </div>
+                <div
+                  id="record-panel-location"
+                  role="tabpanel"
+                  aria-labelledby="record-tab-location"
+                  hidden={activeWorkspaceSection !== "location"}
+                  className={styles.workspacePanel}
+                >
+                  <RecordLocations
+                    recordId={recordDetail.id}
+                    readOnly={isReadOnly}
+                    onCountChange={(count) =>
+                      updateSectionCount("location", count)
+                    }
+                  />
+                </div>
+                <div
+                  id="record-panel-related"
+                  role="tabpanel"
+                  aria-labelledby="record-tab-related"
+                  hidden={activeWorkspaceSection !== "related"}
+                  className={styles.workspacePanel}
+                >
+                  <RecordRelationships
+                    recordId={recordDetail.id}
+                    readOnly={isReadOnly}
+                    onCountChange={(count) =>
+                      updateSectionCount("related", count)
+                    }
+                  />
+                </div>
+                <div
+                  id="record-panel-media"
+                  role="tabpanel"
+                  aria-labelledby="record-tab-media"
+                  hidden={activeWorkspaceSection !== "media"}
+                  className={styles.workspacePanel}
+                >
+                  <RecordMedia
+                    recordId={recordDetail.id}
+                    readOnly={isReadOnly}
+                    onCountChange={(count) =>
+                      updateSectionCount("media", count)
+                    }
+                  />
+                </div>
+                {recordDetail.status !== "archived" && (
                   <div
                     id="record-panel-review"
                     role="tabpanel"
@@ -748,8 +814,8 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                       onSelectSection={setActiveWorkspaceSection}
                     />
                   </div>
-                </>
-              )}
+                )}
+              </>
             </div>
           </div>
         </>

@@ -75,14 +75,26 @@ export const defaultRecordWorkspaceSections: RecordWorkspaceSection[] = [
   },
 ];
 
+export function getRecordWorkspaceSections(
+  status?: string,
+): RecordWorkspaceSection[] {
+  return status === "archived"
+    ? defaultRecordWorkspaceSections.filter(
+        (section) => section.id !== "review",
+      )
+    : defaultRecordWorkspaceSections;
+}
+
 export function RecordWorkspaceNav({
   sections,
   activeSection,
   onSelect,
+  summaries = {},
 }: {
   sections: RecordWorkspaceSection[];
   activeSection: RecordWorkspaceSectionId;
   onSelect: (section: RecordWorkspaceSectionId) => void;
+  summaries?: Partial<Record<RecordWorkspaceSectionId, string>>;
 }) {
   return (
     <nav className={styles.workspaceNav} aria-label="Record sections">
@@ -116,7 +128,7 @@ export function RecordWorkspaceNav({
               <Icon className={styles.workspaceNavIcon} aria-hidden="true" />
               <span className={styles.workspaceNavCopy}>
                 <strong>{section.label}</strong>
-                <small>{section.description}</small>
+                <small>{summaries[section.id] ?? section.description}</small>
               </span>
             </button>
           );

@@ -85,6 +85,10 @@ The interface must:
 - Use archive and restore as the normal removal workflow.
 - Keep completion and visibility separate: a draft may be incomplete, a complete item may remain unpublished by choice, and publishing or returning a published record to editing is always an explicit action. Explain missing title, description, approved image, evidence, or location requirement beside the relevant action.
 - On a published scientific record, label the correction action **Edit published record**, not **Unpublish**. Confirm that the record will be temporarily hidden from visitors, preserve all work, create audit history, and open the editable draft immediately after the transition succeeds.
+- Treat the record workspace as one record, not a collection of unrelated database forms. Every saved section remains visible in draft, in-review, and published states; non-editable states use readable summaries instead of hiding data.
+- Show a concise section state in the workspace navigation, such as **Not added**, **1 location**, or **3 files**, so teachers can understand completeness without opening every section.
+- Do not request the same value twice when one safe value is sufficient. A public location reuses the exact point as its public point; only an approximate public location asks for a separate approved map point. Initial media upload uses one plain-language description for purpose, caption, and image alternative text, with advanced corrections available after upload.
+- Save success and failure feedback appears beside the control that initiated the save and remains visible without requiring the teacher to scroll to the top of a long form.
 
 ## Roles and permissions
 

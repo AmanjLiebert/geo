@@ -41,9 +41,13 @@ const ACCEPTED_TYPES = [
 export function RecordMedia({
   recordId,
   initialItems,
+  readOnly = false,
+  onCountChange,
 }: {
   recordId: string;
   initialItems?: RecordMediaAttachment[];
+  readOnly?: boolean;
+  onCountChange?: (count: number) => void;
 }) {
   const [items, setItems] = useState<RecordMediaAttachment[]>(
     initialItems ?? [],
@@ -52,10 +56,7 @@ export function RecordMedia({
   const [rights, setRights] = useState("");
   const [credit, setCredit] = useState("");
   const [licence, setLicence] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [caption, setCaption] = useState("");
   const [description, setDescription] = useState("");
-  const [altText, setAltText] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedPreviewUrl, setSelectedPreviewUrl] = useState<string | null>(
@@ -108,6 +109,8 @@ export function RecordMedia({
     };
   }, [recordId]);
 
+  useEffect(() => onCountChange?.(items.length), [items.length, onCountChange]);
+
   useEffect(
     () => () => {
       if (selectedPreviewUrlRef.current) {
@@ -141,7 +144,6 @@ export function RecordMedia({
       setFile(null);
       setSelectedPreviewUrl(null);
       setIsPrimary(false);
-      setAltText("");
       setError("Choose a JPEG, PNG, WebP, PDF, MP4, or WebM file.");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
@@ -156,7 +158,6 @@ export function RecordMedia({
     }
     if (!selected?.type.startsWith("image/")) {
       setIsPrimary(false);
-      setAltText("");
     }
   }
 
@@ -174,8 +175,8 @@ export function RecordMedia({
       setError("Choose a JPEG, PNG, WebP, PDF, MP4, or WebM file.");
       return;
     }
-    if (!rights.trim() || !purpose.trim()) {
-      setError("Describe the file rights and its purpose.");
+    if (!rights.trim() || !description.trim()) {
+      setError("Describe the file and why Geo-Kurdistan may use it.");
       return;
     }
     setUploading(true);
@@ -184,11 +185,11 @@ export function RecordMedia({
         rightsStatement: rights.trim(),
         credit: credit.trim() || undefined,
         licence: licence.trim() || undefined,
-        purpose: purpose.trim(),
-        caption: caption.trim() || undefined,
-        description: description.trim() || undefined,
+        purpose: description.trim().slice(0, 40),
+        caption: description.trim().slice(0, 160),
+        description: description.trim(),
         altText: file.type.startsWith("image/")
-          ? altText.trim() || undefined
+          ? description.trim().slice(0, 500)
           : undefined,
         isPrimary: isPrimary && file.type.startsWith("image/"),
       });
@@ -198,10 +199,7 @@ export function RecordMedia({
       setRights("");
       setCredit("");
       setLicence("");
-      setPurpose("");
-      setCaption("");
       setDescription("");
-      setAltText("");
       setIsPrimary(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setMessage(
@@ -526,64 +524,68 @@ export function RecordMedia({
                       View online
                     </button>
                   )}
-                  {item.mediaKind === "image" && !item.isPrimary && (
-                    <button
-                      className={styles.buttonSecondary}
-                      type="button"
-                      onClick={() => void makePrimary(item.mediaAssetId)}
-                      disabled={
-                        settingPrimaryId === item.mediaAssetId || reordering
-                      }
-                    >
-                      {settingPrimaryId === item.mediaAssetId
-                        ? "Setting primary…"
-                        : "Make primary image"}
-                    </button>
-                  )}
-                  <details className={styles.mediaManageMenu}>
-                    <summary>Manage</summary>
-                    <div>
+                  {!readOnly &&
+                    item.mediaKind === "image" &&
+                    !item.isPrimary && (
                       <button
-                        className={styles.buttonGhost}
+                        className={styles.buttonSecondary}
                         type="button"
-                        onClick={() => void moveAttachment(index, "up")}
-                        disabled={index === 0 || reordering}
-                        aria-label={`Move ${item.filename} up`}
-                      >
-                        Move earlier
-                      </button>
-                      <button
-                        className={styles.buttonGhost}
-                        type="button"
-                        onClick={() => void moveAttachment(index, "down")}
-                        disabled={index === items.length - 1 || reordering}
-                        aria-label={`Move ${item.filename} down`}
-                      >
-                        Move later
-                      </button>
-                      <button
-                        className={styles.buttonGhost}
-                        type="button"
-                        onClick={() => startEditing(item)}
-                        disabled={isEditing}
-                      >
-                        Edit information
-                      </button>
-                      <button
-                        className={styles.buttonGhost}
-                        type="button"
-                        onClick={() =>
-                          setConfirmDetachAssetId(item.mediaAssetId)
+                        onClick={() => void makePrimary(item.mediaAssetId)}
+                        disabled={
+                          settingPrimaryId === item.mediaAssetId || reordering
                         }
-                        disabled={isConfirmingDetach}
                       >
-                        Detach
+                        {settingPrimaryId === item.mediaAssetId
+                          ? "Setting primary…"
+                          : "Make primary image"}
                       </button>
-                    </div>
-                  </details>
+                    )}
+                  {!readOnly && (
+                    <details className={styles.mediaManageMenu}>
+                      <summary>Manage</summary>
+                      <div>
+                        <button
+                          className={styles.buttonGhost}
+                          type="button"
+                          onClick={() => void moveAttachment(index, "up")}
+                          disabled={index === 0 || reordering}
+                          aria-label={`Move ${item.filename} up`}
+                        >
+                          Move earlier
+                        </button>
+                        <button
+                          className={styles.buttonGhost}
+                          type="button"
+                          onClick={() => void moveAttachment(index, "down")}
+                          disabled={index === items.length - 1 || reordering}
+                          aria-label={`Move ${item.filename} down`}
+                        >
+                          Move later
+                        </button>
+                        <button
+                          className={styles.buttonGhost}
+                          type="button"
+                          onClick={() => startEditing(item)}
+                          disabled={isEditing}
+                        >
+                          Edit information
+                        </button>
+                        <button
+                          className={styles.buttonGhost}
+                          type="button"
+                          onClick={() =>
+                            setConfirmDetachAssetId(item.mediaAssetId)
+                          }
+                          disabled={isConfirmingDetach}
+                        >
+                          Detach
+                        </button>
+                      </div>
+                    </details>
+                  )}
                 </div>
 
-                {isEditing && (
+                {!readOnly && isEditing && (
                   <form
                     className={styles.inlineEditBox}
                     onSubmit={(e) => void saveEdit(e, item)}
@@ -671,7 +673,7 @@ export function RecordMedia({
                   </form>
                 )}
 
-                {isConfirmingDetach && (
+                {!readOnly && isConfirmingDetach && (
                   <div className={styles.inlineConfirmBox}>
                     <p className={styles.inlineConfirmText}>
                       Detach this file from the record? The media asset and its
@@ -704,222 +706,183 @@ export function RecordMedia({
         <p className={styles.stepDescription}>No files attached yet.</p>
       )}
 
-      <form className={styles.mediaUploadForm} onSubmit={upload}>
-        <div className={styles.mediaUploadHeading}>
-          <div>
-            <span className={styles.stepNumber}>Add another file</span>
-            <h3>Upload protected media</h3>
-          </div>
-          <p>One file at a time. It stays private while it is checked.</p>
-        </div>
-
-        <div
-          className={
-            isDragging ? styles.mediaDropZoneActive : styles.mediaDropZone
-          }
-          onDragEnter={(event) => {
-            event.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragOver={(event) => event.preventDefault()}
-          onDragLeave={(event) => {
-            if (
-              !event.currentTarget.contains(event.relatedTarget as Node | null)
-            ) {
-              setIsDragging(false);
-            }
-          }}
-          onDrop={dropFile}
-        >
-          {selectedPreviewUrl ? (
-            /* Local preview only; uploaded originals remain private. */
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={selectedPreviewUrl}
-              alt="Selected upload preview"
-              className={styles.mediaSelectedPreview}
-            />
-          ) : (
-            <div className={styles.mediaDropIcon} aria-hidden="true">
-              <UploadCloud />
+      {!readOnly && (
+        <form className={styles.mediaUploadForm} onSubmit={upload}>
+          <div className={styles.mediaUploadHeading}>
+            <div>
+              <span className={styles.stepNumber}>Add another file</span>
+              <h3>Upload protected media</h3>
             </div>
-          )}
-          <div className={styles.mediaDropCopy}>
-            <strong>{file ? file.name : "Drop a file here"}</strong>
-            <span>
-              {file
-                ? `${file.type || "Unknown type"} · ${(file.size / 1024 / 1024).toFixed(1)} MB`
-                : "or choose one from your computer"}
-            </span>
-            <label
-              className={styles.buttonSecondary}
-              htmlFor="record-media-file"
-            >
-              {file ? "Choose a different file" : "Choose file"}
-            </label>
+            <p>One file at a time. It stays private while it is checked.</p>
           </div>
-          <input
-            ref={fileInputRef}
-            id="record-media-file"
-            className={styles.mediaFileInput}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"
-            required
-            onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
-          />
-        </div>
-        <small className={styles.fieldHelp}>
-          JPEG, PNG, or WebP up to 25 MB; PDF up to 20 MB; MP4 or WebM up to 50
-          MB.
-        </small>
 
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel} htmlFor="record-media-purpose">
-            What does this file show?{" "}
-            <span className={styles.requiredTag}>Required</span>
-          </label>
-          <input
-            id="record-media-purpose"
-            className={styles.input}
-            maxLength={40}
-            required
-            value={purpose}
-            onChange={(event) => setPurpose(event.target.value)}
-            placeholder="Example: Outcrop overview or Thin section"
-          />
-        </div>
-
-        <div className={styles.formGrid}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="record-media-caption">
-              Short caption (optional)
-            </label>
-            <input
-              id="record-media-caption"
-              className={styles.input}
-              maxLength={160}
-              value={caption}
-              onChange={(event) => setCaption(event.target.value)}
-              placeholder="Shown with the image"
-            />
-          </div>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="record-media-alt">
-              Describe the image for accessibility
-            </label>
-            <input
-              id="record-media-alt"
-              className={styles.input}
-              maxLength={500}
-              value={altText}
-              disabled={!isChosenFileImage}
-              onChange={(event) => setAltText(event.target.value)}
-              placeholder={
-                isChosenFileImage
-                  ? "What is visible in this image?"
-                  : "Available for images"
+          <div
+            className={
+              isDragging ? styles.mediaDropZoneActive : styles.mediaDropZone
+            }
+            onDragEnter={(event) => {
+              event.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragOver={(event) => event.preventDefault()}
+            onDragLeave={(event) => {
+              if (
+                !event.currentTarget.contains(
+                  event.relatedTarget as Node | null,
+                )
+              ) {
+                setIsDragging(false);
               }
+            }}
+            onDrop={dropFile}
+          >
+            {selectedPreviewUrl ? (
+              /* Local preview only; uploaded originals remain private. */
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={selectedPreviewUrl}
+                alt="Selected upload preview"
+                className={styles.mediaSelectedPreview}
+              />
+            ) : (
+              <div className={styles.mediaDropIcon} aria-hidden="true">
+                <UploadCloud />
+              </div>
+            )}
+            <div className={styles.mediaDropCopy}>
+              <strong>{file ? file.name : "Drop a file here"}</strong>
+              <span>
+                {file
+                  ? `${file.type || "Unknown type"} · ${(file.size / 1024 / 1024).toFixed(1)} MB`
+                  : "or choose one from your computer"}
+              </span>
+              <label
+                className={styles.buttonSecondary}
+                htmlFor="record-media-file"
+              >
+                {file ? "Choose a different file" : "Choose file"}
+              </label>
+            </div>
+            <input
+              ref={fileInputRef}
+              id="record-media-file"
+              className={styles.mediaFileInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"
+              required
+              onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
             />
           </div>
-        </div>
-
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel} htmlFor="record-media-rights">
-            Why may Geo-Kurdistan use this file?{" "}
-            <span className={styles.requiredTag}>Required</span>
-          </label>
-          <input
-            id="record-media-rights"
-            className={styles.input}
-            maxLength={2000}
-            required
-            value={rights}
-            onChange={(event) => setRights(event.target.value)}
-            placeholder="Example: Photographed by our field team, used with permission"
-          />
           <small className={styles.fieldHelp}>
-            State who owns the file or what permission or licence allows its
-            use.
+            JPEG, PNG, or WebP up to 25 MB; PDF up to 20 MB; MP4 or WebM up to
+            50 MB.
           </small>
-        </div>
 
-        <label className={styles.checkboxLabel}>
-          <input
-            type="checkbox"
-            className={styles.checkboxInput}
-            checked={isPrimary}
-            disabled={!isChosenFileImage}
-            onChange={(event) => setIsPrimary(event.target.checked)}
-          />
-          <span className={styles.checkboxText}>
-            Use this as the record’s main image{" "}
-            {!file || isChosenFileImage ? "" : "(images only)"}
-          </span>
-        </label>
-
-        <details className={styles.mediaAdvancedFields}>
-          <summary>More file information</summary>
           <div className={styles.fieldGroup}>
             <label
               className={styles.fieldLabel}
               htmlFor="record-media-description"
             >
-              Detailed description (optional)
+              What does this file show or contain?{" "}
+              <span className={styles.requiredTag}>Required</span>
             </label>
             <textarea
               id="record-media-description"
               className={styles.textarea}
-              maxLength={2000}
+              maxLength={500}
+              required
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Additional geological context or methodology"
+              placeholder="Example: Western face of the outcrop showing the limestone contact."
             />
+            <small className={styles.fieldHelp}>
+              This description is shown with the file and used as image
+              alternative text when applicable.
+            </small>
           </div>
-          <div className={styles.formGrid}>
-            <div className={styles.fieldGroup}>
-              <label
-                className={styles.fieldLabel}
-                htmlFor="record-media-credit"
-              >
-                Credit line (optional)
-              </label>
-              <input
-                id="record-media-credit"
-                className={styles.input}
-                maxLength={1000}
-                value={credit}
-                onChange={(event) => setCredit(event.target.value)}
-              />
-            </div>
-            <div className={styles.fieldGroup}>
-              <label
-                className={styles.fieldLabel}
-                htmlFor="record-media-licence"
-              >
-                Licence name (optional)
-              </label>
-              <input
-                id="record-media-licence"
-                className={styles.input}
-                maxLength={160}
-                value={licence}
-                onChange={(event) => setLicence(event.target.value)}
-                placeholder="Example: CC BY 4.0"
-              />
-            </div>
-          </div>
-        </details>
 
-        <div className={styles.actionsBar}>
-          <button
-            className={styles.buttonPrimary}
-            type="submit"
-            disabled={uploading || !file}
-          >
-            {uploading ? "Uploading…" : "Add file"}
-          </button>
-        </div>
-      </form>
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel} htmlFor="record-media-rights">
+              Why may Geo-Kurdistan use this file?{" "}
+              <span className={styles.requiredTag}>Required</span>
+            </label>
+            <input
+              id="record-media-rights"
+              className={styles.input}
+              maxLength={2000}
+              required
+              value={rights}
+              onChange={(event) => setRights(event.target.value)}
+              placeholder="Example: Photographed by our field team, used with permission"
+            />
+            <small className={styles.fieldHelp}>
+              State who owns the file or what permission or licence allows its
+              use.
+            </small>
+          </div>
+
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              className={styles.checkboxInput}
+              checked={isPrimary}
+              disabled={!isChosenFileImage}
+              onChange={(event) => setIsPrimary(event.target.checked)}
+            />
+            <span className={styles.checkboxText}>
+              Use this as the record’s main image{" "}
+              {!file || isChosenFileImage ? "" : "(images only)"}
+            </span>
+          </label>
+
+          <details className={styles.mediaAdvancedFields}>
+            <summary>More file information</summary>
+            <div className={styles.formGrid}>
+              <div className={styles.fieldGroup}>
+                <label
+                  className={styles.fieldLabel}
+                  htmlFor="record-media-credit"
+                >
+                  Credit line (optional)
+                </label>
+                <input
+                  id="record-media-credit"
+                  className={styles.input}
+                  maxLength={1000}
+                  value={credit}
+                  onChange={(event) => setCredit(event.target.value)}
+                />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label
+                  className={styles.fieldLabel}
+                  htmlFor="record-media-licence"
+                >
+                  Licence name (optional)
+                </label>
+                <input
+                  id="record-media-licence"
+                  className={styles.input}
+                  maxLength={160}
+                  value={licence}
+                  onChange={(event) => setLicence(event.target.value)}
+                  placeholder="Example: CC BY 4.0"
+                />
+              </div>
+            </div>
+          </details>
+
+          <div className={styles.actionsBar}>
+            <button
+              className={styles.buttonPrimary}
+              type="submit"
+              disabled={uploading || !file}
+            >
+              {uploading ? "Uploading…" : "Add file"}
+            </button>
+          </div>
+        </form>
+      )}
 
       {view && (
         <div

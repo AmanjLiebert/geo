@@ -161,7 +161,12 @@ describe("record-editor-utils", () => {
 
       const sorted = sortTemplateFields(fields);
       expect(sorted).toHaveLength(4);
-      expect(sorted.map((f) => f.id)).toEqual(["f-req-1", "f-req-2", "f-opt-1", "f-opt-2"]);
+      expect(sorted.map((f) => f.id)).toEqual([
+        "f-req-1",
+        "f-req-2",
+        "f-opt-1",
+        "f-opt-2",
+      ]);
     });
   });
 
@@ -185,9 +190,15 @@ describe("record-editor-utils", () => {
       };
 
       expect(validateFieldInput(field, "")).toBeNull();
-      expect(validateFieldInput(field, "Ab")).toBe("Use at least 3 characters.");
-      expect(validateFieldInput(field, "Limestone Extra Long")).toBe("Use no more than 10 characters.");
-      expect(validateFieldInput(field, "Rock123")).toBe("Value does not match the required format.");
+      expect(validateFieldInput(field, "Ab")).toBe(
+        "Use at least 3 characters.",
+      );
+      expect(validateFieldInput(field, "Limestone Extra Long")).toBe(
+        "Use no more than 10 characters.",
+      );
+      expect(validateFieldInput(field, "Rock123")).toBe(
+        "Value does not match the required format.",
+      );
       expect(validateFieldInput(field, "Limestone")).toBeNull();
     });
 
@@ -210,10 +221,16 @@ describe("record-editor-utils", () => {
       };
 
       expect(validateFieldInput(field, "")).toBeNull();
-      expect(validateFieldInput(field, "abc")).toBe("Please enter a valid whole number.");
-      expect(validateFieldInput(field, 3.14)).toBe("Please enter a valid whole number.");
+      expect(validateFieldInput(field, "abc")).toBe(
+        "Please enter a valid whole number.",
+      );
+      expect(validateFieldInput(field, 3.14)).toBe(
+        "Please enter a valid whole number.",
+      );
       expect(validateFieldInput(field, 0)).toBe("Value must be at least 1.");
-      expect(validateFieldInput(field, 101)).toBe("Value must be no more than 100.");
+      expect(validateFieldInput(field, 101)).toBe(
+        "Value must be no more than 100.",
+      );
       expect(validateFieldInput(field, 42)).toBeNull();
       expect(validateFieldInput(field, "42")).toBeNull();
     });
@@ -242,18 +259,30 @@ describe("record-editor-utils", () => {
       expect(validateFieldInput(field, "-1e2")).toBeNull(); // -100
 
       // Exponent notation: fractional result fails integer check
-      expect(validateFieldInput(field, "1e-2")).toBe("Please enter a valid whole number."); // 0.01
+      expect(validateFieldInput(field, "1e-2")).toBe(
+        "Please enter a valid whole number.",
+      ); // 0.01
 
       // Fractions are rejected
-      expect(validateFieldInput(field, "1/2")).toBe("Please enter a valid whole number.");
-      expect(validateFieldInput(field, "3/4")).toBe("Please enter a valid whole number.");
-      expect(validateFieldInput(field, "10/2")).toBe("Please enter a valid whole number.");
+      expect(validateFieldInput(field, "1/2")).toBe(
+        "Please enter a valid whole number.",
+      );
+      expect(validateFieldInput(field, "3/4")).toBe(
+        "Please enter a valid whole number.",
+      );
+      expect(validateFieldInput(field, "10/2")).toBe(
+        "Please enter a valid whole number.",
+      );
 
       // Negative values
       expect(validateFieldInput(field, "-250")).toBeNull();
       expect(validateFieldInput(field, -250)).toBeNull();
-      expect(validateFieldInput(field, "-600")).toBe("Value must be at least -500.");
-      expect(validateFieldInput(field, "6000")).toBe("Value must be no more than 5000.");
+      expect(validateFieldInput(field, "-600")).toBe(
+        "Value must be at least -500.",
+      );
+      expect(validateFieldInput(field, "6000")).toBe(
+        "Value must be no more than 5000.",
+      );
 
       // Unsafe integers (> Number.MAX_SAFE_INTEGER)
       expect(validateFieldInput(field, "9007199254740992")).toBe(
@@ -286,9 +315,13 @@ describe("record-editor-utils", () => {
       };
 
       expect(validateFieldInput(field, "")).toBeNull();
-      expect(validateFieldInput(field, "not-a-number")).toBe("Please enter a valid number.");
+      expect(validateFieldInput(field, "not-a-number")).toBe(
+        "Please enter a valid number.",
+      );
       expect(validateFieldInput(field, 0.5)).toBe("Value must be at least 1.");
-      expect(validateFieldInput(field, 10.5)).toBe("Value must be no more than 10.");
+      expect(validateFieldInput(field, 10.5)).toBe(
+        "Value must be no more than 10.",
+      );
       expect(validateFieldInput(field, 6.5)).toBeNull();
       expect(validateFieldInput(field, "6.5")).toBeNull();
     });
@@ -317,20 +350,31 @@ describe("record-editor-utils", () => {
       expect(validateFieldInput(field, "-4.5e1")).toBeNull(); // -45
 
       // Fractions are rejected
-      expect(validateFieldInput(field, "1/2")).toBe("Please enter a valid number.");
-      expect(validateFieldInput(field, "45/2")).toBe("Please enter a valid number.");
+      expect(validateFieldInput(field, "1/2")).toBe(
+        "Please enter a valid number.",
+      );
+      expect(validateFieldInput(field, "45/2")).toBe(
+        "Please enter a valid number.",
+      );
 
       // Negative values
       expect(validateFieldInput(field, "-45.5")).toBeNull();
       expect(validateFieldInput(field, -45.5)).toBeNull();
-      expect(validateFieldInput(field, "-95.0")).toBe("Value must be at least -90.");
-      expect(validateFieldInput(field, "95.0")).toBe("Value must be no more than 90.");
+      expect(validateFieldInput(field, "-95.0")).toBe(
+        "Value must be at least -90.",
+      );
+      expect(validateFieldInput(field, "95.0")).toBe(
+        "Value must be no more than 90.",
+      );
 
       // Infinity / NaN
-      expect(validateFieldInput(field, "Infinity")).toBe("Please enter a valid number.");
-      expect(validateFieldInput(field, "-Infinity")).toBe("Please enter a valid number.");
+      expect(validateFieldInput(field, "Infinity")).toBe(
+        "Please enter a valid number.",
+      );
+      expect(validateFieldInput(field, "-Infinity")).toBe(
+        "Please enter a valid number.",
+      );
     });
-
 
     it("validates boolean fields", () => {
       const field: TemplateField = {
@@ -373,8 +417,12 @@ describe("record-editor-utils", () => {
       };
 
       expect(validateFieldInput(field, "")).toBeNull();
-      expect(validateFieldInput(field, "2024-13-45")).toBe("Please enter a valid date in YYYY-MM-DD format.");
-      expect(validateFieldInput(field, "2024-02-30")).toBe("Please enter a valid date in YYYY-MM-DD format.");
+      expect(validateFieldInput(field, "2024-13-45")).toBe(
+        "Please enter a valid date in YYYY-MM-DD format.",
+      );
+      expect(validateFieldInput(field, "2024-02-30")).toBe(
+        "Please enter a valid date in YYYY-MM-DD format.",
+      );
       expect(validateFieldInput(field, "2024-02-29")).toBeNull(); // leap year
       expect(validateFieldInput(field, "2024-05-15")).toBeNull();
     });
@@ -399,7 +447,9 @@ describe("record-editor-utils", () => {
 
       expect(validateFieldInput(field, "")).toBeNull();
       expect(validateFieldInput(field, "mold")).toBeNull();
-      expect(validateFieldInput(field, "unknown")).toBe("Selected option is not allowed.");
+      expect(validateFieldInput(field, "unknown")).toBe(
+        "Selected option is not allowed.",
+      );
     });
 
     it("validates multi_choice fields against allowed options", () => {
@@ -452,7 +502,9 @@ describe("record-editor-utils", () => {
 
     it("rejects slugs exceeding 160 characters", () => {
       const longSlug = "a".repeat(161);
-      expect(validateSlug(longSlug)).toBe("Slug must be 160 characters or fewer.");
+      expect(validateSlug(longSlug)).toBe(
+        "Slug must be 160 characters or fewer.",
+      );
     });
   });
 
@@ -477,9 +529,14 @@ describe("record-editor-utils", () => {
       const intField: TemplateField = { ...textField, dataType: "integer" };
       const decField: TemplateField = { ...textField, dataType: "decimal" };
       const boolField: TemplateField = { ...textField, dataType: "boolean" };
-      const multiField: TemplateField = { ...textField, dataType: "multi_choice" };
+      const multiField: TemplateField = {
+        ...textField,
+        dataType: "multi_choice",
+      };
 
-      expect(formatFieldValueForSubmit(textField, "  trimmed text  ")).toBe("trimmed text");
+      expect(formatFieldValueForSubmit(textField, "  trimmed text  ")).toBe(
+        "trimmed text",
+      );
       expect(formatFieldValueForSubmit(textField, "")).toBeUndefined();
       expect(formatFieldValueForSubmit(intField, "42")).toBe(42);
       expect(formatFieldValueForSubmit(intField, "1e2")).toBe(100); // Exponent converted to 100, not 1!
@@ -491,7 +548,10 @@ describe("record-editor-utils", () => {
       expect(formatFieldValueForSubmit(decField, "-2.5e2")).toBe(-250);
       expect(formatFieldValueForSubmit(boolField, true)).toBe(true);
       expect(formatFieldValueForSubmit(boolField, false)).toBe(false);
-      expect(formatFieldValueForSubmit(multiField, ["a", "b"])).toEqual(["a", "b"]);
+      expect(formatFieldValueForSubmit(multiField, ["a", "b"])).toEqual([
+        "a",
+        "b",
+      ]);
     });
   });
 
@@ -499,7 +559,9 @@ describe("record-editor-utils", () => {
     it("permits changing classification in create mode regardless of status", () => {
       expect(canChangeClassification("create")).toBe(true);
       expect(canChangeClassification("create", undefined)).toBe(true);
-      expect(canChangeClassification("create", "unclassified_draft")).toBe(true);
+      expect(canChangeClassification("create", "unclassified_draft")).toBe(
+        true,
+      );
       expect(canChangeClassification("create", "draft")).toBe(true);
     });
 
@@ -522,8 +584,12 @@ describe("record-editor-utils", () => {
 
   describe("formatSlugForSubmit", () => {
     it("formats non-empty slug by trimming in both create and edit modes", () => {
-      expect(formatSlugForSubmit("  rawandiz-chert  ", "create")).toBe("rawandiz-chert");
-      expect(formatSlugForSubmit("  rawandiz-chert  ", "edit")).toBe("rawandiz-chert");
+      expect(formatSlugForSubmit("  rawandiz-chert  ", "create")).toBe(
+        "rawandiz-chert",
+      );
+      expect(formatSlugForSubmit("  rawandiz-chert  ", "edit")).toBe(
+        "rawandiz-chert",
+      );
     });
 
     it("returns null in edit mode when slug is cleared or empty to explicitly clear in database", () => {
@@ -614,7 +680,28 @@ describe("record-editor-utils", () => {
         }),
       );
       expect(html).toContain("General geological record template");
-      expect(html).toContain("This general geological record uses the common sections below");
+      expect(html).toContain(
+        "This general geological record uses the common sections below",
+      );
+    });
+
+    it("places save feedback after the save controls so it is visible where the action happened", () => {
+      const html = renderToStaticMarkup(
+        createElement(RecordTemplateForm, {
+          template: mockTemplate,
+          categoryName: "Formations",
+          recordTypeName: "Rock Unit",
+          mode: "edit",
+          isSaving: false,
+          saveSuccessMessage: "Your scientific fields are saved.",
+          onSubmit: () => {},
+          onCancel: () => {},
+        }),
+      );
+      expect(html.indexOf("Save changes")).toBeGreaterThan(-1);
+      expect(html.indexOf("Changes saved")).toBeGreaterThan(
+        html.indexOf("Save changes"),
+      );
     });
   });
 
@@ -721,12 +808,18 @@ describe("record-editor-utils", () => {
     });
 
     it("returns true when categoryId is not in active categories (archived category)", () => {
-      expect(isRecordCategoryArchived("cat-archived-999", sampleCategories)).toBe(true);
+      expect(
+        isRecordCategoryArchived("cat-archived-999", sampleCategories),
+      ).toBe(true);
     });
 
     it("returns false when categoryId is in active categories", () => {
-      expect(isRecordCategoryArchived("cat-child-1", sampleCategories)).toBe(false);
-      expect(isRecordCategoryArchived("cat-root-2", sampleCategories)).toBe(false);
+      expect(isRecordCategoryArchived("cat-child-1", sampleCategories)).toBe(
+        false,
+      );
+      expect(isRecordCategoryArchived("cat-root-2", sampleCategories)).toBe(
+        false,
+      );
     });
   });
 

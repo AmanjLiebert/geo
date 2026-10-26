@@ -28,9 +28,13 @@ type SourceMode = "new" | "saved";
 export function RecordEvidence({
   recordId,
   fields,
+  readOnly = false,
+  onCountChange,
 }: {
   recordId: string;
   fields: TemplateField[];
+  readOnly?: boolean;
+  onCountChange?: (count: number) => void;
 }) {
   const [evidence, setEvidence] = useState<RecordEvidenceItem[]>([]);
   const [references, setReferences] = useState<ReferenceChoice[]>([]);
@@ -73,6 +77,11 @@ export function RecordEvidence({
       active = false;
     };
   }, [recordId]);
+
+  useEffect(
+    () => onCountChange?.(evidence.length),
+    [evidence.length, onCountChange],
+  );
 
   function clearFeedback() {
     setError(null);
@@ -369,16 +378,18 @@ export function RecordEvidence({
                     {fieldLabel ? `Only ${fieldLabel}` : "Whole record"}
                   </p>
                   {item.notes && <small>{item.notes}</small>}
-                  {item.verificationStatus !== "verified" && item.canVerify && (
-                    <button
-                      type="button"
-                      className={styles.buttonSecondary}
-                      disabled={busy}
-                      onClick={() => void verifySource(item.referenceId)}
-                    >
-                      <ShieldCheck aria-hidden="true" /> Verify source
-                    </button>
-                  )}
+                  {!readOnly &&
+                    item.verificationStatus !== "verified" &&
+                    item.canVerify && (
+                      <button
+                        type="button"
+                        className={styles.buttonSecondary}
+                        disabled={busy}
+                        onClick={() => void verifySource(item.referenceId)}
+                      >
+                        <ShieldCheck aria-hidden="true" /> Verify source
+                      </button>
+                    )}
                 </div>
               </li>
             );
@@ -388,7 +399,9 @@ export function RecordEvidence({
         <div className={styles.sourceEmptyState}>
           <BookOpen aria-hidden="true" />
           <div>
-            <strong>Add the first source</strong>
+            <strong>
+              {readOnly ? "No sources connected" : "Add the first source"}
+            </strong>
             <p>
               Use a journal, book, report, map, dataset, or trusted web page.
             </p>
@@ -396,305 +409,324 @@ export function RecordEvidence({
         </div>
       )}
 
-      <div
-        className={styles.sourceModeSwitch}
-        aria-label="Choose source method"
-      >
-        <button
-          type="button"
-          className={
-            mode === "new"
-              ? styles.sourceModeButtonActive
-              : styles.sourceModeButton
-          }
-          aria-pressed={mode === "new"}
-          onClick={() => {
-            clearFeedback();
-            setMode("new");
-          }}
-        >
-          <Plus aria-hidden="true" />
-          <span>
-            <strong>Add a new source</strong>
-            <small>Enter a citation for the first time</small>
-          </span>
-        </button>
-        <button
-          type="button"
-          className={
-            mode === "saved"
-              ? styles.sourceModeButtonActive
-              : styles.sourceModeButton
-          }
-          aria-pressed={mode === "saved"}
-          onClick={() => {
-            clearFeedback();
-            setMode("saved");
-          }}
-        >
-          <Search aria-hidden="true" />
-          <span>
-            <strong>Use a saved source</strong>
-            <small>Reuse a citation already in Geo-Kurdistan</small>
-          </span>
-        </button>
-      </div>
-
-      {mode === "new" ? (
-        <form className={styles.sourceForm} onSubmit={createAndAttach}>
-          <div className={styles.sourceFormHeader}>
-            <span className={styles.stepNumber}>New citation</span>
-            <h3>Describe the source</h3>
-            <p>Choose the source type first. The labels below will adapt.</p>
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="source-type">
-              What kind of source is it?
-            </label>
-            <select
-              id="source-type"
-              className={styles.select}
-              value={sourceType}
-              onChange={(event) =>
-                setSourceType(event.target.value as SourceType)
-              }
-            >
-              {SOURCE_TYPES.map((value) => (
-                <option key={value} value={value}>
-                  {formatSourceType(value)}
-                </option>
-              ))}
-            </select>
-            <small className={styles.fieldHelp}>
-              {sourceConfig.description}
-            </small>
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="source-title">
-              {sourceConfig.titleLabel}{" "}
-              <span className={styles.requiredTag}>Required</span>
-            </label>
-            <input
-              id="source-title"
-              className={styles.input}
-              maxLength={500}
-              required
-              value={sourceTitle}
-              onChange={(event) => setSourceTitle(event.target.value)}
-            />
-          </div>
-
-          <div className={styles.formGrid}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="source-author">
-                {sourceConfig.contributorLabel}{" "}
-                <span className={styles.requiredTag}>Required</span>
-              </label>
-              <input
-                id="source-author"
-                className={styles.input}
-                maxLength={240}
-                required
-                value={sourceAuthor}
-                onChange={(event) => setSourceAuthor(event.target.value)}
-              />
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="source-publication">
-                {sourceConfig.publicationLabel}
-              </label>
-              <input
-                id="source-publication"
-                className={styles.input}
-                maxLength={300}
-                value={sourcePublication}
-                onChange={(event) => setSourcePublication(event.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className={styles.formGrid}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="source-url">
-                Web address
-                {sourceConfig.linkRequired ? " (required)" : " (optional)"}
-              </label>
-              <input
-                id="source-url"
-                className={styles.input}
-                type="text"
-                inputMode="url"
-                maxLength={2000}
-                required={sourceConfig.linkRequired}
-                value={sourceUrl}
-                onChange={(event) => setSourceUrl(event.target.value)}
-                placeholder="example.org/source"
-              />
-              <small className={styles.fieldHelp}>
-                You may paste a secure link with or without https://.
-              </small>
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="source-identifier">
-                {sourceConfig.identifierLabel} (optional)
-              </label>
-              <input
-                id="source-identifier"
-                className={styles.input}
-                maxLength={240}
-                value={sourceIdentifier}
-                onChange={(event) => setSourceIdentifier(event.target.value)}
-              />
-            </div>
-          </div>
-
-          <details className={styles.sourceDetailsDisclosure}>
-            <summary>
-              Add year, pages, rights, or other citation details
-            </summary>
-            <div className={styles.formGrid}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel} htmlFor="source-year">
-                  Publication year (optional)
-                </label>
-                <input
-                  id="source-year"
-                  className={styles.input}
-                  inputMode="numeric"
-                  maxLength={4}
-                  value={sourceYear}
-                  onChange={(event) => setSourceYear(event.target.value)}
-                  placeholder="2026"
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel} htmlFor="source-pages">
-                  {sourceConfig.pagesLabel} (optional)
-                </label>
-                <input
-                  id="source-pages"
-                  className={styles.input}
-                  maxLength={160}
-                  value={sourcePages}
-                  onChange={(event) => setSourcePages(event.target.value)}
-                />
-              </div>
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="source-rights">
-                Rights or reuse statement (optional)
-              </label>
-              <textarea
-                id="source-rights"
-                className={styles.textarea}
-                maxLength={2000}
-                value={sourceRights}
-                onChange={(event) => setSourceRights(event.target.value)}
-                placeholder="Especially useful for maps, datasets, and online images."
-              />
-            </div>
-          </details>
-
-          {targetFields}
-
-          <p className={styles.sourceMediaHint}>
-            To upload a photograph, PDF, or video to the record, use Images and
-            files. This section records the citation and provenance.
-          </p>
-
-          <div className={styles.actionsBar}>
+      {!readOnly && (
+        <>
+          <div
+            className={styles.sourceModeSwitch}
+            aria-label="Choose source method"
+          >
             <button
-              className={styles.buttonPrimary}
-              type="submit"
-              disabled={busy}
-            >
-              {busy ? "Saving…" : "Save and connect source"}
-            </button>
-          </div>
-        </form>
-      ) : (
-        <form className={styles.sourceForm} onSubmit={attachSaved}>
-          <div className={styles.sourceFormHeader}>
-            <span className={styles.stepNumber}>Saved citations</span>
-            <h3>Find a source</h3>
-            <p>Search by title, DOI, ISBN, or catalogue identifier.</p>
-          </div>
-
-          <div className={styles.sourceSearchRow}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="reference-search">
-                Search saved sources
-              </label>
-              <input
-                id="reference-search"
-                className={styles.input}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                maxLength={120}
-                placeholder="Title, DOI, ISBN, or catalogue number"
-              />
-            </div>
-            <button
-              className={styles.buttonSecondary}
               type="button"
-              disabled={searching}
-              onClick={() => void searchSavedSources()}
+              className={
+                mode === "new"
+                  ? styles.sourceModeButtonActive
+                  : styles.sourceModeButton
+              }
+              aria-pressed={mode === "new"}
+              onClick={() => {
+                clearFeedback();
+                setMode("new");
+              }}
             >
-              <Search size={16} aria-hidden="true" />
-              {searching ? "Searching…" : "Search"}
+              <Plus aria-hidden="true" />
+              <span>
+                <strong>Add a new source</strong>
+                <small>Enter a citation for the first time</small>
+              </span>
             </button>
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="reference-choice">
-              Choose a source
-            </label>
-            <select
-              id="reference-choice"
-              className={styles.select}
-              required
-              value={referenceId}
-              onChange={(event) => setReferenceId(event.target.value)}
-            >
-              <option value="">Choose a saved source</option>
-              {references.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title} · {formatSourceType(item.sourceType)}
-                  {item.identifier ? ` · ${item.identifier}` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {selectedReference && (
-            <div className={styles.sourceSelectedSummary}>
-              <BookOpen aria-hidden="true" />
-              <div>
-                <strong>{selectedReference.title}</strong>
-                <span>
-                  {formatSourceType(selectedReference.sourceType)} ·{" "}
-                  {selectedReference.verificationStatus === "verified"
-                    ? "Verified"
-                    : "Awaiting verification"}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {targetFields}
-
-          <div className={styles.actionsBar}>
             <button
-              className={styles.buttonPrimary}
-              type="submit"
-              disabled={busy || !selectedReference}
+              type="button"
+              className={
+                mode === "saved"
+                  ? styles.sourceModeButtonActive
+                  : styles.sourceModeButton
+              }
+              aria-pressed={mode === "saved"}
+              onClick={() => {
+                clearFeedback();
+                setMode("saved");
+              }}
             >
-              {busy ? "Connecting…" : "Connect selected source"}
+              <Search aria-hidden="true" />
+              <span>
+                <strong>Use a saved source</strong>
+                <small>Reuse a citation already in Geo-Kurdistan</small>
+              </span>
             </button>
           </div>
-        </form>
+
+          {mode === "new" ? (
+            <form className={styles.sourceForm} onSubmit={createAndAttach}>
+              <div className={styles.sourceFormHeader}>
+                <span className={styles.stepNumber}>New citation</span>
+                <h3>Describe the source</h3>
+                <p>
+                  Choose the source type first. The labels below will adapt.
+                </p>
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel} htmlFor="source-type">
+                  What kind of source is it?
+                </label>
+                <select
+                  id="source-type"
+                  className={styles.select}
+                  value={sourceType}
+                  onChange={(event) =>
+                    setSourceType(event.target.value as SourceType)
+                  }
+                >
+                  {SOURCE_TYPES.map((value) => (
+                    <option key={value} value={value}>
+                      {formatSourceType(value)}
+                    </option>
+                  ))}
+                </select>
+                <small className={styles.fieldHelp}>
+                  {sourceConfig.description}
+                </small>
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel} htmlFor="source-title">
+                  {sourceConfig.titleLabel}{" "}
+                  <span className={styles.requiredTag}>Required</span>
+                </label>
+                <input
+                  id="source-title"
+                  className={styles.input}
+                  maxLength={500}
+                  required
+                  value={sourceTitle}
+                  onChange={(event) => setSourceTitle(event.target.value)}
+                />
+              </div>
+
+              <div className={styles.formGrid}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel} htmlFor="source-author">
+                    {sourceConfig.contributorLabel}{" "}
+                    <span className={styles.requiredTag}>Required</span>
+                  </label>
+                  <input
+                    id="source-author"
+                    className={styles.input}
+                    maxLength={240}
+                    required
+                    value={sourceAuthor}
+                    onChange={(event) => setSourceAuthor(event.target.value)}
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label
+                    className={styles.fieldLabel}
+                    htmlFor="source-publication"
+                  >
+                    {sourceConfig.publicationLabel}
+                  </label>
+                  <input
+                    id="source-publication"
+                    className={styles.input}
+                    maxLength={300}
+                    value={sourcePublication}
+                    onChange={(event) =>
+                      setSourcePublication(event.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGrid}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel} htmlFor="source-url">
+                    Web address
+                    {sourceConfig.linkRequired ? " (required)" : " (optional)"}
+                  </label>
+                  <input
+                    id="source-url"
+                    className={styles.input}
+                    type="text"
+                    inputMode="url"
+                    maxLength={2000}
+                    required={sourceConfig.linkRequired}
+                    value={sourceUrl}
+                    onChange={(event) => setSourceUrl(event.target.value)}
+                    placeholder="example.org/source"
+                  />
+                  <small className={styles.fieldHelp}>
+                    You may paste a secure link with or without https://.
+                  </small>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label
+                    className={styles.fieldLabel}
+                    htmlFor="source-identifier"
+                  >
+                    {sourceConfig.identifierLabel} (optional)
+                  </label>
+                  <input
+                    id="source-identifier"
+                    className={styles.input}
+                    maxLength={240}
+                    value={sourceIdentifier}
+                    onChange={(event) =>
+                      setSourceIdentifier(event.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <details className={styles.sourceDetailsDisclosure}>
+                <summary>
+                  Add year, pages, rights, or other citation details
+                </summary>
+                <div className={styles.formGrid}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel} htmlFor="source-year">
+                      Publication year (optional)
+                    </label>
+                    <input
+                      id="source-year"
+                      className={styles.input}
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={sourceYear}
+                      onChange={(event) => setSourceYear(event.target.value)}
+                      placeholder="2026"
+                    />
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel} htmlFor="source-pages">
+                      {sourceConfig.pagesLabel} (optional)
+                    </label>
+                    <input
+                      id="source-pages"
+                      className={styles.input}
+                      maxLength={160}
+                      value={sourcePages}
+                      onChange={(event) => setSourcePages(event.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel} htmlFor="source-rights">
+                    Rights or reuse statement (optional)
+                  </label>
+                  <textarea
+                    id="source-rights"
+                    className={styles.textarea}
+                    maxLength={2000}
+                    value={sourceRights}
+                    onChange={(event) => setSourceRights(event.target.value)}
+                    placeholder="Especially useful for maps, datasets, and online images."
+                  />
+                </div>
+              </details>
+
+              {targetFields}
+
+              <p className={styles.sourceMediaHint}>
+                To upload a photograph, PDF, or video to the record, use Images
+                and files. This section records the citation and provenance.
+              </p>
+
+              <div className={styles.actionsBar}>
+                <button
+                  className={styles.buttonPrimary}
+                  type="submit"
+                  disabled={busy}
+                >
+                  {busy ? "Saving…" : "Save and connect source"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form className={styles.sourceForm} onSubmit={attachSaved}>
+              <div className={styles.sourceFormHeader}>
+                <span className={styles.stepNumber}>Saved citations</span>
+                <h3>Find a source</h3>
+                <p>Search by title, DOI, ISBN, or catalogue identifier.</p>
+              </div>
+
+              <div className={styles.sourceSearchRow}>
+                <div className={styles.fieldGroup}>
+                  <label
+                    className={styles.fieldLabel}
+                    htmlFor="reference-search"
+                  >
+                    Search saved sources
+                  </label>
+                  <input
+                    id="reference-search"
+                    className={styles.input}
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    maxLength={120}
+                    placeholder="Title, DOI, ISBN, or catalogue number"
+                  />
+                </div>
+                <button
+                  className={styles.buttonSecondary}
+                  type="button"
+                  disabled={searching}
+                  onClick={() => void searchSavedSources()}
+                >
+                  <Search size={16} aria-hidden="true" />
+                  {searching ? "Searching…" : "Search"}
+                </button>
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel} htmlFor="reference-choice">
+                  Choose a source
+                </label>
+                <select
+                  id="reference-choice"
+                  className={styles.select}
+                  required
+                  value={referenceId}
+                  onChange={(event) => setReferenceId(event.target.value)}
+                >
+                  <option value="">Choose a saved source</option>
+                  {references.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.title} · {formatSourceType(item.sourceType)}
+                      {item.identifier ? ` · ${item.identifier}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedReference && (
+                <div className={styles.sourceSelectedSummary}>
+                  <BookOpen aria-hidden="true" />
+                  <div>
+                    <strong>{selectedReference.title}</strong>
+                    <span>
+                      {formatSourceType(selectedReference.sourceType)} ·{" "}
+                      {selectedReference.verificationStatus === "verified"
+                        ? "Verified"
+                        : "Awaiting verification"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {targetFields}
+
+              <div className={styles.actionsBar}>
+                <button
+                  className={styles.buttonPrimary}
+                  type="submit"
+                  disabled={busy || !selectedReference}
+                >
+                  {busy ? "Connecting…" : "Connect selected source"}
+                </button>
+              </div>
+            </form>
+          )}
+        </>
       )}
     </section>
   );
