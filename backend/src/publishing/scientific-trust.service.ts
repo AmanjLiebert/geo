@@ -336,7 +336,7 @@ export class ScientificTrustService {
 
   async publicationIssues(
     recordId: string,
-    reviewerUserId?: string,
+    _publisherUserId?: string,
     executor: DataSource | EntityManager = this.dataSource,
   ) {
     const rows = (await executor.query(
@@ -376,24 +376,14 @@ export class ScientificTrustService {
         });
       }
     }
-    if (reviewerUserId && reviewerUserId === record.owner_user_id) {
-      issues.push({
-        field: 'reviewer',
-        code: 'independent',
-        message: 'The author cannot publish their own record.',
-      });
-    }
-    const independentReviewerId =
-      reviewerUserId && reviewerUserId !== record.owner_user_id ? reviewerUserId : null;
     const translations = (await executor.query(
       `SELECT count(*)::int AS count
        FROM record_translations
        WHERE record_id = $1 AND locale = 'en'
          AND length(btrim(title)) > 0
          AND length(btrim(COALESCE(summary, ''))) > 0
-         AND length(btrim(COALESCE(description, ''))) > 0
-         AND ($2::uuid IS NULL OR translator_user_id IS DISTINCT FROM $2::uuid)`,
-      [recordId, independentReviewerId],
+         AND length(btrim(COALESCE(description, ''))) > 0`,
+      [recordId],
     )) as unknown as Array<{ count: number }>;
     if ((translations[0]?.count ?? 0) < 1) {
       issues.push({

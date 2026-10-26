@@ -270,4 +270,45 @@ describe('ScientificTrustService record attachments', () => {
     });
     expect(result.recordId).toBe(recordId);
   });
+
+  it('does not create a publication issue when the publisher owns the complete record', async () => {
+    const queries: Array<{ sql: string; params: unknown[] }> = [];
+    const query = vi.fn((sql: string, params: unknown[] = []) => {
+      queries.push({ sql, params });
+      if (sql.includes('FROM scientific_records WHERE id')) {
+        return Promise.resolve([
+          {
+            id: recordId,
+            owner_user_id: 'teacher-1',
+            category_id: 'category-1',
+            record_type_id: 'type-1',
+            template_version_id: 'template-1',
+          },
+        ]);
+      }
+      if (sql.includes('FROM categories c')) return Promise.resolve([{ exists: 1 }]);
+      if (sql.includes('FROM record_translations')) return Promise.resolve([{ count: 1 }]);
+      if (sql.includes('WITH policy AS')) {
+        return Promise.resolve([{ minimum: 1, kinds: [], verified_count: 1 }]);
+      }
+      if (sql.includes('FROM record_media rm')) {
+        return Promise.resolve([
+          { primary_count: 1, unapproved_count: 0, invalid_primary_count: 0 },
+        ]);
+      }
+      if (sql.includes('FROM record_locations')) return Promise.resolve([{ invalid_count: 0 }]);
+      return Promise.resolve([]);
+    });
+    const service = new ScientificTrustService({ query } as unknown as DataSource);
+
+    await expect(service.publicationIssues(recordId, 'teacher-1')).resolves.toEqual({
+      valid: true,
+      issues: [],
+    });
+    const translationQuery = queries.find((entry) =>
+      entry.sql.includes('FROM record_translations'),
+    );
+    expect(translationQuery?.params).toEqual([recordId]);
+    expect(translationQuery?.sql).not.toContain('translator_user_id IS DISTINCT FROM');
+  });
 });

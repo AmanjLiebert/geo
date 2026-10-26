@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / Step 6E — accept deterministic public record identifiers in Explore |
-| Task folder | `docs/agent-work/phase-6-step-6e-public-id-validation/` |
+| Task | Phase 6 / Step 6F — owner publication and published-record correction |
+| Task folder | `docs/agent-work/phase-6-step-6f-record-owner-publishing/` |
 | Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | Every published collection route accepts valid deterministic UUIDv5 public record identifiers, malformed identifiers remain rejected, all public category routes render without server-component errors, and the public projection remains minimal. |
+| Plan gate | A teacher or admin may publish their own complete scientific record; all non-review readiness rules remain enforced; a published record has an explicit audited action that returns it to editable draft state; visitors remain denied. |
 
 ## Required file order
 

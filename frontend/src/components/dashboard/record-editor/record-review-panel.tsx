@@ -129,7 +129,7 @@ export function RecordReviewPanel({
 
       {readiness && status === "draft" && (
         <div className={styles.reviewActions}>
-          <p>Submitting locks the draft while another teacher or administrator reviews it.</p>
+          <p>Run the final checks, then move this draft to the publication step.</p>
           <button
             type="button"
             className={styles.button}
@@ -141,11 +141,7 @@ export function RecordReviewPanel({
         </div>
       )}
 
-      {readiness && status === "in_review" && readiness.isOwner && (
-        <p className={styles.reviewNotice}>This record is waiting for an independent review.</p>
-      )}
-
-      {readiness && status === "in_review" && !readiness.isOwner && (
+      {readiness && status === "in_review" && (
         <div className={styles.reviewDecisionGrid}>
           <div>
             <h3>Publish record</h3>
@@ -183,17 +179,24 @@ export function RecordReviewPanel({
 
       {readiness && status === "published" && (
         <div className={styles.reviewActions}>
-          <p>Unpublishing returns this record to an editable draft without deleting its work.</p>
+          <p>
+            Editing returns this record to draft and temporarily hides it from visitors. No
+            content is deleted, and you can publish it again after correcting it.
+          </p>
           <button
             type="button"
             className={styles.buttonSecondary}
             disabled={busy}
             onClick={() => {
-              if (window.confirm("Unpublish this record and return it to draft?"))
+              if (
+                window.confirm(
+                  "Edit this published record? It will be hidden from visitors until you publish it again.",
+                )
+              )
                 void run(() => unpublishRecord(recordId));
             }}
           >
-            <RotateCcw aria-hidden="true" /> Unpublish
+            <RotateCcw aria-hidden="true" /> Edit published record
           </button>
         </div>
       )}

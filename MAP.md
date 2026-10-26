@@ -420,7 +420,7 @@ Record-type publication policy
         └── requirements satisfied
                     │
                     ▼
-           authorized independent review
+           authorized publication check
                     │
                     ▼
                  PUBLISHED
@@ -435,6 +435,8 @@ Publication requires:
 - Valid media rights and reference access.
 - Public-safe geographic representation.
 - Teacher or admin authorization for the target record.
+
+For scientific records, the author may perform the final publication action. The actor is still recorded as the reviewer/publisher for audit history, but author/publisher separation is not a publication requirement. Returning a published record to editing is an explicit audited transition to draft; the public version is hidden until the corrected draft is republished.
 
 Record media is a one-to-many attachment collection. Images, supported videos, and PDFs remain private objects and are exposed only through authorized short-lived inline viewing. Each attachment owns its presentation metadata rather than borrowing one record-wide caption. Browser-viewable media cannot be made impossible to copy; the enforceable controls are private storage, validation and malware scanning, authorization, short-lived URLs, inline disposition, and no ordinary download control.
 

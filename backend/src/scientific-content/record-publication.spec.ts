@@ -1,4 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
 import { ScientificTrustService } from '../publishing/scientific-trust.service';
@@ -101,11 +100,25 @@ describe('record review and publication lifecycle', () => {
     ).toBe(true);
   });
 
-  it('prevents an author from returning their own record for changes', async () => {
-    const { service } = createHarness('in_review');
-    await expect(
-      service.requestChanges('author-1', 'record-1', 'Needs detail'),
-    ).rejects.toBeInstanceOf(BadRequestException);
+  it('allows the author to publish their own complete record', async () => {
+    const { service, publicationIssues, manager, calls, record, translation } =
+      createHarness('in_review');
+    await service.publish('author-1', 'record-1');
+    expect(record.status).toBe('published');
+    expect(translation.status).toBe('published');
+    expect(translation.reviewer_user_id).toBe('author-1');
+    expect(publicationIssues).toHaveBeenCalledWith('record-1', 'author-1', manager);
+    const translationUpdate = calls.find((call) =>
+      call.sql.includes("record_translations SET status = 'published'"),
+    );
+    expect(translationUpdate?.sql).not.toContain('translator_user_id IS DISTINCT FROM');
+  });
+
+  it('allows the author to return an in-review record to editing', async () => {
+    const { service, record, translation } = createHarness('in_review');
+    await service.requestChanges('author-1', 'record-1', 'Continue editing this record.');
+    expect(record.status).toBe('draft');
+    expect(translation.status).toBe('draft');
   });
 
   it('returns an independently reviewed record to draft without deleting its content', async () => {

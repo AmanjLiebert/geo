@@ -83,7 +83,8 @@ The interface must:
 - Display field-level errors beside fields and provide a linked page-level summary.
 - Show autosave, unsaved, saved, conflict, and offline/error states clearly.
 - Use archive and restore as the normal removal workflow.
-- Keep completion and visibility separate: a draft may be incomplete, a complete item may remain unpublished by choice, and publishing or unpublishing is always an explicit action. Explain missing title, description, approved image, evidence, or location/review requirement beside the relevant action.
+- Keep completion and visibility separate: a draft may be incomplete, a complete item may remain unpublished by choice, and publishing or returning a published record to editing is always an explicit action. Explain missing title, description, approved image, evidence, or location requirement beside the relevant action.
+- On a published scientific record, label the correction action **Edit published record**, not **Unpublish**. Confirm that the record will be temporarily hidden from visitors, preserve all work, create audit history, and open the editable draft immediately after the transition succeeds.
 
 ## Roles and permissions
 
@@ -128,7 +129,7 @@ Templates drive the form but are not edited by teachers or admins in routine use
 - Reference presentation should distinguish source type, authorship, year, identifier, pages/figure, institution, rights, and verification status when available.
 - Publication readiness shows missing evidence according to record type.
 - Provisional, disputed, externally sourced, teacher-reviewed, and institutionally verified claims must be visually distinguishable without using colour alone.
-- High-impact claims should show the independent reviewer and review date where policy requires them.
+- High-impact claims may show a second reviewer and review date when one was used, but scientific-record publication must not imply that a different person is mandatory.
 - Public pages reveal citations progressively: concise evidence near the claim and complete citation detail in a dedicated section.
 
 ## Research experience

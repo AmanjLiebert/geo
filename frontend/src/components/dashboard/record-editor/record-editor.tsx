@@ -544,7 +544,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
               </span>
               <p className={styles.bannerText}>
                 {recordDetail.status === "published"
-                  ? "The published version is read-only until it is returned to draft."
+                  ? "To correct this record, choose Edit published record below. It will be hidden from visitors until you publish it again."
                   : recordDetail.status === "archived"
                     ? "Archived records are preserved in read-only state."
                     : "The draft is locked while its publication decision is pending."}
