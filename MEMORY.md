@@ -8,7 +8,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Phase 6 / UX-6 — record workspace clarity and visibility |
 | Task folder | `docs/agent-work/phase-6-ux6-record-workspace-clarity/` |
-| Status | `READY_FOR_IMPLEMENTATION` |
+| Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
 | Plan gate | Teachers see all saved record data in one understandable workspace, including read-only published/in-review records; repeated location/media inputs are removed; section completion and save results are visible where the action occurs; backend validation remains unchanged. |
