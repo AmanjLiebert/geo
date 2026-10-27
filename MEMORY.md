@@ -8,7 +8,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Phase 6 / UX-9 — saved location clarity |
 | Task folder | `docs/agent-work/phase-6-ux9-saved-location-clarity/` |
-| Status | `READY_FOR_IMPLEMENTATION` |
+| Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
 | Plan gate | After saving a location, authorized teachers can see the saved label, region, exact point, and visibility; the emptied form is clearly presented only as a new-location form; restricted coordinates remain unavailable to public responses. |
