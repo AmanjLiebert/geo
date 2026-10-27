@@ -8,7 +8,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Phase 6 / UX-8 — protected-action identity guidance |
 | Task folder | `docs/agent-work/phase-6-ux8-reauth-guidance/` |
-| Status | `READY_FOR_IMPLEMENTATION` |
+| Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
 | Plan gate | An authorized teacher whose recent identity confirmation has expired receives a clear confirmation prompt and returns to the same record; a real permission denial remains a distinct neutral error; the high-risk-action security check stays enforced. |
