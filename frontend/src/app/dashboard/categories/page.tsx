@@ -78,9 +78,13 @@ export default function CategoriesPage() {
   }
 
   function protectedError(cause: unknown, categoryId: string, fallback: string) {
-    if (cause instanceof DashboardApiError && cause.status === 403) {
+    if (cause instanceof DashboardApiError && cause.kind === "reauthentication") {
       setReauthenticationCategoryId(categoryId);
       setError("Confirm your identity before changing publication status.");
+      return;
+    }
+    if (cause instanceof DashboardApiError && cause.kind === "forbidden") {
+      setError(cause.message);
       return;
     }
     setError(fallback);

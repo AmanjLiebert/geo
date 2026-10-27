@@ -18,6 +18,19 @@ interface ProblemDetails {
   instance: string;
   requestId: string;
   timestamp: string;
+  code?: 'reauthentication_required';
+}
+
+function safeProblemCode(exception: HttpException): ProblemDetails['code'] {
+  const response = exception.getResponse();
+  if (
+    typeof response === 'object' &&
+    response !== null &&
+    (response as Record<string, unknown>).code === 'reauthentication_required'
+  ) {
+    return 'reauthentication_required';
+  }
+  return undefined;
 }
 
 function exceptionDetail(exception: HttpException, status: number): string {
@@ -57,6 +70,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exceptionDetail(exception, status)
         : 'The server could not complete the request.';
+    const code = exception instanceof HttpException ? safeProblemCode(exception) : undefined;
 
     if (status >= 500) {
       this.logger.error(
@@ -78,6 +92,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       instance: request.url,
       requestId: request.id,
       timestamp: new Date().toISOString(),
+      ...(code ? { code } : {}),
     };
 
     this.adapterHost.httpAdapter.setHeader(response, 'content-type', 'application/problem+json');

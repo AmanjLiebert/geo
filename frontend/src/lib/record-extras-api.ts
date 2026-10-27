@@ -116,9 +116,20 @@ export async function requestRecordResource(
     );
   }
   if (!response.ok) {
+    let problemCode: unknown;
+    try {
+      const problem = (await response.json()) as unknown;
+      if (typeof problem === "object" && problem !== null) {
+        problemCode = (problem as Record<string, unknown>).code;
+      }
+    } catch {
+      problemCode = undefined;
+    }
     const kind =
       response.status === 401
         ? "unauthorized"
+        : response.status === 403 && problemCode === "reauthentication_required"
+          ? "reauthentication"
         : response.status === 403
           ? "forbidden"
           : response.status === 400 || response.status === 409
@@ -127,6 +138,8 @@ export async function requestRecordResource(
     throw new DashboardApiError(
       kind === "unauthorized"
         ? "Sign in to continue."
+        : kind === "reauthentication"
+          ? "Confirm your identity to continue this protected action."
         : kind === "forbidden"
           ? "You do not have access to this action."
           : kind === "validation"

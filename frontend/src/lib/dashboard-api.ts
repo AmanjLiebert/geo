@@ -195,6 +195,7 @@ export type UpdateRecordPayload = {
 export type DashboardApiErrorKind =
   | "unauthorized"
   | "forbidden"
+  | "reauthentication"
   | "validation"
   | "conflict"
   | "rate_limited"

@@ -54,6 +54,9 @@ Runtime tokens in `frontend/src/app/globals.css` are canonical:
 
 ## Accessibility and states
 
+- When a permitted high-impact action needs a fresh identity confirmation, say exactly that and provide one clear confirmation action that returns the user to their current work. Do not describe this state as missing access.
+- A genuine permission denial must remain distinct from identity confirmation and must not offer a confirmation action that cannot grant permission.
+
 - Minimum interactive target: 44px.
 - Keyboard focus uses the shared ochre/iron high-contrast outline and must never depend on hover.
 - Icon-only actions require an accessible label.

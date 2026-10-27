@@ -6,6 +6,7 @@ import {
   listRecordMedia,
   listRecordRelationships,
   reorderRecordMedia,
+  requestRecordResource,
   saveEnglishRecordDetails,
   setRecordPrimaryMedia,
   updateRecordMediaAttachment,
@@ -26,6 +27,37 @@ function ok(data: unknown, status = 200): Response {
 describe("record extras API", () => {
   beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
   afterEach(() => vi.unstubAllGlobals());
+
+  it("distinguishes required identity confirmation from a real permission denial", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            status: 403,
+            code: "reauthentication_required",
+            detail: "Recent authentication is required for this protected action.",
+          }),
+          { status: 403, headers: { "content-type": "application/problem+json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: 403, detail: "Forbidden" }), {
+          status: 403,
+          headers: { "content-type": "application/problem+json" },
+        }),
+      );
+
+    await expect(requestRecordResource(`/api/v1/records/${recordId}/publish`, "POST")).rejects.toMatchObject({
+      kind: "reauthentication",
+      status: 403,
+      message: "Confirm your identity to continue this protected action.",
+    });
+    await expect(requestRecordResource(`/api/v1/records/${recordId}/publish`, "POST")).rejects.toMatchObject({
+      kind: "forbidden",
+      status: 403,
+      message: "You do not have access to this action.",
+    });
+  });
 
   it("saves English details to the existing protected record endpoint", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(

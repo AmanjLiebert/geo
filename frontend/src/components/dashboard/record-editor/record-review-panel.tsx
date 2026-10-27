@@ -113,9 +113,9 @@ export function RecordReviewPanel({
       {error && (
         <div className={styles.reviewError} role="alert">
           <p>{error.message}</p>
-          {error.kind === "forbidden" && (
+          {error.kind === "reauthentication" && (
             <Link href={`/account?returnTo=${encodeURIComponent(`/dashboard/records/edit?recordId=${recordId}`)}`}>
-              Confirm identity
+              Confirm identity and return
             </Link>
           )}
         </div>
@@ -165,7 +165,7 @@ export function RecordReviewPanel({
             <button
               type="button"
               className={styles.button}
-              disabled={!readiness.publishableByCurrentUser || busy}
+              disabled={!readiness.publishableByCurrentUser || busy || error?.kind === "reauthentication"}
               onClick={() => void run(() => publishRecord(recordId))}
             >
               <Upload aria-hidden="true" /> Publish

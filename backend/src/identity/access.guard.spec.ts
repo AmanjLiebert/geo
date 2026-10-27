@@ -116,6 +116,14 @@ describe('deny-by-default access guard', () => {
       highRisk: true,
       reauthenticatedAt: new Date(Date.now() - 10 * 60 * 1_000),
     });
-    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(ForbiddenException);
+    try {
+      await guard.canActivate(context);
+      throw new Error('Expected high-risk action to require recent authentication.');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ForbiddenException);
+      expect((error as ForbiddenException).getResponse()).toMatchObject({
+        code: 'reauthentication_required',
+      });
+    }
   });
 });

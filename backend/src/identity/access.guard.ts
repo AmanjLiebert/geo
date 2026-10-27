@@ -115,7 +115,10 @@ export class AccessGuard implements CanActivate {
         targetType: 'route',
         metadata: { method: request.method, route: request.routeOptions.url, mfaRequired },
       });
-      throw new ForbiddenException('Recent authentication is required for this protected action.');
+      throw new ForbiddenException({
+        message: 'Recent authentication is required for this protected action.',
+        code: 'reauthentication_required',
+      });
     }
   }
 

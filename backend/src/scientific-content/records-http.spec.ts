@@ -1092,6 +1092,9 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         headers: { 'x-csrf-token': validCsrf },
       });
       expect(response.statusCode).toBe(403);
+      expect(response.json()).toMatchObject({
+        code: 'reauthentication_required',
+      });
     });
 
     it.each(['publish', 'unpublish'])(
