@@ -16,6 +16,17 @@ function coordinate(raw: string, min: number, max: number): number | null {
   return Number.isFinite(value) && value >= min && value <= max ? value : null;
 }
 
+function formatCoordinate(value: number): string {
+  return value.toFixed(6).replace(/\.?0+$/, "");
+}
+
+function visibilityLabel(visibility: RecordLocationItem["visibility"]): string {
+  if (visibility === "restricted") return "Restricted";
+  if (visibility === "embargoed") return "Embargoed";
+  if (visibility === "approximate") return "Approximate public location";
+  return "Public location";
+}
+
 export function buildLocationPayload(input: {
   label: string;
   region: string;
@@ -114,6 +125,7 @@ export function RecordLocations({
   const [reason, setReason] = useState("");
   const [embargoUntil, setEmbargoUntil] = useState("");
   const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -121,7 +133,10 @@ export function RecordLocations({
     let active = true;
     listRecordLocations(recordId)
       .then((loaded) => {
-        if (active) setItems(loaded);
+        if (active) {
+          setItems(loaded);
+          setAdding(loaded.length === 0);
+        }
       })
       .catch(() => {
         if (active) setError("Locations could not be loaded.");
@@ -168,6 +183,7 @@ export function RecordLocations({
       setEmbargoUntil("");
       setVisibility("restricted");
       setMessage("Location added.");
+      setAdding(false);
     } catch (cause) {
       setError(
         cause instanceof DashboardApiError
@@ -193,29 +209,44 @@ export function RecordLocations({
         </p>
       </div>
       {items.length ? (
+        <>
+          <h3 className={styles.subsectionTitle}>Saved locations</h3>
         <ul className={styles.detailList}>
           {items.map((item) => (
-            <li key={item.id} className={styles.detailListItem}>
-              <span>
-                {item.label || item.region_label || "Record location"}
-              </span>
-              <small>
-                {item.visibility === "restricted"
-                  ? "Restricted"
-                  : item.visibility === "embargoed"
-                    ? "Embargoed"
-                    : item.visibility === "approximate"
-                      ? "Approximate public location"
-                      : "Public location"}
-              </small>
+            <li key={item.id} className={styles.savedLocation}>
+              <div className={styles.savedLocationHeading}>
+                <strong>{item.label || item.regionLabel || "Record location"}</strong>
+                <span>{visibilityLabel(item.visibility)}</span>
+              </div>
+              {item.regionLabel && item.label && <p>{item.regionLabel}</p>}
+              <dl className={styles.savedLocationFacts}>
+                <div>
+                  <dt>{item.visibility === "public" ? "Exact coordinates" : "Exact coordinates (private)"}</dt>
+                  <dd>{formatCoordinate(item.exactLatitude)}, {formatCoordinate(item.exactLongitude)}</dd>
+                </div>
+                {item.publicLatitude !== null && item.publicLongitude !== null && item.visibility === "approximate" && (
+                  <div>
+                    <dt>Public map point</dt>
+                    <dd>{formatCoordinate(item.publicLatitude)}, {formatCoordinate(item.publicLongitude)}{item.publicPrecisionMetres !== null ? ` · ${item.publicPrecisionMetres.toLocaleString()} m precision` : ""}</dd>
+                  </div>
+                )}
+              </dl>
+              {item.sensitivityReason && <p className={styles.savedLocationNote}><strong>Why it is protected:</strong> {item.sensitivityReason}</p>}
             </li>
           ))}
         </ul>
+          {!readOnly && !adding && (
+            <button className={styles.buttonSecondary} type="button" onClick={() => { setAdding(true); setMessage(null); }}>
+              Add another location
+            </button>
+          )}
+        </>
       ) : (
         <p className={styles.stepDescription}>No locations added yet.</p>
       )}
-      {!readOnly && (
+      {!readOnly && adding && (
         <form className={styles.formSection} onSubmit={add}>
+          <h3 className={styles.subsectionTitle}>{items.length ? "Add another location" : "Add location"}</h3>
           <div className={styles.formGrid}>
             <div className={styles.fieldGroup}>
               <label className={styles.fieldLabel} htmlFor="location-label">
@@ -405,6 +436,11 @@ export function RecordLocations({
             >
               {saving ? "Saving…" : "Add location"}
             </button>
+            {items.length > 0 && (
+              <button className={styles.buttonSecondary} type="button" disabled={saving} onClick={() => setAdding(false)}>
+                Cancel
+              </button>
+            )}
           </div>
         </form>
       )}

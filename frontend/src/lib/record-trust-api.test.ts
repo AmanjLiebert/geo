@@ -101,14 +101,23 @@ describe("record trust API", () => {
               label: "Site",
               visibility: "restricted",
               region_label: "Zagros",
+              exact_geometry: { type: "Point", coordinates: [44.25, 36.5] },
+              public_geometry: null,
+              public_precision_metres: null,
+              sensitivity_reason: "Sensitive fossil locality",
+              embargo_until: null,
             },
           ],
         }),
       );
     expect(await listRecordEvidence(recordId)).toHaveLength(1);
-    expect((await listRecordLocations(recordId))[0]?.visibility).toBe(
-      "restricted",
-    );
+    expect((await listRecordLocations(recordId))[0]).toMatchObject({
+      visibility: "restricted",
+      regionLabel: "Zagros",
+      exactLatitude: 36.5,
+      exactLongitude: 44.25,
+      sensitivityReason: "Sensitive fossil locality",
+    });
     vi.mocked(fetch).mockResolvedValueOnce(
       ok({
         items: [

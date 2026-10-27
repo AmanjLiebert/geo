@@ -23,7 +23,14 @@ export type RecordLocationItem = {
   id: string;
   label: string | null;
   visibility: "public" | "approximate" | "restricted" | "embargoed";
-  region_label: string | null;
+  regionLabel: string | null;
+  exactLatitude: number;
+  exactLongitude: number;
+  publicLatitude: number | null;
+  publicLongitude: number | null;
+  publicPrecisionMetres: number | null;
+  sensitivityReason: string | null;
+  embargoUntil: string | null;
 };
 
 function object(value: unknown): value is Record<string, unknown> {
@@ -35,6 +42,22 @@ function invalid(): never {
     200,
     "server",
   );
+}
+
+function geoPoint(value: unknown): { latitude: number; longitude: number } | null {
+  if (
+    !object(value) ||
+    value.type !== "Point" ||
+    !Array.isArray(value.coordinates) ||
+    value.coordinates.length !== 2 ||
+    typeof value.coordinates[0] !== "number" ||
+    typeof value.coordinates[1] !== "number" ||
+    !Number.isFinite(value.coordinates[0]) ||
+    !Number.isFinite(value.coordinates[1])
+  ) {
+    return null;
+  }
+  return { longitude: value.coordinates[0], latitude: value.coordinates[1] };
 }
 
 export async function searchReferences(
@@ -136,6 +159,8 @@ export async function listRecordLocations(
   );
   if (!object(response) || !Array.isArray(response.items)) return invalid();
   return response.items.map((item: unknown) => {
+    const exactPoint = object(item) ? geoPoint(item.exact_geometry) : null;
+    const publicPoint = object(item) ? geoPoint(item.public_geometry) : null;
     if (
       !object(item) ||
       typeof item.id !== "string" ||
@@ -143,10 +168,33 @@ export async function listRecordLocations(
       !["public", "approximate", "restricted", "embargoed"].includes(
         String(item.visibility),
       ) ||
-      (item.region_label !== null && typeof item.region_label !== "string")
+      (item.region_label !== null && typeof item.region_label !== "string") ||
+      !exactPoint ||
+      (item.public_geometry !== null && !publicPoint) ||
+      (item.public_precision_metres !== null &&
+        (!Number.isInteger(item.public_precision_metres) ||
+          Number(item.public_precision_metres) < 0)) ||
+      (item.sensitivity_reason !== null &&
+        typeof item.sensitivity_reason !== "string") ||
+      (item.embargo_until !== null && typeof item.embargo_until !== "string")
     )
       return invalid();
-    return item as RecordLocationItem;
+    return {
+      id: item.id,
+      label: item.label,
+      visibility: item.visibility as RecordLocationItem["visibility"],
+      regionLabel: item.region_label,
+      exactLatitude: exactPoint.latitude,
+      exactLongitude: exactPoint.longitude,
+      publicLatitude: publicPoint?.latitude ?? null,
+      publicLongitude: publicPoint?.longitude ?? null,
+      publicPrecisionMetres:
+        typeof item.public_precision_metres === "number"
+          ? item.public_precision_metres
+          : null,
+      sensitivityReason: item.sensitivity_reason,
+      embargoUntil: item.embargo_until,
+    };
   });
 }
 

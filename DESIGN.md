@@ -193,6 +193,9 @@ Templates drive the form but are not edited by teachers or admins in routine use
 
 ## Geographic privacy and maps
 
+- After saving a protected location, the authorized editor must show a clear saved-location summary. Clearing an add form must never make a successful save look like lost data.
+- Separate existing locations from the action for adding another location; do not leave a blank creation form as the dominant success state.
+
 - Never display exact restricted coordinates in public cards, URLs, page source, map payloads, alt text, or downloadable metadata.
 - Public maps use only the approved public representation: exact, generalized, approximate area, region-only, or hidden.
 - Clearly label approximate locations without inviting users to infer the protected point.

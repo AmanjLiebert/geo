@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / UX-8 — protected-action identity guidance |
-| Task folder | `docs/agent-work/phase-6-ux8-reauth-guidance/` |
-| Status | `COMPLETE` |
+| Task | Phase 6 / UX-9 — saved location clarity |
+| Task folder | `docs/agent-work/phase-6-ux9-saved-location-clarity/` |
+| Status | `READY_FOR_IMPLEMENTATION` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | An authorized teacher whose recent identity confirmation has expired receives a clear confirmation prompt and returns to the same record; a real permission denial remains a distinct neutral error; the high-risk-action security check stays enforced. |
+| Plan gate | After saving a location, authorized teachers can see the saved label, region, exact point, and visibility; the emptied form is clearly presented only as a new-location form; restricted coordinates remain unavailable to public responses. |
 
 ## Required file order
 
