@@ -8,7 +8,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Phase 6 / UX-7 — media readiness repair |
 | Task folder | `docs/agent-work/phase-6-ux7-media-readiness-repair/` |
-| Status | `IMPLEMENTED_AWAITING_REVIEW` |
+| Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
 | Plan gate | Teachers can repair every actionable primary-image readiness requirement on an existing attachment; automated processing is explained separately; review guidance names the exact problem and opens the correct section; authorization and audit history remain enforced. |

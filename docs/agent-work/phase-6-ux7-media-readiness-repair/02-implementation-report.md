@@ -2,6 +2,8 @@
 
 Status: `IMPLEMENTED_AWAITING_REVIEW`
 
+Implementation commit: `8fffb2db8aadb3809ae02887e6be99c7e7371e99`
+
 ## Delivered
 
 - Existing attachments can now update usage rights, credit, and licence through the protected media PATCH contract while retaining ownership checks, record locks, audit events, and input bounds.
