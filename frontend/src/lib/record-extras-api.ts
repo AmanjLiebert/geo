@@ -278,6 +278,9 @@ export async function updateRecordMediaAttachment(
     caption?: string | null;
     description?: string | null;
     altText?: string | null;
+    rightsStatement?: string;
+    credit?: string | null;
+    licence?: string | null;
     position?: number;
     isPrimary?: boolean;
   },

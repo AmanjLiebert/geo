@@ -12,6 +12,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateMediaUploadDto {
@@ -99,6 +100,22 @@ export class UpdateRecordAttachmentDto {
   @IsString()
   @MaxLength(500)
   altText?: string | null;
+
+  @ValidateIf((_, value: unknown) => value !== undefined)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(2000)
+  rightsStatement?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  credit?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  licence?: string | null;
 
   @IsOptional()
   @IsInt()

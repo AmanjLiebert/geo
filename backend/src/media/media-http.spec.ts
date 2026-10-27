@@ -344,6 +344,10 @@ describe('MediaController HTTP requests and authorization', () => {
         payload: {
           caption: 'Updated caption',
           description: 'Updated description',
+          altText: 'Layered limestone exposed in a cliff face',
+          rightsStatement: 'Photographed by the field team with permission',
+          credit: 'Geo-Kurdistan field team',
+          licence: 'CC BY 4.0',
           isPrimary: true,
         },
         cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
@@ -354,8 +358,38 @@ describe('MediaController HTTP requests and authorization', () => {
         'teacher-1',
         validRecordId,
         validMediaAssetId,
-        expect.objectContaining({ caption: 'Updated caption', isPrimary: true }),
+        expect.objectContaining({
+          caption: 'Updated caption',
+          rightsStatement: 'Photographed by the field team with permission',
+          credit: 'Geo-Kurdistan field team',
+          licence: 'CC BY 4.0',
+          isPrimary: true,
+        }),
       );
+    });
+
+    it('rejects an empty usage-rights statement', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/media/records/${validRecordId}/attachments/${validMediaAssetId}`,
+        payload: { rightsStatement: '' },
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+      });
+      expect(response.statusCode).toBe(400);
+      expect(mockMediaService.updateAttachment).not.toHaveBeenCalled();
+    });
+
+    it('rejects a null usage-rights statement at the HTTP boundary', async () => {
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/media/records/${validRecordId}/attachments/${validMediaAssetId}`,
+        payload: { rightsStatement: null },
+        cookies: { gk_session: 'teacher-session', gk_csrf: validCsrf },
+        headers: { 'x-csrf-token': validCsrf },
+      });
+      expect(response.statusCode).toBe(400);
+      expect(mockMediaService.updateAttachment).not.toHaveBeenCalled();
     });
 
     it('returns 404 when attachment not found', async () => {

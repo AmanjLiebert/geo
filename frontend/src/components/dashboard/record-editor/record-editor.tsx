@@ -799,12 +799,12 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                     }
                   />
                 </div>
-                {recordDetail.status !== "archived" && (
+                {recordDetail.status !== "archived" &&
+                  activeWorkspaceSection === "review" && (
                   <div
                     id="record-panel-review"
                     role="tabpanel"
                     aria-labelledby="record-tab-review"
-                    hidden={activeWorkspaceSection !== "review"}
                     className={styles.workspacePanel}
                   >
                     <RecordReviewPanel

@@ -431,44 +431,88 @@ export class ScientificTrustService {
     const media = (await executor.query(
       `SELECT
          count(*) FILTER (WHERE rm.is_primary)::int AS primary_count,
-         count(*) FILTER (WHERE m.processing_status <> 'approved')::int AS unapproved_count,
+         max(m.media_kind) FILTER (WHERE rm.is_primary) AS primary_media_kind,
+         max(m.processing_status) FILTER (WHERE rm.is_primary) AS primary_processing_status,
          count(*) FILTER (
-           WHERE rm.is_primary AND (
-             m.media_kind <> 'image'
-             OR
-             m.processing_status <> 'approved'
-             OR length(btrim(COALESCE(m.rights_statement, ''))) = 0
-             OR length(btrim(COALESCE(rm.alt_text, ''))) < 5
-           )
-         )::int AS invalid_primary_count
+           WHERE rm.is_primary
+             AND length(btrim(COALESCE(m.rights_statement, ''))) = 0
+         )::int AS primary_missing_rights_count,
+         count(*) FILTER (
+           WHERE rm.is_primary
+             AND length(btrim(COALESCE(rm.alt_text, ''))) < 5
+         )::int AS primary_missing_alt_count,
+         count(*) FILTER (
+           WHERE NOT rm.is_primary AND m.processing_status <> 'approved'
+         )::int AS unapproved_other_count
        FROM record_media rm
        JOIN media_assets m ON m.id = rm.media_asset_id
        WHERE rm.record_id = $1`,
       [recordId],
     )) as unknown as Array<{
       primary_count: number;
-      unapproved_count: number;
-      invalid_primary_count: number;
+      primary_media_kind: string | null;
+      primary_processing_status: string | null;
+      primary_missing_rights_count: number;
+      primary_missing_alt_count: number;
+      unapproved_other_count: number;
     }>;
-    if ((media[0]?.primary_count ?? 0) !== 1) {
+    const primaryCount = media[0]?.primary_count ?? 0;
+    if (primaryCount !== 1) {
       issues.push({
         field: 'media',
         code: 'primary_image_required',
-        message: 'Choose one primary image.',
+        message: 'Choose one image as the main image for this record.',
       });
     }
-    if ((media[0]?.invalid_primary_count ?? 0) > 0) {
+    if (primaryCount === 1 && media[0]?.primary_media_kind !== 'image') {
       issues.push({
         field: 'media',
-        code: 'primary_image_incomplete',
-        message: 'The primary image needs approval, usage rights, and accessible alternative text.',
+        code: 'primary_media_not_image',
+        message: 'Choose an image, rather than a document or video, as the main image.',
       });
     }
-    if ((media[0]?.unapproved_count ?? 0) > 0) {
+    if (
+      primaryCount === 1 &&
+      media[0]?.primary_processing_status &&
+      !['approved', 'rejected', 'failed', 'archived'].includes(
+        media[0].primary_processing_status,
+      )
+    ) {
       issues.push({
         field: 'media',
-        code: 'not_approved',
-        message: 'All attached media must be approved.',
+        code: 'primary_image_processing',
+        message: 'The main image is still being checked. Refresh Images and files in a moment.',
+      });
+    }
+    if (
+      primaryCount === 1 &&
+      ['rejected', 'failed', 'archived'].includes(media[0]?.primary_processing_status ?? '')
+    ) {
+      issues.push({
+        field: 'media',
+        code: 'primary_image_rejected',
+        message: 'The main image could not be approved. Remove it or choose another image.',
+      });
+    }
+    if (primaryCount === 1 && (media[0]?.primary_missing_rights_count ?? 0) > 0) {
+      issues.push({
+        field: 'media',
+        code: 'primary_image_rights_required',
+        message: 'Add who owns the main image or the permission or licence that allows its use.',
+      });
+    }
+    if (primaryCount === 1 && (media[0]?.primary_missing_alt_count ?? 0) > 0) {
+      issues.push({
+        field: 'media',
+        code: 'primary_image_alt_text_required',
+        message: 'Describe what is visible in the main image for people using screen readers.',
+      });
+    }
+    if ((media[0]?.unapproved_other_count ?? 0) > 0) {
+      issues.push({
+        field: 'media',
+        code: 'other_media_not_approved',
+        message: 'One or more other files are still being checked or need replacement.',
       });
     }
     const locations = (await executor.query(

@@ -6,6 +6,30 @@ import { ScientificTrustService } from './scientific-trust.service';
 const recordId = '11111111-1111-4111-8111-111111111111';
 const referenceId = '22222222-2222-4222-8222-222222222222';
 
+function completeRecordQueryWithMedia(mediaRow: Record<string, unknown>) {
+  return vi.fn((sql: string) => {
+    if (sql.includes('FROM scientific_records WHERE id')) {
+      return Promise.resolve([
+        {
+          id: recordId,
+          owner_user_id: 'teacher-1',
+          category_id: 'category-1',
+          record_type_id: 'type-1',
+          template_version_id: 'template-1',
+        },
+      ]);
+    }
+    if (sql.includes('FROM categories c')) return Promise.resolve([{ exists: 1 }]);
+    if (sql.includes('FROM record_translations')) return Promise.resolve([{ count: 1 }]);
+    if (sql.includes('WITH policy AS')) {
+      return Promise.resolve([{ minimum: 1, kinds: [], verified_count: 1 }]);
+    }
+    if (sql.includes('FROM record_media rm')) return Promise.resolve([mediaRow]);
+    if (sql.includes('FROM record_locations')) return Promise.resolve([{ invalid_count: 0 }]);
+    return Promise.resolve([]);
+  });
+}
+
 describe('ScientificTrustService record attachments', () => {
   it('lists related items with English display titles and a bound source ID', async () => {
     const query = vi
@@ -293,7 +317,14 @@ describe('ScientificTrustService record attachments', () => {
       }
       if (sql.includes('FROM record_media rm')) {
         return Promise.resolve([
-          { primary_count: 1, unapproved_count: 0, invalid_primary_count: 0 },
+          {
+            primary_count: 1,
+            primary_media_kind: 'image',
+            primary_processing_status: 'approved',
+            primary_missing_rights_count: 0,
+            primary_missing_alt_count: 0,
+            unapproved_other_count: 0,
+          },
         ]);
       }
       if (sql.includes('FROM record_locations')) return Promise.resolve([{ invalid_count: 0 }]);
@@ -310,5 +341,54 @@ describe('ScientificTrustService record attachments', () => {
     );
     expect(translationQuery?.params).toEqual([recordId]);
     expect(translationQuery?.sql).not.toContain('translator_user_id IS DISTINCT FROM');
+  });
+
+  it('reports missing main-image rights and alternative text as separate repair actions', async () => {
+    const query = completeRecordQueryWithMedia({
+      primary_count: 1,
+      primary_media_kind: 'image',
+      primary_processing_status: 'approved',
+      primary_missing_rights_count: 1,
+      primary_missing_alt_count: 1,
+      unapproved_other_count: 0,
+    });
+    const service = new ScientificTrustService({ query } as unknown as DataSource);
+
+    const result = await service.publicationIssues(recordId, 'teacher-1');
+
+    expect(result.issues).toEqual([
+      {
+        field: 'media',
+        code: 'primary_image_rights_required',
+        message: 'Add who owns the main image or the permission or licence that allows its use.',
+      },
+      {
+        field: 'media',
+        code: 'primary_image_alt_text_required',
+        message: 'Describe what is visible in the main image for people using screen readers.',
+      },
+    ]);
+  });
+
+  it('reports automated main-image processing without blaming missing teacher input', async () => {
+    const query = completeRecordQueryWithMedia({
+      primary_count: 1,
+      primary_media_kind: 'image',
+      primary_processing_status: 'quarantined',
+      primary_missing_rights_count: 0,
+      primary_missing_alt_count: 0,
+      unapproved_other_count: 0,
+    });
+    const service = new ScientificTrustService({ query } as unknown as DataSource);
+
+    const result = await service.publicationIssues(recordId, 'teacher-1');
+
+    expect(result.issues).toEqual([
+      {
+        field: 'media',
+        code: 'primary_image_processing',
+        message: 'The main image is still being checked. Refresh Images and files in a moment.',
+      },
+    ]);
   });
 });

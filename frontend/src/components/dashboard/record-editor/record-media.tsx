@@ -75,10 +75,11 @@ export function RecordMedia({
 
   // Inline editing state
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
-  const [editPurpose, setEditPurpose] = useState("");
-  const [editCaption, setEditCaption] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editAltText, setEditAltText] = useState("");
+  const [editRights, setEditRights] = useState("");
+  const [editCredit, setEditCredit] = useState("");
+  const [editLicence, setEditLicence] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Detach confirmation state
@@ -295,10 +296,11 @@ export function RecordMedia({
 
   function startEditing(item: RecordMediaAttachment) {
     setEditingAssetId(item.mediaAssetId);
-    setEditPurpose(item.purpose);
-    setEditCaption(item.caption ?? "");
-    setEditDescription(item.description ?? "");
+    setEditDescription(item.description ?? item.caption ?? item.purpose);
     setEditAltText(item.altText ?? "");
+    setEditRights(item.rightsStatement);
+    setEditCredit(item.credit ?? "");
+    setEditLicence(item.licence ?? "");
     setError(null);
     setMessage(null);
   }
@@ -308,8 +310,12 @@ export function RecordMedia({
     item: RecordMediaAttachment,
   ) {
     event.preventDefault();
-    if (!editPurpose.trim()) {
-      setError("Purpose is required.");
+    if (!editDescription.trim() || !editRights.trim()) {
+      setError("Describe the file and why Geo-Kurdistan may use it.");
+      return;
+    }
+    if (item.mediaKind === "image" && editAltText.trim().length < 5) {
+      setError("Describe what is visible in the image using at least 5 characters.");
       return;
     }
     setSavingEdit(true);
@@ -317,11 +323,14 @@ export function RecordMedia({
     setMessage(null);
     try {
       await updateRecordMediaAttachment(recordId, item.mediaAssetId, {
-        purpose: editPurpose.trim(),
-        caption: editCaption.trim() || null,
-        description: editDescription.trim() || null,
+        purpose: editDescription.trim().slice(0, 40),
+        caption: editDescription.trim().slice(0, 160),
+        description: editDescription.trim(),
         altText:
           item.mediaKind === "image" ? editAltText.trim() || null : undefined,
+        rightsStatement: editRights.trim(),
+        credit: editCredit.trim() || null,
+        licence: editLicence.trim() || null,
       });
       setItems(await listRecordMedia(recordId));
       setEditingAssetId(null);
@@ -593,33 +602,18 @@ export function RecordMedia({
                     <div className={styles.fieldGroup}>
                       <label
                         className={styles.fieldLabel}
-                        htmlFor={`edit-purpose-${item.mediaAssetId}`}
+                        htmlFor={`edit-desc-${item.mediaAssetId}`}
                       >
-                        Purpose{" "}
+                        What does this file show or contain?{" "}
                         <span className={styles.requiredTag}>Required</span>
                       </label>
-                      <input
-                        id={`edit-purpose-${item.mediaAssetId}`}
-                        className={styles.input}
-                        maxLength={40}
+                      <textarea
+                        id={`edit-desc-${item.mediaAssetId}`}
+                        className={styles.textarea}
+                        maxLength={2000}
                         required
-                        value={editPurpose}
-                        onChange={(e) => setEditPurpose(e.target.value)}
-                      />
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label
-                        className={styles.fieldLabel}
-                        htmlFor={`edit-caption-${item.mediaAssetId}`}
-                      >
-                        Caption (optional)
-                      </label>
-                      <input
-                        id={`edit-caption-${item.mediaAssetId}`}
-                        className={styles.input}
-                        maxLength={160}
-                        value={editCaption}
-                        onChange={(e) => setEditCaption(e.target.value)}
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
                       />
                     </div>
                     {item.mediaKind === "image" && (
@@ -628,39 +622,85 @@ export function RecordMedia({
                           className={styles.fieldLabel}
                           htmlFor={`edit-alt-${item.mediaAssetId}`}
                         >
-                          Alt text (optional)
+                          Describe the image for people who cannot see it{" "}
+                          <span className={styles.requiredTag}>Required</span>
                         </label>
                         <input
                           id={`edit-alt-${item.mediaAssetId}`}
                           className={styles.input}
+                          minLength={5}
                           maxLength={500}
+                          required
                           value={editAltText}
                           onChange={(e) => setEditAltText(e.target.value)}
                         />
+                        <small className={styles.fieldHelp}>
+                          Describe the important visible details, not the filename.
+                        </small>
                       </div>
                     )}
                     <div className={styles.fieldGroup}>
                       <label
                         className={styles.fieldLabel}
-                        htmlFor={`edit-desc-${item.mediaAssetId}`}
+                        htmlFor={`edit-rights-${item.mediaAssetId}`}
                       >
-                        Description (optional)
+                        Why may Geo-Kurdistan use this file?{" "}
+                        <span className={styles.requiredTag}>Required</span>
                       </label>
-                      <textarea
-                        id={`edit-desc-${item.mediaAssetId}`}
-                        className={styles.textarea}
+                      <input
+                        id={`edit-rights-${item.mediaAssetId}`}
+                        className={styles.input}
                         maxLength={2000}
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
+                        required
+                        value={editRights}
+                        onChange={(e) => setEditRights(e.target.value)}
                       />
+                      <small className={styles.fieldHelp}>
+                        State who owns it or what permission or licence allows its use.
+                      </small>
                     </div>
+                    <details className={styles.mediaAdvancedFields}>
+                      <summary>More file information</summary>
+                      <div className={styles.formGrid}>
+                        <div className={styles.fieldGroup}>
+                          <label
+                            className={styles.fieldLabel}
+                            htmlFor={`edit-credit-${item.mediaAssetId}`}
+                          >
+                            Credit line (optional)
+                          </label>
+                          <input
+                            id={`edit-credit-${item.mediaAssetId}`}
+                            className={styles.input}
+                            maxLength={1000}
+                            value={editCredit}
+                            onChange={(e) => setEditCredit(e.target.value)}
+                          />
+                        </div>
+                        <div className={styles.fieldGroup}>
+                          <label
+                            className={styles.fieldLabel}
+                            htmlFor={`edit-licence-${item.mediaAssetId}`}
+                          >
+                            Licence name (optional)
+                          </label>
+                          <input
+                            id={`edit-licence-${item.mediaAssetId}`}
+                            className={styles.input}
+                            maxLength={160}
+                            value={editLicence}
+                            onChange={(e) => setEditLicence(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </details>
                     <div className={styles.actionGroup}>
                       <button
                         className={styles.buttonPrimary}
                         type="submit"
                         disabled={savingEdit}
                       >
-                        {savingEdit ? "Saving…" : "Save details"}
+                        {savingEdit ? "Saving…" : "Save file information"}
                       </button>
                       <button
                         className={styles.buttonSecondary}

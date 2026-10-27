@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / UX-6 — record workspace clarity and visibility |
-| Task folder | `docs/agent-work/phase-6-ux6-record-workspace-clarity/` |
-| Status | `COMPLETE` |
+| Task | Phase 6 / UX-7 — media readiness repair |
+| Task folder | `docs/agent-work/phase-6-ux7-media-readiness-repair/` |
+| Status | `IMPLEMENTED_AWAITING_REVIEW` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | Teachers see all saved record data in one understandable workspace, including read-only published/in-review records; repeated location/media inputs are removed; section completion and save results are visible where the action occurs; backend validation remains unchanged. |
+| Plan gate | Teachers can repair every actionable primary-image readiness requirement on an existing attachment; automated processing is explained separately; review guidance names the exact problem and opens the correct section; authorization and audit history remain enforced. |
 
 ## Required file order
 

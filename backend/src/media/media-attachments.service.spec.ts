@@ -113,10 +113,14 @@ describe('MediaService record attachments', () => {
           position: 0,
           is_primary: false,
           media_kind: 'image',
+          rights_statement: 'Old field-team permission',
+          credit: 'Old credit',
+          licence: null,
         },
       ]) // existing attachment row
       .mockResolvedValueOnce([]) // unset other primary
       .mockResolvedValueOnce([]) // update record_media
+      .mockResolvedValueOnce([]) // update media_assets rights metadata
       .mockResolvedValueOnce([]) // update record updated_at
       .mockResolvedValueOnce([]); // insert audit event
 
@@ -133,6 +137,9 @@ describe('MediaService record attachments', () => {
       altText: 'Close up of limestone',
       position: 2,
       isPrimary: true,
+      rightsStatement: 'Updated field-team permission',
+      credit: 'Geo-Kurdistan field team',
+      licence: 'CC BY 4.0',
     });
 
     expect(updated).toEqual({
@@ -144,13 +151,23 @@ describe('MediaService record attachments', () => {
       altText: 'Close up of limestone',
       position: 2,
       isPrimary: true,
+      rightsStatement: 'Updated field-team permission',
+      credit: 'Geo-Kurdistan field team',
+      licence: 'CC BY 4.0',
     });
 
     expect(managerQuery.mock.calls[2]?.[0]).toContain('UPDATE record_media SET is_primary = false');
     expect(managerQuery.mock.calls[3]?.[0]).toContain('UPDATE record_media');
-    expect(managerQuery.mock.calls[5]?.[0]).toContain('INSERT INTO content_audit_events');
+    expect(managerQuery.mock.calls[4]?.[0]).toContain('UPDATE media_assets');
+    expect(managerQuery.mock.calls[4]?.[1]).toEqual([
+      mediaAssetId,
+      'Updated field-team permission',
+      'Geo-Kurdistan field team',
+      'CC BY 4.0',
+    ]);
+    expect(managerQuery.mock.calls[6]?.[0]).toContain('INSERT INTO content_audit_events');
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(managerQuery.mock.calls[5]?.[1]?.[1]).toBe('scientific-record.primary-media-changed');
+    expect(managerQuery.mock.calls[6]?.[1]?.[1]).toBe('scientific-record.primary-media-changed');
   });
 
   it('safely reorders attachments and validates that all IDs belong to the record', async () => {

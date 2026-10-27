@@ -25,6 +25,20 @@ const issueSections: Record<string, RecordWorkspaceSectionId> = {
   media: "media",
 };
 
+export function issueActionLabel(field: string, code: string): string {
+  if (field === "media") {
+    return [
+      "primary_image_rights_required",
+      "primary_image_alt_text_required",
+    ].includes(code)
+      ? "Fix main image"
+      : "View files";
+  }
+  if (field === "evidence") return "View sources";
+  if (field === "location") return "View location";
+  return "Open section";
+}
+
 export function RecordReviewPanel({
   recordId,
   status,
@@ -42,13 +56,13 @@ export function RecordReviewPanel({
   const [error, setError] = useState<DashboardApiError | null>(null);
 
   useEffect(() => {
-    let active = true;
+    let current = true;
     getRecordReadiness(recordId)
       .then((result) => {
-        if (active) setReadiness(result);
+        if (current) setReadiness(result);
       })
       .catch((cause) => {
-        if (active)
+        if (current)
           setError(
             cause instanceof DashboardApiError
               ? cause
@@ -56,7 +70,7 @@ export function RecordReviewPanel({
           );
       });
     return () => {
-      active = false;
+      current = false;
     };
   }, [recordId, status]);
 
@@ -119,7 +133,9 @@ export function RecordReviewPanel({
                 <CircleAlert aria-hidden="true" />
                 <span>{issue.message}</span>
                 {section && onSelectSection && status === "draft" && (
-                  <button type="button" onClick={() => onSelectSection(section)}>Open section</button>
+                  <button type="button" onClick={() => onSelectSection(section)}>
+                    {issueActionLabel(issue.field, issue.code)}
+                  </button>
                 )}
               </li>
             );

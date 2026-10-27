@@ -89,6 +89,8 @@ The interface must:
 - Show a concise section state in the workspace navigation, such as **Not added**, **1 location**, or **3 files**, so teachers can understand completeness without opening every section.
 - Do not request the same value twice when one safe value is sufficient. A public location reuses the exact point as its public point; only an approximate public location asks for a separate approved map point. Initial media upload uses one plain-language description for purpose, caption, and image alternative text, with advanced corrections available after upload.
 - Save success and failure feedback appears beside the control that initiated the save and remains visible without requiring the teacher to scroll to the top of a long form.
+- Every publication-readiness message names the exact missing fact or automated state. If the teacher can repair it, provide a direct action using the same plain-language label as the destination form; if processing is still automatic, say to wait or replace the file rather than presenting it as a teacher error.
+- Existing media uses the same plain-language metadata model as upload. Teachers can repair the file description, image accessibility description, usage rights, credit, and licence without detaching and uploading the file again.
 
 ## Roles and permissions
 

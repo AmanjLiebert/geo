@@ -275,10 +275,14 @@ export class MediaService {
           position: number;
           is_primary: boolean;
           media_kind: string;
+          rights_statement: string;
+          credit: string | null;
+          licence: string | null;
         }>
       >(
         `SELECT rm.record_id, rm.media_asset_id, rm.purpose, rm.caption, rm.description,
-                rm.alt_text, rm.position, rm.is_primary, m.media_kind
+                rm.alt_text, rm.position, rm.is_primary, m.media_kind,
+                m.rights_statement, m.credit, m.licence
          FROM record_media rm
          JOIN media_assets m ON m.id = rm.media_asset_id
          WHERE rm.record_id = $1 AND rm.media_asset_id = $2 AND m.owner_user_id = $3
@@ -332,6 +336,27 @@ export class MediaService {
             : input.altText.trim()
           : current.alt_text;
       const position = input.position !== undefined ? input.position : current.position;
+      const rightsStatement =
+        input.rightsStatement !== undefined
+          ? typeof input.rightsStatement === 'string'
+            ? input.rightsStatement.trim()
+            : ''
+          : current.rights_statement;
+      if (!rightsStatement) {
+        throw new BadRequestException('Usage rights are required.');
+      }
+      const credit =
+        input.credit !== undefined
+          ? input.credit === null || input.credit === ''
+            ? null
+            : input.credit.trim()
+          : current.credit;
+      const licence =
+        input.licence !== undefined
+          ? input.licence === null || input.licence === ''
+            ? null
+            : input.licence.trim()
+          : current.licence;
 
       await manager.query(
         `UPDATE record_media
@@ -343,6 +368,16 @@ export class MediaService {
              is_primary = $8
          WHERE record_id = $1 AND media_asset_id = $2`,
         [recordId, mediaAssetId, purpose, caption, description, altText, position, isPrimary],
+      );
+
+      await manager.query(
+        `UPDATE media_assets
+         SET rights_statement = $2,
+             credit = $3,
+             licence = $4,
+             updated_at = now()
+         WHERE id = $1`,
+        [mediaAssetId, rightsStatement, credit, licence],
       );
 
       await manager.query(`UPDATE scientific_records SET updated_at = now() WHERE id = $1`, [
@@ -366,6 +401,9 @@ export class MediaService {
             isPrimary,
             purpose,
             position,
+            rightsUpdated: input.rightsStatement !== undefined,
+            creditUpdated: input.credit !== undefined,
+            licenceUpdated: input.licence !== undefined,
           }),
         ],
       );
@@ -379,6 +417,9 @@ export class MediaService {
         altText,
         position,
         isPrimary,
+        rightsStatement,
+        credit,
+        licence,
       };
     });
 
