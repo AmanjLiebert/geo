@@ -4,6 +4,7 @@ import { DataSource, EntityManager } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
 import { Environment } from '../config/environment';
 import { JobQueueService } from '../jobs/job-queue.service';
+import { DemoImageProcessorService } from './demo-image-processor.service';
 import { MediaService } from './media.service';
 
 const recordId = '11111111-1111-4111-8111-111111111111';
@@ -17,7 +18,14 @@ function createService(dataSource: DataSource) {
       return '';
     }),
   } as unknown as ConfigService<Environment, true>;
-  return new MediaService(dataSource, config, {} as JobQueueService);
+  return new MediaService(
+    dataSource,
+    config,
+    {} as JobQueueService,
+    {
+      isEnabled: () => false,
+    } as DemoImageProcessorService,
+  );
 }
 
 describe('MediaService record attachments', () => {

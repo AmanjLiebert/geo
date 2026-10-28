@@ -4,6 +4,12 @@ import {
   validateRecordDetailResponse,
   type ScientificRecordDetail,
 } from "./dashboard-api";
+import {
+  acceptedMediaTypes,
+  isExpectedMediaConfirmationStatus,
+  maximumMediaBytes,
+  mediaTypeGuidance,
+} from "./media-upload-policy";
 
 export type RecordRelationship = {
   id: string;
@@ -130,21 +136,21 @@ export async function requestRecordResource(
         ? "unauthorized"
         : response.status === 403 && problemCode === "reauthentication_required"
           ? "reauthentication"
-        : response.status === 403
-          ? "forbidden"
-          : response.status === 400 || response.status === 409
-            ? "validation"
-            : "server";
+          : response.status === 403
+            ? "forbidden"
+            : response.status === 400 || response.status === 409
+              ? "validation"
+              : "server";
     throw new DashboardApiError(
       kind === "unauthorized"
         ? "Sign in to continue."
         : kind === "reauthentication"
           ? "Confirm your identity to continue this protected action."
-        : kind === "forbidden"
-          ? "You do not have access to this action."
-          : kind === "validation"
-            ? "This request could not be saved. Check the details and try again."
-            : "The request could not be completed.",
+          : kind === "forbidden"
+            ? "You do not have access to this action."
+            : kind === "validation"
+              ? "This request could not be saved. Check the details and try again."
+              : "The request could not be completed.",
       response.status,
       kind,
     );
@@ -413,27 +419,11 @@ export async function uploadRecordMedia(
     isPrimary?: boolean;
   },
 ): Promise<void> {
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "application/pdf",
-    "video/mp4",
-    "video/webm",
-  ];
+  const allowedTypes = acceptedMediaTypes();
   if (!allowedTypes.includes(file.type))
-    throw new DashboardApiError(
-      "Choose a JPEG, PNG, WebP, PDF, MP4, or WebM file.",
-      400,
-      "validation",
-    );
+    throw new DashboardApiError(mediaTypeGuidance(), 400, "validation");
 
-  let maximum = 25 * 1024 * 1024;
-  if (file.type === "application/pdf") {
-    maximum = 20 * 1024 * 1024;
-  } else if (file.type.startsWith("video/")) {
-    maximum = 50 * 1024 * 1024;
-  }
+  const maximum = maximumMediaBytes(file.type);
 
   if (file.size < 1 || file.size > maximum)
     throw new DashboardApiError(
@@ -482,7 +472,7 @@ export async function uploadRecordMedia(
   if (
     !object(confirmed) ||
     confirmed.mediaAssetId !== ticket.mediaAssetId ||
-    confirmed.status !== "quarantined"
+    !isExpectedMediaConfirmationStatus(confirmed.status)
   )
     invalidResponse();
   const attached = await requestRecordResource(

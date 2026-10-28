@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / UX-9 — saved location clarity |
-| Task folder | `docs/agent-work/phase-6-ux9-saved-location-clarity/` |
-| Status | `COMPLETE` |
+| Task | Seven-day Render demo — isolated image sanitization |
+| Task folder | `docs/agent-work/render-demo-image-pipeline/` |
+| Status | `BLOCKED` — repository checks pass; live Render/B2/Firebase acceptance requires external provisioning |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | After saving a location, authorized teachers can see the saved label, region, exact point, and visibility; the emptied form is clearly presented only as a new-location form; restricted coordinates remain unavailable to public responses. |
+| Plan gate | Explicit demo mode accepts only bounded JPEG/PNG/WebP images, produces metadata-free approved WebP derivatives through Sharp, preserves all production worker and ClamAV behavior, and supports the normal primary-image publication path on an isolated demo database and credentials. |
 
 ## Required file order
 
