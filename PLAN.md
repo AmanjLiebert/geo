@@ -2,10 +2,6 @@
 
 ## Active delivery change — category-to-public-content sequence
 
-### Temporary seven-day Render demonstration
-
-A separately configured demonstration deployment may process image uploads inside the API only when both an explicit demo deployment profile and an explicit demo-image-processing flag are enabled. This path is limited to bounded JPEG, PNG, and WebP input, fully decodes and re-encodes metadata-free WebP derivatives, keeps originals private, and uses separate demo storage prefixes, database, and credentials. It must reuse normal ownership and publication invariants and fail closed in every non-demo profile. The production pg-boss worker, ClamAV scan, PDF processing, and video processing remain unchanged and authoritative outside this temporary demo profile.
-
 The client approved dashboard management of categories and subcategories for both teachers and admins. This section supersedes earlier statements in this document that routine users cannot manage taxonomy. Existing seeded categories and all records remain intact. Record-type and scientific-field-template editing is still deferred; new branches use a shared General geological record type. Implement one numbered step, verify its gate, and stop before the next step:
 
 1. **Create:** protected creation of unpublished categories/subcategories with English title, summary, description, optional private image, and parent; automatic General geological record pairing. Gate: teacher/admin create and list, visitor denied, existing structure unchanged.

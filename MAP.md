@@ -1,9 +1,5 @@
 # Geo-Kurdistan System Map
 
-## Temporary Render demo media boundary
-
-The seven-day Render demo uses the same authenticated upload, attachment, and publication contracts but has an isolated image-only processor inside the API. It is activated only by an explicit demo deployment profile plus an explicit image-processing flag, accepts bounded JPEG/PNG/WebP files, writes only sanitized WebP derivatives under demo storage prefixes, and uses a separate demo PostgreSQL database and storage credentials. Production retains its separate pg-boss worker, ClamAV service, quarantine lifecycle, and document/video processors unchanged.
-
 ## Approved category-management change
 
 Teachers and admins can manage category/subcategory drafts through protected NestJS endpoints. PostgreSQL retains stable category identity, unpublished state, private image association, and automatic history. Existing seeded structure is preserved. New categories receive the shared General geological record pairing; custom scientific templates remain a separate controlled concern. Public discovery later reads only published, active structure and records from NestJS, never dashboard data or mock files. The ordered gates are in `PLAN.md`; the earlier migration-only dashboard prohibition below is superseded for categories/subcategories, not for arbitrary template editing.

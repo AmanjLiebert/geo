@@ -5,5 +5,3 @@ coverage
 .env.*
 !.env.example
 npm-debug.log*
-firebase-service-account.json
-secrets/

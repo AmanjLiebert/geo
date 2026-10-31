@@ -1,11 +1,9 @@
 import Joi from 'joi';
 
 export type NodeEnvironment = 'development' | 'test' | 'production';
-export type DeploymentProfile = 'production' | 'demo';
 
 export interface Environment {
   NODE_ENV: NodeEnvironment;
-  DEPLOYMENT_PROFILE: DeploymentProfile;
   APP_NAME: string;
   HOST: string;
   PORT: number;
@@ -46,15 +44,10 @@ export interface Environment {
   MEDIA_MAX_PDF_PAGES: number;
   MEDIA_MAX_VIDEO_BYTES: number;
   MEDIA_MAX_VIDEO_DURATION_SECONDS: number;
-  MEDIA_DEMO_IMAGE_PROCESSING_ENABLED: boolean;
-  MEDIA_DEMO_STORAGE_PREFIX: string;
-  MEDIA_DEMO_MAX_IMAGE_BYTES: number;
-  MEDIA_DEMO_MAX_IMAGE_PIXELS: number;
 }
 
 export const environmentSchema = Joi.object<Environment>({
   NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
-  DEPLOYMENT_PROFILE: Joi.string().valid('production', 'demo').default('production'),
   APP_NAME: Joi.string().trim().min(1).max(100).default('geo-kurdistan-api'),
   HOST: Joi.string().hostname().default('0.0.0.0'),
   PORT: Joi.number().port().default(4000),
@@ -132,16 +125,6 @@ export const environmentSchema = Joi.object<Environment>({
   MEDIA_MAX_PDF_PAGES: Joi.number().integer().min(1).max(250).default(100),
   MEDIA_MAX_VIDEO_BYTES: Joi.number().integer().min(1_048_576).max(104_857_600).default(52_428_800),
   MEDIA_MAX_VIDEO_DURATION_SECONDS: Joi.number().integer().min(1).max(1_800).default(300),
-  MEDIA_DEMO_IMAGE_PROCESSING_ENABLED: Joi.boolean().truthy('true').falsy('false').default(false),
-  MEDIA_DEMO_STORAGE_PREFIX: Joi.string()
-    .pattern(/^[a-z0-9][a-z0-9-]{0,62}$/)
-    .default('demo'),
-  MEDIA_DEMO_MAX_IMAGE_BYTES: Joi.number().integer().min(262_144).max(3_145_728).default(3_145_728),
-  MEDIA_DEMO_MAX_IMAGE_PIXELS: Joi.number()
-    .integer()
-    .min(1_000_000)
-    .max(16_000_000)
-    .default(12_000_000),
 }).unknown(true);
 
 export function validateEnvironment(input: NodeJS.ProcessEnv): Environment {
@@ -156,26 +139,7 @@ export function validateEnvironment(input: NodeJS.ProcessEnv): Environment {
     throw new Error(`Invalid environment configuration: ${result.error.message}`);
   }
 
-  const environment = result.value;
-  if (
-    environment.MEDIA_DEMO_IMAGE_PROCESSING_ENABLED &&
-    environment.DEPLOYMENT_PROFILE !== 'demo'
-  ) {
-    throw new Error(
-      'Invalid environment configuration: MEDIA_DEMO_IMAGE_PROCESSING_ENABLED requires DEPLOYMENT_PROFILE=demo.',
-    );
-  }
-
-  if (environment.MEDIA_DEMO_IMAGE_PROCESSING_ENABLED) {
-    const databaseName = new URL(environment.DATABASE_URL).pathname.toLowerCase();
-    if (!databaseName.includes('demo')) {
-      throw new Error(
-        'Invalid environment configuration: demo image processing requires a database name containing "demo".',
-      );
-    }
-  }
-
-  return environment;
+  return result.value;
 }
 
 export function parseCorsOrigins(value: string): string[] {

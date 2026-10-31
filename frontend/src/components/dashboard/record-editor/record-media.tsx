@@ -27,16 +27,16 @@ import {
   type OnlineMediaPage,
   type RecordMediaAttachment,
 } from "@/lib/record-extras-api";
-import {
-  acceptedMediaTypes,
-  demoImagesOnly,
-  mediaTypeGuidance,
-} from "@/lib/media-upload-policy";
 import styles from "./record-editor.module.css";
 
-const ACCEPTED_TYPES = acceptedMediaTypes();
-const MEDIA_TYPE_GUIDANCE = mediaTypeGuidance();
-const DEMO_IMAGES_ONLY = demoImagesOnly();
+const ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+  "video/mp4",
+  "video/webm",
+];
 
 export function RecordMedia({
   recordId,
@@ -145,7 +145,7 @@ export function RecordMedia({
       setFile(null);
       setSelectedPreviewUrl(null);
       setIsPrimary(false);
-      setError(MEDIA_TYPE_GUIDANCE);
+      setError("Choose a JPEG, PNG, WebP, PDF, MP4, or WebM file.");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -173,7 +173,7 @@ export function RecordMedia({
     setError(null);
     setMessage(null);
     if (!file || !ACCEPTED_TYPES.includes(file.type)) {
-      setError(MEDIA_TYPE_GUIDANCE);
+      setError("Choose a JPEG, PNG, WebP, PDF, MP4, or WebM file.");
       return;
     }
     if (!rights.trim() || !description.trim()) {
@@ -315,9 +315,7 @@ export function RecordMedia({
       return;
     }
     if (item.mediaKind === "image" && editAltText.trim().length < 5) {
-      setError(
-        "Describe what is visible in the image using at least 5 characters.",
-      );
+      setError("Describe what is visible in the image using at least 5 characters.");
       return;
     }
     setSavingEdit(true);
@@ -637,8 +635,7 @@ export function RecordMedia({
                           onChange={(e) => setEditAltText(e.target.value)}
                         />
                         <small className={styles.fieldHelp}>
-                          Describe the important visible details, not the
-                          filename.
+                          Describe the important visible details, not the filename.
                         </small>
                       </div>
                     )}
@@ -659,8 +656,7 @@ export function RecordMedia({
                         onChange={(e) => setEditRights(e.target.value)}
                       />
                       <small className={styles.fieldHelp}>
-                        State who owns it or what permission or licence allows
-                        its use.
+                        State who owns it or what permission or licence allows its use.
                       </small>
                     </div>
                     <details className={styles.mediaAdvancedFields}>
@@ -812,15 +808,14 @@ export function RecordMedia({
               id="record-media-file"
               className={styles.mediaFileInput}
               type="file"
-              accept={ACCEPTED_TYPES.join(",")}
+              accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"
               required
               onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
             />
           </div>
           <small className={styles.fieldHelp}>
-            {DEMO_IMAGES_ONLY
-              ? "JPEG, PNG, or WebP up to 3 MB."
-              : "JPEG, PNG, or WebP up to 25 MB; PDF up to 20 MB; MP4 or WebM up to 50 MB."}
+            JPEG, PNG, or WebP up to 25 MB; PDF up to 20 MB; MP4 or WebM up to
+            50 MB.
           </small>
 
           <div className={styles.fieldGroup}>

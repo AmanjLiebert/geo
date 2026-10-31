@@ -14,11 +14,10 @@ ENV NODE_ENV=production
 WORKDIR /app
 RUN apk add --no-cache ffmpeg poppler-utils \
     && addgroup -S geo \
-    && adduser -S geo -G geo \
-    && adduser geo node
+    && adduser -S geo -G geo
 COPY --from=build --chown=geo:geo /app/package.json /app/package-lock.json ./
 COPY --from=build --chown=geo:geo /app/node_modules ./node_modules
 COPY --from=build --chown=geo:geo /app/dist ./dist
 USER geo
 EXPOSE 4000
-CMD ["sh", "-c", "if [ \"$DEPLOYMENT_PROFILE\" = \"demo\" ]; then node dist/database/migrate.js && node dist/database/seed.js || exit 1; fi; exec node dist/main.js"]
+CMD ["node", "dist/main.js"]

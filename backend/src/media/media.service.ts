@@ -24,7 +24,6 @@ import {
   CreateMediaUploadDto,
   UpdateRecordAttachmentDto,
 } from './dto/create-media-upload.dto';
-import { DemoImageProcessorService } from './demo-image-processor.service';
 
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
@@ -51,7 +50,6 @@ export class MediaService {
     private readonly dataSource: DataSource,
     private readonly config: ConfigService<Environment, true>,
     private readonly jobs: JobQueueService,
-    private readonly demoImages: DemoImageProcessorService,
   ) {
     this.bucket = this.config.get('MEDIA_STORAGE_BUCKET', { infer: true });
     this.maxVideoBytes = this.config.get('MEDIA_MAX_VIDEO_BYTES', { infer: true }) || 52_428_800;
@@ -73,18 +71,7 @@ export class MediaService {
     if (!input.filename.trim() || !input.rightsStatement.trim()) {
       throw new BadRequestException('Filename and rights statement are required.');
     }
-    const demoProfile = this.config.get('DEPLOYMENT_PROFILE', { infer: true }) === 'demo';
-    if (demoProfile && !this.demoImages.isEnabled()) {
-      throw new ServiceUnavailableException('Demo image uploads are not enabled.');
-    }
-    if (
-      this.demoImages.isEnabled() &&
-      !['image/jpeg', 'image/png', 'image/webp'].includes(input.contentType)
-    ) {
-      throw new BadRequestException('The demo accepts JPEG, PNG, and WebP images only.');
-    }
-
-    let maximum = this.demoImages.isEnabled() ? this.demoImages.maxImageBytes() : MAX_IMAGE_BYTES;
+    let maximum = MAX_IMAGE_BYTES;
     let mediaKind: 'image' | 'document' | 'video' = 'image';
 
     if (input.contentType === 'application/pdf') {
@@ -100,9 +87,7 @@ export class MediaService {
     }
 
     const id = randomUUID();
-    const storageKey = this.demoImages.isEnabled()
-      ? this.demoImages.storageKey(id)
-      : `quarantine/${id}`;
+    const storageKey = `quarantine/${id}`;
     await this.dataSource.query(
       `INSERT INTO media_assets (
         id, storage_key, original_filename, declared_content_type, byte_size, media_kind,
@@ -180,9 +165,6 @@ export class MediaService {
         updated_at = now() WHERE id = $1`,
       [mediaAssetId, detected],
     );
-    if (this.demoImages.isEnabled()) {
-      return this.demoImages.process(mediaAssetId);
-    }
     const jobId = await this.jobs.enqueueMedia(mediaAssetId);
     return { mediaAssetId, status: 'quarantined', processingRequired: true, jobId };
   }

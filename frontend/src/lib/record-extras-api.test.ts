@@ -26,10 +26,7 @@ function ok(data: unknown, status = 200): Response {
 
 describe("record extras API", () => {
   beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
-  });
+  afterEach(() => vi.unstubAllGlobals());
 
   it("distinguishes required identity confirmation from a real permission denial", async () => {
     vi.mocked(fetch)
@@ -38,13 +35,9 @@ describe("record extras API", () => {
           JSON.stringify({
             status: 403,
             code: "reauthentication_required",
-            detail:
-              "Recent authentication is required for this protected action.",
+            detail: "Recent authentication is required for this protected action.",
           }),
-          {
-            status: 403,
-            headers: { "content-type": "application/problem+json" },
-          },
+          { status: 403, headers: { "content-type": "application/problem+json" } },
         ),
       )
       .mockResolvedValueOnce(
@@ -54,16 +47,12 @@ describe("record extras API", () => {
         }),
       );
 
-    await expect(
-      requestRecordResource(`/api/v1/records/${recordId}/publish`, "POST"),
-    ).rejects.toMatchObject({
+    await expect(requestRecordResource(`/api/v1/records/${recordId}/publish`, "POST")).rejects.toMatchObject({
       kind: "reauthentication",
       status: 403,
       message: "Confirm your identity to continue this protected action.",
     });
-    await expect(
-      requestRecordResource(`/api/v1/records/${recordId}/publish`, "POST"),
-    ).rejects.toMatchObject({
+    await expect(requestRecordResource(`/api/v1/records/${recordId}/publish`, "POST")).rejects.toMatchObject({
       kind: "forbidden",
       status: 403,
       message: "You do not have access to this action.",
@@ -227,36 +216,6 @@ describe("record extras API", () => {
     expect(vi.mocked(fetch).mock.calls[3][1]?.body).toContain(
       '"360 sweep of outcrop"',
     );
-  });
-
-  it("accepts the sanitized approved confirmation returned by demo image processing", async () => {
-    vi.stubEnv("NEXT_PUBLIC_MEDIA_DEMO_IMAGES_ONLY", "true");
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(
-        ok({
-          mediaAssetId: mediaId,
-          uploadUrl: "https://storage.example.test/signed-image-upload",
-          method: "PUT",
-          requiredHeaders: { "content-type": "image/png" },
-        }),
-      )
-      .mockResolvedValueOnce({ ok: true, status: 200 } as Response)
-      .mockResolvedValueOnce(ok({ mediaAssetId: mediaId, status: "approved" }))
-      .mockResolvedValueOnce(ok({ mediaAssetId: mediaId }));
-
-    const image = {
-      name: "outcrop.png",
-      type: "image/png",
-      size: 1024,
-    } as File;
-    await expect(
-      uploadRecordMedia(recordId, image, {
-        rightsStatement: "Demonstration field team",
-        purpose: "primary field image",
-        altText: "Layered outcrop beside a field scale",
-        isPrimary: true,
-      }),
-    ).resolves.toBeUndefined();
   });
 
   it("updates attachment metadata and selects primary image", async () => {
