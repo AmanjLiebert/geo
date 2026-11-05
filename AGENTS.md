@@ -1,73 +1,39 @@
-# Geo-Kurdistan Development Rules
+# Geo-Kurdistan — Agent Rules
 
-## Source of truth
+## Authority
 
-Read these files before making architectural or product changes:
+- **OpenCode implements; Codex independently reviews critical work.** The user authorizes priorities, releases, destructive actions, deploy/push/merge, shared-database or production-data changes, and paid external operations.
+- `PLAN.md` owns delivery order/status/gates; `MAP.md` owns product, roles, data, security, and architecture; `DESIGN.md` owns UI/UX; `MEMORY.md` owns the active formal task and statuses. Topic documents own maintenance and operations.
+- Read only the documents and sections named by the assignment. Code/tests describe current implementation; docs describe intent. Report disagreements instead of silently changing either.
+- Do not activate the next planned feature without user authorization.
 
-1. `PLAN.md` — ordered delivery plan, scope, and completion gates.
-2. `MAP.md` — system boundaries, data ownership, roles, and flows.
-3. `DESIGN.md` — visual and accessibility rules.
+## Task risk
 
-If documents conflict, `PLAN.md` wins for delivery scope and `MAP.md` wins for system boundaries.
+- **QUICK:** isolated styling, copy, or low-risk bug. Inspect affected files, make the smallest change, run focused checks, and create no handoff documents.
+- **STANDARD:** bounded feature, endpoint, or workflow. Inspect the owner module, affected contract, relevant MAP/DESIGN/PLAN sections, permissions, and tests.
+- **CRITICAL:** auth, schema/data migration, media security, publication, restricted geography, shared contracts, deployment/recovery, or destructive data. Define scope, non-goals, permissions, rollback/recovery, and verification first. A small patch touching these boundaries remains CRITICAL.
 
-## Agent handoff workflow
+## Formal work
 
-- Use `MEMORY.md` as the coordination index for work delegated to another coding agent.
-- Only the task identified as active in `MEMORY.md` may be implemented. Do not begin a later phase or combine adjacent phases.
-- Every delegated task has its own folder under `docs/agent-work/` with separate assignment, implementation-report, and verification files.
-- The assigning/reviewing agent owns `01-assignment.md` and `03-verification.md`. The implementation agent writes only `02-implementation-report.md` unless the assignment explicitly authorizes documentation changes elsewhere.
-- An implementation report is evidence for review, not proof of completion. The task is complete only after independent verification is recorded and the completion gate in `PLAN.md` passes.
-- Never place secrets, credentials, personal data, raw environment files, or private storage/database details in handoff files.
+- Critical tasks use `docs/agent-work/<task>/` with `01-assignment.md`, `02-implementation-report.md`, and `03-verification.md`; follow `docs/agent-work/README.md`.
+- `MEMORY.md` is the only active-task pointer and owns status names, including `IMPLEMENTED_AWAITING_REVIEW`.
+- OpenCode implements only authorized scope, records truthful evidence, and stops; it cannot self-approve or activate another task.
+- Codex reviews the actual diff and affected source. Critical work remains `IMPLEMENTED_AWAITING_REVIEW` and unreleasable until independent verification passes.
+- Completed task records are immutable audit history; never rewrite them to imply checks or independence that did not occur.
 
-## Current phase
+## Safety
 
-The visitor showcase remains the frontend baseline. Phase 5 — the protected administration dashboard — is the active implementation phase, building on the completed Phase 1–4 foundational, identity, scientific-content, and publishing/media rehearsals. Current work must follow the active phase in `PLAN.md`. Do not jump ahead to AI, payments, or advanced infrastructure before the earlier phase completion gates pass.
+- Preserve unrelated and uncommitted work. Use recoverable Git state for significant changes; never overwrite user changes.
+- Follow MAP boundaries. Validate external input, deny private operations by default, and preserve object authorization, scientific identity, translations, evidence, revisions, audit history, media quarantine/approval, and restricted locations.
+- Schema changes require reviewed migrations, preserved data, and recovery. Never silently hard-delete used business data.
+- Never inspect, print, copy, modify, or commit real secrets, `.env` contents, keys, credentials, or private production data without an explicitly authorized operational need.
+- Never expose secrets, private identifiers, stack traces, restricted coordinates, storage keys, or unfinished/debug behavior.
+- Preserve localization/RTL readiness, accessibility, visual identity, and user data. Avoid unrelated redesigns, dependencies, services, and abstractions.
 
-## Product rules
+## Execution and verification
 
-- Do not block development on the final geological taxonomy.
-- Categories and subcategories are managed data, never hardcoded business rules.
-- A draft record may be unclassified; a published record must have a valid publishable category.
-- Category-specific fields come from versioned templates.
-- The only application roles are `visitor`, `teacher`, and `admin`; authentication state is not a separate role.
-- Teachers manage geological records, research, translations, evidence, locations, and media. Admins have the same scientific capabilities plus simple operational management such as news, site pages, user activation, and an optional future shop.
-- Teachers and admins may create, edit, archive, and restore categories and subcategories in the dashboard. New structure starts unpublished. Record-type and scientific-template design remains controlled; new branches receive the shared General geological record type.
-- Keep revisions and safe audit history automatically for recovery and security, but do not build a complex audit-log or permission-management interface for client users.
-- Preserve references, provenance, revisions, and audit history.
-- Never silently invent permanent geological rules. Unknown scientific decisions stay configurable and visibly provisional.
-
-## Architecture rules
-
-- Frontend: Next.js, React, TypeScript.
-- Backend: NestJS modular monolith.
-- Primary database: PostgreSQL. Use PostGIS for spatial data and pgvector only when RAG work begins.
-- Store media in private object storage; store metadata and ownership in PostgreSQL.
-- Keep business rules and authorization in NestJS, not in browser components.
-- Keep database access behind backend modules; the frontend must use documented API contracts.
-- Begin with one deployable backend and one database. Split services only after measured operational need.
-- Use migrations for every schema change. Do not edit production data structures manually.
-
-## Engineering rules
-
-- Prefer small, focused modules and reusable components.
-- Validate every external input at the API boundary.
-- Use explicit permissions, deny by default, and test authorization.
-- Use soft deletion or archival for business records; retain audit history.
-- Add tests with each behavior, especially permissions, publication rules, and migrations.
-- Never commit secrets, credentials, tokens, private documents, or production personal data.
-- Keep localization and right-to-left layouts possible; do not couple identifiers to translated labels.
-- Preserve existing user work and avoid unrelated rewrites.
-
-## Production interface and disclosure rules
-
-- Treat every implemented screen, state, and API response as if it will be deployed immediately. Do not ship development narration, phase labels, setup instructions, placeholder statistics, mock operational claims, or debug/configuration messages in user-facing output.
-- Keep public and unauthorized copy concise and action-oriented. Do not explain privileged role names, role-assignment or invitation mechanics, protected route structure, authentication providers, security architecture, infrastructure, environment state, or internal workflows unless that information is genuinely required by the authorized user.
-- Use neutral access messages such as “Sign in to continue” or “You do not have access to this area.” When an unavailable action needs explanation, tell the user what they can do next without describing internal controls.
-- Never expose stack traces, raw provider errors, tokens, cookies, internal identifiers, database or storage details, or security-control specifics. Return safe operational errors and only the minimum API fields needed by the current screen.
-- Hide unfinished or unavailable features unless a visible disabled state is explicitly required and useful. Do not add dead controls, pretend actions, or “coming soon” workflow promises to production-facing interfaces.
-- Review every visible string, route state, error, empty state, loading state, and API projection for production suitability and unnecessary disclosure before considering interface work complete.
-- Copy minimization is not an authorization boundary. NestJS must still enforce permissions and object-level access with deny-by-default behavior even when routes or role details are not shown in the UI.
-
-## Design direction
-
-The product should feel scientific, modern, trustworthy, organized, educational, and visually interesting. Follow `DESIGN.md`; do not replace the established visual language with a generic admin template.
+- Search narrowly; read affected source, dependencies, and relevant document sections. Expand only for a concrete dependency or risk.
+- Avoid unrelated refactors, formatting churn, broad dumps/searches, unnecessary docs, and repeated successful checks when assumptions did not change.
+- Run focused tests first. Run broader suites/builds for affected shared contracts, dependencies, schema, auth, storage, routing, publication, deployment/recovery, or milestone/release gates.
+- Verify affected loading, empty, error, success, session/offline, accessibility, responsive, permission-denial, and public-safety states in proportion to risk.
+- Never claim an unrun check passed. Report changed behavior, files, checks, risks, and—when critical—review status; stop when the authorized task and required verification are complete.

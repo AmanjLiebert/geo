@@ -2,7 +2,7 @@
 
 Geo-Kurdistan is a geological knowledge platform for exploring the geology, discoveries, resources, research, places, and geological heritage of the Kurdistan Region.
 
-The existing Next.js visitor experience is the visual baseline. Development is now moving toward a secure, configurable production platform with a NestJS API, PostgreSQL, editorial tools, and future AI-assisted discovery.
+The existing Next.js visitor experience is the visual baseline. The repository now contains the Next.js public site/dashboard, NestJS API and worker, PostgreSQL/PostGIS foundation, protected scientific workflows, and runtime public Explore integration. Research, managed organization content, broader discovery, production hardening, and optional AI remain incomplete or future work.
 
 ## Start here
 
@@ -10,12 +10,13 @@ The existing Next.js visitor experience is the visual baseline. Development is n
 2. Read [`MAP.md`](MAP.md) for the system, data, permission, and workflow maps.
 3. Read [`DESIGN.md`](DESIGN.md) before changing the interface.
 4. Follow [`AGENTS.md`](AGENTS.md) for repository-wide development rules.
+5. For formal critical work, follow the active pointer in [`MEMORY.md`](MEMORY.md) and its task assignment.
 
 ## Repository
 
-- `frontend/` — Next.js public site plus the Phase 2 visitor/invited-user account entry.
-- `backend/` — NestJS API with the Phase 1 foundation and active Phase 2 identity/access modules.
-- `docs/` — supporting content, media, and operational documentation.
+- `frontend/` — Next.js public site, account flows, public Explore, and protected dashboard.
+- `backend/` — NestJS modular API and worker with identity, scientific content, evidence, media, research, publishing, and public-safe projections.
+- `docs/` — architecture decisions, maintenance policy, operational runbooks, scientific-structure maintenance, and immutable task evidence.
 
 ## Frontend commands
 
@@ -29,7 +30,7 @@ npm run lint
 npm run build
 ```
 
-The frontend still uses local data today. Replace that data through its repository/query boundary during Phase 6; do not rewrite working pages just to connect the API.
+Public Explore reads published PostgreSQL content through the public scientific API. Some unfinished or showcase-only routes may still use local presentation data; do not present that content as canonical scientific data.
 
 ## Backend commands
 

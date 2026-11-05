@@ -7,6 +7,7 @@ import {
   getCategoryReadiness,
   listManagedCategories,
   publishCategory,
+  saveCategoryEdit,
   unpublishCategory,
   type ManagedCategory,
 } from "./category-management-api";
@@ -197,6 +198,110 @@ describe("category management API", () => {
     await expect(publishCategory("cat-1")).resolves.toBeUndefined();
     expect(fetchMock.mock.calls[0]?.[0]).toContain("/api/v1/scientific-structure/categories/cat-1/publish");
     expect(fetchMock.mock.calls[0]?.[1]?.method).toBe("POST");
+  });
+
+  it("saves a category revision before publishing it", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "cat-1", revisionSaved: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "cat-1",
+            publicationStatus: "published",
+            promotedDraft: true,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      saveCategoryEdit(
+        "cat-1",
+        {
+          title: "Updated category",
+          summary: "Updated summary",
+          description: "Updated description",
+          imageMediaAssetId: "img-1",
+          position: 2,
+        },
+        true,
+      ),
+    ).resolves.toEqual({ state: "published" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/categories/cat-1");
+    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe("PATCH");
+    expect(fetchMock.mock.calls[1]?.[0]).toContain("/categories/cat-1/publish");
+    expect(fetchMock.mock.calls[1]?.[1]?.method).toBe("POST");
+  });
+
+  it("reports that the draft is safe when publication needs identity confirmation", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ id: "cat-1", revisionSaved: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ code: "reauthentication_required" }), {
+          status: 403,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await saveCategoryEdit(
+      "cat-1",
+      {
+        title: "Updated category",
+        summary: "Updated summary",
+        description: "Updated description",
+        imageMediaAssetId: "img-1",
+        position: 2,
+      },
+      true,
+    );
+
+    expect(result.state).toBe("publication_failed");
+    if (result.state === "publication_failed") {
+      expect(result.cause).toMatchObject({ kind: "reauthentication", status: 403 });
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("saves a private draft without calling publication", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ id: "cat-1", revisionSaved: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      saveCategoryEdit(
+        "cat-1",
+        {
+          title: "Updated category",
+          summary: "Updated summary",
+          description: "Updated description",
+          imageMediaAssetId: null,
+          position: 0,
+        },
+        false,
+      ),
+    ).resolves.toEqual({ state: "draft_saved" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[1]?.method).toBe("PATCH");
   });
 
   it("unpublishes category via POST /unpublish", async () => {

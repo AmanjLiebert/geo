@@ -1,6 +1,8 @@
 # Scientific structure maintenance
 
-This is a developer/reviewer workflow, not a dashboard feature. Teachers and admins choose approved structure when creating records; they cannot create or delete taxonomy from the browser. The initial six-category, 17-subcategory catalog is a working seed, not final geological approval.
+> **Authority:** This document owns controlled scientific-structure maintenance, the provisional starter catalog, category/type pairings, and scientific approval gates. `MAP.md` owns the general scientific model and lifecycle; `PLAN.md` owns delivery status.
+
+Teachers and admins manage category and subcategory content through the protected dashboard. Custom record types, templates, field definitions, stable-key corrections, and schema/data migrations remain developer/reviewer maintenance. The initial six-category, 17-subcategory catalog is a working seed, not final geological approval.
 
 ## One change, one reviewed forward migration
 
@@ -25,6 +27,34 @@ This is a developer/reviewer workflow, not a dashboard feature. Teachers and adm
 
 The database lifecycle guards reject hard deletion, stable-key mutation, cyclic parenting, mismatched active templates, and archival while non-archived records or active dependencies remain. Application authorization and publication checks still apply; database guards are a second line of defense, not a replacement for them.
 
+## Provisional starter catalog and pairings
+
+This menu is a design proposal, not a final geological classification. All six top-level categories are collection headings (`recordsAllowed: false`); the listed subcategories accept records (`recordsAllowed: true`). A teacher explicitly selects the applicable subcategory. The interface must not silently choose the first child. A later reviewed structure may allow records directly on a parent category.
+
+| Category | Subcategory | Allowed record types | Characteristic information in the type-specific form |
+| --- | --- | --- | --- |
+| Stratigraphy and geological units | Lithostratigraphic units | Geologic unit profile; Unit occurrence | Formal/source name and rank, age, lithology, defining source; for an occurrence, exposure and observed contact/location |
+| Stratigraphy and geological units | Stratigraphic sections | Measured section | Section locality, measured thickness, interval/layer descriptions, measurement method, source |
+| Rocks and minerals | Sedimentary rocks | Rock material profile; Rock specimen; Outcrop observation | Rock name, texture/composition and identification basis; specimen provenance or outcrop location when applicable |
+| Rocks and minerals | Igneous and metamorphic rocks | Rock material profile; Rock specimen; Outcrop observation | Rock name, texture/composition, metamorphic or igneous interpretation and identification basis |
+| Rocks and minerals | Minerals | Mineral profile; Mineral specimen; Mineral occurrence | Mineral identification and evidence; specimen collection details or occurrence host rock and locality when applicable |
+| Fossils | Invertebrate body fossils | Fossil occurrence; Fossil specimen | Identification and confidence, host unit and age, locality policy; specimen repository/catalogue when applicable |
+| Fossils | Vertebrate body fossils | Fossil occurrence; Fossil specimen | The fossil evidence above, with additional location-sensitivity review before public display |
+| Fossils | Microfossils | Fossil occurrence; Fossil specimen | Assemblage/taxon, sampled interval and preparation or slide details, host unit and age |
+| Fossils | Trace fossils | Fossil occurrence; Fossil specimen | Trace identification, host bed/unit, interpretation and documentation of the observed or collected material |
+| Structural geology | Folds | Mapped structural feature; Structural measurement | Feature geometry, orientation, observed versus interpreted status, source; measurement method and values when applicable |
+| Structural geology | Faults and shear zones | Mapped structural feature; Structural measurement | Fault/shear evidence, geometry, sense of movement and confidence where known; measurement values when applicable |
+| Structural geology | Joints and fractures | Mapped structural feature; Structural measurement | Fracture set, orientation, spacing/condition and observation locality, where measured |
+| Hydrogeology | Springs | Water-point profile; Water observation | Site and public-location policy, aquifer/host unit if known; dated discharge or chemistry observation with method and units |
+| Hydrogeology | Wells | Water-point profile; Water observation | Site, well construction/interval if known, aquifer; dated level or quality observation with method and units |
+| Hydrogeology | Aquifers | Aquifer profile | Named/defined aquifer, constituent units, extent, hydraulic evidence and supporting source |
+| Surface geology and landforms | Quaternary and other surficial deposits | Surficial unit profile; Outcrop observation | Deposit material, landform/context, relative or measured age, mapped extent or exposure, source |
+| Surface geology and landforms | Karst and erosional landforms | Landform profile; Outcrop observation | Feature type, morphology, host rock, process interpretation, public-location policy and source |
+
+These are permitted category/type pairings, not one record for every row and not a claim that each feature exists at a particular Kurdistan locality. Reused types such as `Outcrop observation` may share a stable type identity but use different approved templates for different pairings. A type represents a named entity, observed occurrence, held specimen, or dated measurement. External works belong in References; managed publications belong in Research; geological maps belong to Map Layers with source, scale, coordinate system, rights, and version. Cross-disciplinary facts are linked rather than copied.
+
+The subject areas are informed by the [Iraq Geological Survey map and formation overview](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/263), [Kurdistan biostratigraphy and fossil evidence](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/476), [Kurdistan folds and fractures study](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/497), [Kurdistan mineral-resource survey](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/241), [Kurdistan spring/aquifer research](https://www.mdpi.com/94668), and [Kurdistan geomorphology study](https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/394). Those sources do not publish or endorse this menu or its pairings.
+
 ## Release gate for the starter catalog
 
-Before the proposed starter structure is treated as production-approved, geology reviewers must confirm its categories, pairings, field templates, evidence requirements, sensitive-location handling, and English/Kurdish/Arabic labels. Keep zero geological records valid. Do not invent geological examples or translate scientific terms automatically to make the menu look complete.
+Before the proposed starter structure is treated as production-approved, geology reviewers must confirm its categories, pairings, field templates, evidence requirements, sensitive-location handling, and English/Kurdish/Arabic labels. Never edit an already-applied starter migration. Production may contain the approved structure while retaining zero geological records. Category and record publication require an approved, rights-cleared primary image; video and additional-image requirements remain type/evidence-policy decisions. Drafts may remain incomplete. Do not invent geological examples or translate scientific terms automatically to make the menu look complete.

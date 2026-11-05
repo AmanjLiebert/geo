@@ -1,14 +1,42 @@
 # Geo-Kurdistan System Map
 
-## Approved category-management change
+> **Authority:** This file defines intended product behavior, roles, data ownership, security boundaries, lifecycle rules, and system architecture. `PLAN.md` owns delivery status; `DESIGN.md` owns presentation; topic documents own maintenance and operational procedures.
 
-Teachers and admins can manage category/subcategory drafts through protected NestJS endpoints. PostgreSQL retains stable category identity, unpublished state, private image association, and automatic history. Existing seeded structure is preserved. New categories receive the shared General geological record pairing; custom scientific templates remain a separate controlled concern. Public discovery later reads only published, active structure and records from NestJS, never dashboard data or mock files. The ordered gates are in `PLAN.md`; the earlier migration-only dashboard prohibition below is superseded for categories/subcategories, not for arbitrary template editing.
+## Current category-management behavior
+
+Teachers and admins manage category/subcategory drafts through protected NestJS endpoints. PostgreSQL retains stable category identity, unpublished state, private image association, and automatic history. Existing seeded structure is preserved. New categories receive the shared General geological record pairing; custom record types, templates, field definitions, and schema changes remain controlled maintenance. Public discovery reads only published, active structure and records from NestJS through public-safe projections, never dashboard data or mock files.
 
 Category edits are stored as private draft revisions with append-only history. The live category row, English translation, image, display order, stable ID, and slug remain unchanged until an explicit later publication action. Parent movement is not available in this editing gate, so existing two-level relationships cannot accidentally form cycles.
 
 Archive and restore operate on an entire category subtree. The dashboard previews and confirms affected category and record counts, the backend rechecks those counts transactionally, descendants are archived before their parent and restored after their parent, and neither records nor type bindings are deleted. Normal scientific-structure queries continue to hide archived branches; the protected management projection includes them so authorized users can restore them.
 
 This document defines system boundaries, data ownership, permissions, and workflows. Use `PLAN.md` for delivery order. The existing frontend and its visual design remain the baseline.
+
+## Extension and maintenance boundary
+
+New capability must fit an existing owner module or introduce one clearly named module with a narrow public contract. It must not reach across modules to query another module's tables directly, duplicate canonical data in the frontend, or turn shared utilities into a second business layer.
+
+```text
+Next.js route/component
+        │ documented API contract
+        ▼
+Owning NestJS module ── domain rules, authorization, transactions
+        │
+        ├── its PostgreSQL tables and migrations
+        ├── private object-storage references when needed
+        └── durable background job for slow/retryable work
+```
+
+- **Records/categories** remain owned by Scientific Content; Evidence, Geography, and Media attach through explicit service contracts.
+- **Research** remains a separate owner module while reusing identity, evidence, media, review, and publication services.
+- **About and institutional pages** remain owned by Site Content; they do not become frontend constants after management is enabled.
+- **News** remains owned by Publishing/Editorial and does not reuse scientific-record semantics.
+- **Discovery** reads public-safe projections and search indexes; it never becomes the canonical writer.
+- **AI**, if approved, is an optional Intelligence adapter over permission-filtered public/reviewed projections. It owns no canonical scientific facts and has no publication or authorization power.
+
+Schema changes use expand → migrate/backfill → contract across separate reviewed releases when destructive or incompatible. API additions are backwards compatible by default. Feature flags default off for unfinished or externally dependent behavior. Stable IDs, revisions, references, rights, and audit history survive UI redesigns and provider changes.
+
+The initial deployment remains one reverse proxy, one Next.js service, one NestJS API, one PostgreSQL/PostGIS database, one worker, and ClamAV, with private external object storage and off-server recovery. Split a service only after measurements show a sustained bottleneck or isolation requirement. A local AI model or GPU workload never shares this application host; external inference is the first option, and any later self-hosted model is a separate measured deployment boundary.
 
 ## 1. System map
 
@@ -226,7 +254,7 @@ RecordMedia
 
 The record type is first-class data. It must not be stored only as an unrestricted string or confused with a subcategory.
 
-The starter structure is seeded through reviewed migrations while the geological collection may remain empty. Teachers and admins create category/subcategory drafts through NestJS; later gates add editing and archive/restore. Stable keys and used template versions retain their meaning. Custom type/template changes remain controlled maintenance. Archived choices disappear from new-record selection but remain resolvable for historical records. A correction must not silently rewrite an existing record's classification. Category moves reject cycles and archived parents; active category/type pairings require a matching active template version.
+The starter structure is seeded through reviewed migrations while the geological collection may remain empty. Teachers and admins create, edit, publish, unpublish, archive, and restore category/subcategory content through protected workflows. Stable keys and used template versions retain their meaning. Custom type/template changes remain controlled maintenance. Archived choices disappear from new-record selection but remain resolvable for historical records. A correction must not silently rewrite an existing record's classification. Category moves reject cycles and archived parents; active category/type pairings require a matching active template version.
 
 ## 5. Identity and permission map
 
@@ -254,7 +282,8 @@ Exactly three application roles exist. They map to fixed, tested permission bund
 | Manage reviewed news and site pages | No | No | Yes |
 | Manage user accounts and the three role assignments | No | No | Yes, simple controls |
 | Manage optional future shop | No | No | Yes, when enabled |
-| Manage taxonomy, record types, or templates | No | No | No |
+| Manage category/subcategory content | No | Yes | Yes |
+| Manage custom record types, templates, field definitions, or schema migrations in routine UI | No | No | No |
 | Manage custom roles, raw audit logs, or technical settings | No | No | No |
 
 The interface shows only the work relevant to the role, but the API always enforces authorization. Teacher and admin share one scientific workspace. Admin receives a small additional operational area; it is not a technical system console.
@@ -460,7 +489,7 @@ UNCLASSIFIED_DRAFT
     ARCHIVED ─── restore ─────────────► DRAFT
 ```
 
-A published revision remains public until an approved replacement is published. Restoring or migrating never silently publishes.
+Returning a published record to editing is an explicit audited unpublish-to-draft transition. The public record is hidden until the corrected draft passes publication checks and is intentionally republished. Restoring or migrating never silently publishes.
 
 ## 12. Research map
 
@@ -662,17 +691,8 @@ archive / rights withdrawal / permission change / deletion
 - Provider, model, prompt, embedding, chunking, and ingestion versions are stored with evaluation and cost/latency signals.
 - A global kill switch and provider-failure path disable AI without disabling core browsing or editorial work.
 
-## 17. Repository map
+## 17. Repository navigation
 
-```text
-geo-kurdistan/
-├── AGENTS.md       development rules
-├── PLAN.md         ordered source of truth
-├── MAP.md          architecture and ownership boundaries
-├── DESIGN.md       public and dashboard design contract
-├── frontend/       existing Next.js application
-├── backend/        future NestJS application
-└── docs/           supporting operational and content documentation
-```
+`frontend/` contains the current Next.js public site and dashboard; `backend/` contains the current NestJS API and worker; `docs/` contains maintenance, architecture, operations, and immutable task evidence. `README.md` owns the concise repository entry point, while the repository itself is authoritative for its current file tree.
 
-Every major capability needs one owning module, a documented contract, authorization tests, empty-state behavior, and a place in this map.
+Every major capability needs one owning module, a documented contract, authorization tests, empty-state behavior, and a place in this system map.

@@ -14,6 +14,17 @@ export type CategoryReadiness = {
 
 export type CategoryDisplayState = "draft" | "published" | "unpublished" | "archived";
 export type CategoryBadgeState = "draft" | "published" | "unpublished" | "removed";
+export type CategoryEditInput = {
+  title: string;
+  summary: string;
+  description: string;
+  imageMediaAssetId: string | null;
+  position: number;
+};
+export type CategoryEditSaveResult =
+  | { state: "draft_saved" }
+  | { state: "published" }
+  | { state: "publication_failed"; cause: unknown };
 
 export type ManagedCategory = {
   id: string;
@@ -147,9 +158,24 @@ export async function changeCategoryArchive(id: string, restore: boolean, impact
   if (!object(result) || result.status !== (restore ? "active" : "archived")) throw new DashboardApiError("Category change could not be confirmed.", 200, "server");
 }
 
-export async function saveCategoryDraft(id: string, input: { title: string; summary: string; description: string; imageMediaAssetId: string | null; position: number }): Promise<void> {
+export async function saveCategoryDraft(id: string, input: CategoryEditInput): Promise<void> {
   const result = await requestRecordResource(`/api/v1/scientific-structure/categories/${encodeURIComponent(id)}`, "PATCH", input);
   if (!object(result) || result.id !== id || result.revisionSaved !== true) throw new DashboardApiError("The draft could not be confirmed.", 200, "server");
+}
+
+export async function saveCategoryEdit(
+  id: string,
+  input: CategoryEditInput,
+  publishAfterSave: boolean,
+): Promise<CategoryEditSaveResult> {
+  await saveCategoryDraft(id, input);
+  if (!publishAfterSave) return { state: "draft_saved" };
+  try {
+    await publishCategory(id);
+    return { state: "published" };
+  } catch (cause) {
+    return { state: "publication_failed", cause };
+  }
 }
 
 export async function createManagedCategory(input: { title: string; summary: string; description: string; parentId?: string; imageMediaAssetId?: string }): Promise<void> {

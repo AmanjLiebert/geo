@@ -1,8 +1,10 @@
 # Geo-Kurdistan Design Context
 
-## Approved category-management change
+> **Authority:** This file defines visual language, interaction behavior, accessibility, responsive behavior, and user-visible states. `MAP.md` owns permissions, data, security, and lifecycle policy; `PLAN.md` owns delivery status.
 
-The teacher/admin scientific workspace now includes simple category and subcategory creation, unpublished draft editing, and confirmed archive/restore with preserved records. New branches begin unpublished and receive a General geological record choice automatically. The earlier prohibition on category creation in the dashboard is superseded; custom scientific-field-template editing remains unavailable. Keep the established visual language, plain labels, accessible image upload, and obvious draft/removed states. Public Explore must eventually show only published database content, never showcase records presented as real.
+## Current category-management experience
+
+The teacher/admin scientific workspace includes simple category and subcategory creation, unpublished draft editing, publication/unpublication, and confirmed archive/restore with preserved records. New branches begin unpublished and receive a General geological record choice automatically. Custom scientific-field-template editing remains unavailable. Keep the established visual language, plain labels, accessible image upload, and obvious draft/removed states. Public Explore shows only published database content through public-safe projections, never showcase records presented as real.
 
 ## Product and audience
 

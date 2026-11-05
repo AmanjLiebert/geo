@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Phase 6 / UX-9 — saved location clarity |
-| Task folder | `docs/agent-work/phase-6-ux9-saved-location-clarity/` |
+| Task | Stage A — category edits reach the public frontend |
+| Task folder | `docs/agent-work/stage-a-category-live-edits/` |
 | Status | `COMPLETE` |
 | Implementer | Codex |
 | Reviewer | Codex |
-| Plan gate | After saving a location, authorized teachers can see the saved label, region, exact point, and visibility; the emptied form is clearly presented only as a new-location form; restricted coordinates remain unavailable to public responses. |
+| Plan gate | An authorized teacher/admin editing an active category can choose one clear “save and publish” action; successful publication updates the canonical category projection used by public Explore immediately, while “save draft” remains available and failures never discard saved work. |
 
 ## Required file order
 

@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import {
   createManagedCategory,
-  saveCategoryDraft,
+  saveCategoryEdit,
   uploadCategoryImage,
   type ManagedCategory,
 } from "@/lib/category-management-api";
+import { DashboardApiError } from "@/lib/dashboard-api";
 import { CategoryImageInput } from "./category-image-input";
 import styles from "./category-management.module.css";
 
@@ -39,13 +40,19 @@ export function CategoryEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [needsReauthentication, setNeedsReauthentication] = useState(false);
   const existingImageId = savedImageId;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const saveAsDraft =
+      submitter instanceof HTMLButtonElement && submitter.dataset.intent === "draft";
+    const publishAfterSave = mode === "edit" && !saveAsDraft;
     setBusy(true);
     setError("");
     setMessage("");
+    setNeedsReauthentication(false);
     try {
       if (image && !rights.trim()) {
         setError("Add the image credit and rights before saving.");
@@ -69,18 +76,40 @@ export function CategoryEditor({
 
       if (!category) return;
       const nextImageId = uploadedId ?? (removeImage ? null : existingImageId);
-      await saveCategoryDraft(category.id, {
+      const result = await saveCategoryEdit(category.id, {
         title: title.trim(),
         summary: summary.trim(),
         description: description.trim(),
         imageMediaAssetId: nextImageId,
         position,
-      });
+      }, publishAfterSave);
       setImage(null);
       setSavedImageId(nextImageId);
       setRights("");
       setRemoveImage(false);
-      setMessage("Draft changes saved. The public version is unchanged until publication.");
+      if (result.state === "published") {
+        setMessage("Changes saved and published. They are now live on the public website.");
+      } else if (result.state === "draft_saved") {
+        setMessage("Draft saved. These changes are not live on the public website.");
+      } else if (
+        result.cause instanceof DashboardApiError &&
+        result.cause.kind === "reauthentication"
+      ) {
+        setNeedsReauthentication(true);
+        setError("Your draft is safe. Confirm your identity to publish these changes.");
+      } else if (
+        result.cause instanceof DashboardApiError &&
+        result.cause.kind === "forbidden"
+      ) {
+        setError("Your draft is safe, but you do not have access to publish these changes.");
+      } else if (
+        result.cause instanceof DashboardApiError &&
+        result.cause.kind === "validation"
+      ) {
+        setError("Your draft is safe, but it is not live yet. Complete the publication requirements and try again.");
+      } else {
+        setError("Your draft is safe, but it could not be made live. Try publishing again.");
+      }
       router.refresh();
     } catch {
       setError("Changes could not be saved. Check the details and try again.");
@@ -99,7 +128,7 @@ export function CategoryEditor({
         <p>
           {mode === "create"
             ? "Create a top-level subject or place a subcategory under an existing subject."
-            : "Save private draft changes without changing the current public category."}
+            : "Save and publish to update the public website, or keep unfinished work as a private draft."}
         </p>
       </header>
       <section className={styles.panel}>
@@ -151,9 +180,33 @@ export function CategoryEditor({
           />
           <div className={styles.formActions}>
             <button type="submit" className={styles.primaryButton} disabled={busy}>
-              {busy ? "Saving…" : mode === "create" ? "Save category draft" : "Save draft changes"}
+              {busy
+                ? "Saving…"
+                : mode === "create"
+                  ? "Save category draft"
+                  : category?.publicationStatus === "published"
+                    ? "Save and publish changes"
+                    : "Save and publish"}
             </button>
+            {mode === "edit" && (
+              <button
+                type="submit"
+                data-intent="draft"
+                className={styles.secondaryButton}
+                disabled={busy}
+              >
+                Save draft
+              </button>
+            )}
             <Link href="/dashboard/categories" className={styles.cancelButton}>Cancel</Link>
+            {needsReauthentication && category && (
+              <Link
+                className={styles.secondaryButton}
+                href={`/account?returnTo=${encodeURIComponent(`/dashboard/categories/edit?categoryId=${category.id}`)}`}
+              >
+                Confirm identity
+              </Link>
+            )}
           </div>
         </form>
       </section>
