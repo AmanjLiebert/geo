@@ -43,4 +43,30 @@ describe('record list query DTO validation', () => {
       expect(errors.some((error) => error.property === 'query')).toBe(true);
     },
   );
+
+  it('accepts a trimmed, lowercase category slug', async () => {
+    const dto = plainToInstance(RecordListQueryDto, { category: '  invertebrate-fossils  ' });
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+    expect(dto.category).toBe('invertebrate-fossils');
+  });
+
+  it.each([
+    'Fossils',
+    'invertebrate fossils',
+    'fossils/../../records',
+    '-fossils',
+    'fossils-',
+    'fossils--rocks',
+    'fossils_rocks',
+    'fossils?status=archived',
+    'x'.repeat(121),
+    42,
+    ['fossils'],
+    { slug: 'fossils' },
+  ])('rejects an invalid category slug: %j', async (category) => {
+    const dto = plainToInstance(RecordListQueryDto, { category });
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === 'category')).toBe(true);
+  });
 });

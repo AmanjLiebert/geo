@@ -220,6 +220,7 @@ export type ListRecordsOptions = {
   offset?: number;
   status?: ScientificRecordStatus;
   query?: string;
+  category?: string;
   signal?: AbortSignal;
 };
 
@@ -1136,6 +1137,7 @@ export async function listDashboardRecords(
     offset: options.offset,
     status: options.status,
     query: options.query,
+    category: options.category,
   });
 
   try {

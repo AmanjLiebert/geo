@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Stage A — category edits reach the public frontend |
-| Task folder | `docs/agent-work/stage-a-category-live-edits/` |
-| Status | `COMPLETE` |
-| Implementer | Codex |
+| Task | Teacher Record Manager — category-first record discovery |
+| Task folder | `docs/agent-work/teacher-record-manager/` |
+| Status | `IMPLEMENTED_AWAITING_REVIEW` |
+| Implementer | OpenCode |
 | Reviewer | Codex |
-| Plan gate | An authorized teacher/admin editing an active category can choose one clear “save and publish” action; successful publication updates the canonical category projection used by public Explore immediately, while “save draft” remains available and failures never discard saved work. |
+| Plan gate | A teacher or administrator can browse or filter records by category branch, combine category/status/search, open the correct management action, and return to exactly the preserved list context; signed-out users and visitors remain denied and record lifecycle behavior is unchanged. |
 
 ## Required file order
 

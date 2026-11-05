@@ -3,13 +3,15 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { RecordEditor } from "@/components/dashboard/record-editor/record-editor";
+import { sanitizeRecordsReturnTo } from "@/lib/record-list-state";
 import styles from "@/components/dashboard/record-editor/record-editor.module.css";
 
 function EditRecordContent() {
   const searchParams = useSearchParams();
   const recordId = searchParams.get("recordId") ?? undefined;
+  const returnTo = sanitizeRecordsReturnTo(searchParams.get("returnTo")) ?? undefined;
 
-  return <RecordEditor mode="edit" recordId={recordId} />;
+  return <RecordEditor mode="edit" recordId={recordId} returnTo={returnTo} />;
 }
 
 export default function EditRecordPage() {

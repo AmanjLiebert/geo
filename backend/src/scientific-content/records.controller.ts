@@ -29,7 +29,13 @@ export class RecordsController {
   @Get()
   @Header('Cache-Control', 'private, no-store')
   list(@Query() query: RecordListQueryDto) {
-    return this.records.list(query.limit ?? 50, query.offset ?? 0, query.status, query.query);
+    return this.records.list(
+      query.limit ?? 50,
+      query.offset ?? 0,
+      query.status,
+      query.query,
+      query.category,
+    );
   }
 
   @Post()

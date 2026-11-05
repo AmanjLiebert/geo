@@ -7,6 +7,7 @@ import {
   formatRecordStatus,
   formatResearchStatus,
   getRecoveredOffset,
+  getRecordPrimaryActionLabel,
 } from "./dashboard-list-utils";
 
 describe("dashboard-list-utils", () => {
@@ -17,6 +18,16 @@ describe("dashboard-list-utils", () => {
       expect(formatRecordStatus("in_review")).toBe("In review");
       expect(formatRecordStatus("published")).toBe("Published");
       expect(formatRecordStatus("archived")).toBe("Archived");
+    });
+  });
+
+  describe("getRecordPrimaryActionLabel", () => {
+    it("returns exactly one plain action for every record status", () => {
+      expect(getRecordPrimaryActionLabel("unclassified_draft")).toBe("Classify");
+      expect(getRecordPrimaryActionLabel("draft")).toBe("Edit");
+      expect(getRecordPrimaryActionLabel("in_review")).toBe("Review");
+      expect(getRecordPrimaryActionLabel("published")).toBe("Manage");
+      expect(getRecordPrimaryActionLabel("archived")).toBe("View");
     });
   });
 

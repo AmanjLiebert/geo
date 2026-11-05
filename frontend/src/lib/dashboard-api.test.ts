@@ -80,12 +80,13 @@ describe("dashboard-api", () => {
         offset: 0,
         status: "published",
         query: "limestone",
+        category: "invertebrate-fossils",
       });
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [url, init] = vi.mocked(fetch).mock.calls[0];
       expect(url).toContain(
-        "/api/v1/records?limit=20&offset=0&status=published&query=limestone",
+        "/api/v1/records?limit=20&offset=0&status=published&query=limestone&category=invertebrate-fossils",
       );
       expect(init?.credentials).toBe("include");
       expect(init?.cache).toBe("no-store");

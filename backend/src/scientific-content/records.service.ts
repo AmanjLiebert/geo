@@ -100,7 +100,13 @@ export class RecordsService {
     private readonly trust: ScientificTrustService,
   ) {}
 
-  async list(limit = 50, offset = 0, status?: string, query?: string) {
+  async list(
+    limit = 50,
+    offset = 0,
+    status?: string,
+    query?: string,
+    categorySlug?: string,
+  ) {
     const safeLimit = Math.min(Math.max(limit, 1), 100);
     const safeOffset = Math.max(offset, 0);
     const values: unknown[] = [safeLimit, safeOffset];
@@ -125,11 +131,44 @@ export class RecordsService {
         `(COALESCE(t.title, '') ILIKE $${countValues.length} ESCAPE '\\' OR COALESCE(category_t.name, '') ILIKE $${countValues.length} ESCAPE '\\')`,
       );
     }
+    if (categorySlug) {
+      values.push(categorySlug);
+      countValues.push(categorySlug);
+      conditions.push(
+        'r.category_id IN (SELECT id FROM selected_category_branch)',
+      );
+      countConditions.push(
+        'r.category_id IN (SELECT id FROM selected_category_branch)',
+      );
+    }
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const countWhereClause = countConditions.length ? `WHERE ${countConditions.join(' AND ')}` : '';
+    const categoryCte = categorySlug
+      ? `WITH RECURSIVE selected_category_branch AS (
+          SELECT id FROM categories
+          WHERE slug = $${values.length} AND status = 'active'
+          UNION ALL
+          SELECT c.id
+          FROM categories c
+          JOIN selected_category_branch b ON c.parent_id = b.id
+          WHERE c.status = 'active'
+        )`
+      : '';
+    const countCategoryCte = categorySlug
+      ? `WITH RECURSIVE selected_category_branch AS (
+          SELECT id FROM categories
+          WHERE slug = $${countValues.length} AND status = 'active'
+          UNION ALL
+          SELECT c.id
+          FROM categories c
+          JOIN selected_category_branch b ON c.parent_id = b.id
+          WHERE c.status = 'active'
+        )`
+      : '';
 
     const rows = (await this.dataSource.query(
       `
+        ${categoryCte}
         SELECT
           r.id,
           r.status,
@@ -167,6 +206,7 @@ export class RecordsService {
     )) as unknown as RecordListRow[];
     const countRows = (await this.dataSource.query(
       `
+        ${countCategoryCte}
         SELECT COUNT(*)::text AS total
         FROM scientific_records r
         LEFT JOIN LATERAL (

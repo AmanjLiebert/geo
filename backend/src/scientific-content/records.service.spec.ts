@@ -261,6 +261,102 @@ describe('RecordsService.list', () => {
     expect(countCall?.params).toEqual(['draft', '%50\\%\\_limestone%']);
   });
 
+  it('filters records in a category branch with an active recursive CTE in both queries', async () => {
+    const capturedCalls: Array<{ sql: string; params: unknown[] }> = [];
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      capturedCalls.push({ sql, params });
+      if (sql.includes('COUNT(*)')) return Promise.resolve([{ total: '3' }]);
+      return Promise.resolve([]);
+    });
+    const dataSource = { query: queryMock } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    const result = await service.list(20, 0, undefined, undefined, 'invertebrate-fossils');
+
+    const [listCall, countCall] = capturedCalls;
+    expect(listCall).toBeDefined();
+    expect(countCall).toBeDefined();
+    if (!listCall || !countCall) throw new Error('Expected captured calls');
+
+    for (const call of [listCall, countCall]) {
+      expect(call.sql).toContain('WITH RECURSIVE selected_category_branch AS');
+      expect(call.sql).toContain('r.category_id IN (SELECT id FROM selected_category_branch)');
+      expect(call.sql).toContain('WHERE slug = $');
+      expect(call.sql).toContain("AND status = 'active'");
+      expect(call.sql).not.toContain('invertebrate-fossils');
+    }
+    expect(listCall.sql).toContain('WHERE slug = $3');
+    expect(listCall.params).toEqual([20, 0, 'invertebrate-fossils']);
+    expect(countCall.sql).toContain('WHERE slug = $1');
+    expect(countCall.params).toEqual(['invertebrate-fossils']);
+
+    expect(result.total).toBe(3);
+  });
+
+  it('combines category, status, and search filters in stable parameter order', async () => {
+    const capturedCalls: Array<{ sql: string; params: unknown[] }> = [];
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      capturedCalls.push({ sql, params });
+      if (sql.includes('COUNT(*)')) return Promise.resolve([{ total: '2' }]);
+      return Promise.resolve([
+        {
+          id: 'rec-filtered',
+          status: 'draft',
+          is_classified: true,
+          updated_at: new Date('2026-05-01T00:00:00Z'),
+          title: 'Ammonite',
+          category_name: 'Fossils',
+        },
+      ]);
+    });
+    const dataSource = { query: queryMock } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    const result = await service.list(30, 60, 'draft', 'ammonite', 'fossils');
+
+    const [listCall, countCall] = capturedCalls;
+    expect(listCall).toBeDefined();
+    expect(countCall).toBeDefined();
+    if (!listCall || !countCall) throw new Error('Expected captured calls');
+
+    expect(listCall.params).toEqual([30, 60, 'draft', '%ammonite%', 'fossils']);
+    expect(listCall.sql).toContain('r.status = $3');
+    expect(listCall.sql).toContain('ILIKE $4');
+    expect(listCall.sql).toContain('WHERE slug = $5');
+    expect(listCall.sql).toContain('r.category_id IN (SELECT id FROM selected_category_branch)');
+
+    expect(countCall.params).toEqual(['draft', '%ammonite%', 'fossils']);
+    expect(countCall.sql).toContain('r.status = $1');
+    expect(countCall.sql).toContain('ILIKE $2');
+    expect(countCall.sql).toContain('WHERE slug = $3');
+
+    expect(result.total).toBe(2);
+    expect(result.items).toHaveLength(1);
+    expect(result.offset).toBe(60);
+  });
+
+  it('omits the category CTE and parameter when no category is selected', async () => {
+    const capturedCalls: Array<{ sql: string; params: unknown[] }> = [];
+    const queryMock = vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+      capturedCalls.push({ sql, params });
+      if (sql.includes('COUNT(*)')) return Promise.resolve([{ total: '0' }]);
+      return Promise.resolve([]);
+    });
+    const dataSource = { query: queryMock } as unknown as DataSource;
+    const service = new RecordsService(dataSource, {} as ScientificTrustService);
+
+    await service.list(20, 0);
+
+    const [listCall, countCall] = capturedCalls;
+    expect(listCall).toBeDefined();
+    expect(countCall).toBeDefined();
+    if (!listCall || !countCall) throw new Error('Expected captured calls');
+    expect(listCall.sql).not.toContain('WITH RECURSIVE');
+    expect(countCall.sql).not.toContain('WITH RECURSIVE');
+    expect(listCall.params).toEqual([20, 0]);
+    expect(countCall.params).toEqual([]);
+  });
+
   it('returns valid empty state when database contains zero records', async () => {
     const queryMock = vi.fn().mockImplementation((sql: string) => {
       if (sql.includes('COUNT(*)')) {

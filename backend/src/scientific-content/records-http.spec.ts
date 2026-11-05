@@ -375,7 +375,7 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       expect(response.statusCode).toBe(200);
       const optionalArguments =
         path === '/api/v1/records'
-          ? [undefined, undefined]
+          ? [undefined, undefined, undefined]
           : path === '/api/v1/research'
             ? [undefined]
             : [];
@@ -403,7 +403,7 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         cookies: { gk_session: 'teacher-session' },
       });
       expect(response.statusCode).toBe(200);
-      expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, 'draft', undefined);
+      expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, 'draft', undefined, undefined);
     });
 
     it('passes a validated, trimmed record search query to the service', async () => {
@@ -413,7 +413,13 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         cookies: { gk_session: 'teacher-session' },
       });
       expect(response.statusCode).toBe(200);
-      expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, undefined, 'limestone');
+      expect(mockRecordsService.list).toHaveBeenCalledWith(
+        50,
+        0,
+        undefined,
+        'limestone',
+        undefined,
+      );
     });
 
     it.each(['query=a', `query=${'x'.repeat(121)}`, 'query[]=rock'])(
@@ -427,6 +433,70 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         expect(response.statusCode).toBe(400);
       },
     );
+
+    it('passes a validated category slug and keeps the private no-store policy', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/records?category=%20invertebrate-fossils%20',
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['cache-control']).toBe('private, no-store');
+      expect(mockRecordsService.list).toHaveBeenCalledWith(
+        50,
+        0,
+        undefined,
+        undefined,
+        'invertebrate-fossils',
+      );
+    });
+
+    it('combines category, status, and search filters in one request', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/records?category=fossils&status=draft&query=ammonite',
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(mockRecordsService.list).toHaveBeenCalledWith(
+        50,
+        0,
+        'draft',
+        'ammonite',
+        'fossils',
+      );
+    });
+
+    it.each([
+      'category=Fossils',
+      'category=fossils%2F..%2Frecords',
+      'category=fossils_rocks',
+      'category=-fossils',
+      `category=${'x'.repeat(121)}`,
+      'category[]=fossils',
+    ])('rejects an invalid category filter %s', async (category) => {
+      const response = await app.inject({
+        method: 'GET',
+        url: `/api/v1/records?${category}`,
+        cookies: { gk_session: 'teacher-session' },
+      });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('denies category-filtered record lists to visitors and signed-out users', async () => {
+      const visitor = await app.inject({
+        method: 'GET',
+        url: '/api/v1/records?category=fossils',
+        cookies: { gk_session: 'visitor-session' },
+      });
+      expect(visitor.statusCode).toBe(403);
+
+      const signedOut = await app.inject({
+        method: 'GET',
+        url: '/api/v1/records?category=fossils',
+      });
+      expect(signedOut.statusCode).toBe(401);
+    });
   });
 
   describe('Record attachment reads', () => {

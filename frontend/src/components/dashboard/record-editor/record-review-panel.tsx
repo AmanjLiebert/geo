@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, CircleAlert, RotateCcw, Send, Upload } from "lucide-react";
 import Link from "@/components/safe-link";
 import { DashboardApiError, type ScientificRecordStatus } from "@/lib/dashboard-api";
+import { buildRecordEditHref, buildRecordsSignInHref } from "@/lib/record-list-state";
 import {
   getRecordReadiness,
   publishRecord,
@@ -42,11 +43,13 @@ export function issueActionLabel(field: string, code: string): string {
 export function RecordReviewPanel({
   recordId,
   status,
+  returnTo,
   onRecordChanged,
   onSelectSection,
 }: {
   recordId: string;
   status: ScientificRecordStatus;
+  returnTo?: string;
   onRecordChanged: () => void;
   onSelectSection?: (section: RecordWorkspaceSectionId) => void;
 }) {
@@ -114,7 +117,11 @@ export function RecordReviewPanel({
         <div className={styles.reviewError} role="alert">
           <p>{error.message}</p>
           {error.kind === "reauthentication" && (
-            <Link href={`/account?returnTo=${encodeURIComponent(`/dashboard/records/edit?recordId=${recordId}`)}`}>
+            <Link
+              href={buildRecordsSignInHref(
+                buildRecordEditHref(recordId, returnTo),
+              )}
+            >
               Confirm identity and return
             </Link>
           )}

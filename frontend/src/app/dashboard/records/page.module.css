@@ -1,4 +1,4 @@
-.page { width: min(1120px, 100%); display: grid; gap: 20px; }
+.page { width: min(1240px, 100%); display: grid; gap: 20px; }
 .header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .heading { min-width: 0; display: flex; align-items: center; gap: 14px; }
 .heading h1, .heading p { margin: 0; }
@@ -6,20 +6,33 @@
 .titleMark { width: 54px; height: 54px; flex: none; display: grid; place-items: center; border: 2px solid var(--carbon); border-radius: 5px; background: var(--shale); color: #fff; box-shadow: 3px 3px 0 var(--carbon); }
 .addButton, .editButton, .secondaryButton { min-height: 44px; width: fit-content; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 14px; border: 2px solid var(--carbon); border-radius: 4px; background: var(--iron); color: #fff; box-shadow: 2px 2px 0 var(--carbon); font-family: var(--mono); font-weight: 800; text-decoration: none; text-transform: uppercase; cursor: pointer; }
 
-.toolbar { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(180px, 230px) auto; align-items: end; gap: 14px; padding: 14px; border: 2px solid var(--carbon); border-radius: 5px; background: var(--limestone); }
-.searchForm, .filterField { display: grid; gap: 6px; font-family: var(--mono); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.layout { display: grid; grid-template-columns: minmax(230px, 280px) minmax(0, 1fr); align-items: start; gap: 18px; }
+.sidebar, .results { min-width: 0; }
+.results { display: grid; gap: 14px; }
+
+.toolbar { display: grid; gap: 14px; padding: 14px; border: 2px solid var(--carbon); border-radius: 5px; background: var(--limestone); }
+.searchForm, .filterLabel { display: grid; gap: 6px; font-family: var(--mono); font-size: 12px; font-weight: 800; text-transform: uppercase; }
 .searchRow { display: flex; gap: 8px; }
 .searchControl { min-height: 44px; min-width: 0; flex: 1; display: flex; align-items: center; gap: 8px; padding-inline: 12px; border: 2px solid var(--carbon); border-radius: 4px; background: #fff; }
 .searchControl input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; text-transform: none; }
-.searchRow button, .filterField select, .pagination button { min-height: 44px; padding: 8px 12px; border: 2px solid var(--carbon); border-radius: 4px; background: var(--carbon); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+.searchRow button, .pagination button { min-height: 44px; padding: 8px 12px; border: 2px solid var(--carbon); border-radius: 4px; background: var(--carbon); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
 .searchRow button:disabled, .pagination button:disabled { opacity: .45; cursor: not-allowed; }
 .searchRow .clearButton { background: var(--limestone); color: var(--carbon); }
-.filterField select { background: #fff; color: var(--carbon); text-transform: none; }
 .searchHint { color: var(--iron); font-size: 11px; text-transform: none; }
-.resultCount { margin: 0 0 12px; font-family: var(--mono); font-size: 12px; font-weight: 800; white-space: nowrap; text-transform: uppercase; }
+
+.statusFilter { display: grid; gap: 8px; }
+.statusChips { display: flex; flex-wrap: wrap; gap: 8px; }
+.statusChip { min-height: 44px; padding: 8px 14px; border: 2px solid var(--carbon); border-radius: 999px; background: #fff; color: var(--carbon); font-family: var(--mono); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+.statusChip:hover { background: color-mix(in srgb, var(--ochre) 40%, #fff); }
+.statusChipActive { background: var(--ochre); box-shadow: 2px 2px 0 var(--carbon); }
+
+.resultBar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-block-start: 10px; border-block-start: 1px solid color-mix(in srgb, var(--carbon) 22%, transparent); }
+.resultCount { margin: 0; font-family: var(--mono); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.clearFilters { min-height: 44px; padding: 8px 12px; border: 2px solid var(--carbon); border-radius: 4px; background: var(--limestone); color: var(--carbon); font-family: var(--mono); font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+.clearFilters:hover { background: var(--ochre); }
 
 .recordList { margin: 0; padding: 0; list-style: none; border: 2px solid var(--carbon); border-radius: 6px; background: var(--limestone); box-shadow: 4px 4px 0 var(--carbon); }
-.recordRow { min-width: 0; display: grid; grid-template-columns: 64px minmax(220px, 1fr) 150px 118px 84px; grid-template-areas: "image identity state updated actions"; align-items: center; gap: 14px; padding: 12px 14px; }
+.recordRow { min-width: 0; display: grid; grid-template-columns: 64px minmax(180px, 1fr) 142px 112px 86px; grid-template-areas: "image identity state updated actions"; align-items: center; gap: 14px; padding: 12px 14px; }
 .recordRow + .recordRow { border-top: 1px solid color-mix(in srgb, var(--carbon) 24%, transparent); }
 .thumbnail { grid-area: image; width: 64px; aspect-ratio: 1 / 1; }
 .identity { grid-area: identity; min-width: 0; }
@@ -38,7 +51,7 @@
 .updated { grid-area: updated; display: grid; gap: 3px; color: var(--soft-ink); font-family: var(--mono); font-size: 11px; }
 .updated span { color: var(--carbon); font-size: 9px; font-weight: 800; text-transform: uppercase; }
 .actions { grid-area: actions; display: flex; justify-content: flex-end; }
-.editButton { min-width: 72px; min-height: 40px; padding: 7px 11px; background: var(--shale); font-family: inherit; text-transform: none; }
+.editButton { min-width: 72px; min-height: 44px; padding: 7px 11px; background: var(--shale); font-family: inherit; text-transform: none; }
 
 .loadingState, .emptyState, .errorState { margin: 0; padding: 24px; border: 2px solid var(--carbon); border-radius: 5px; background: var(--limestone); box-shadow: 3px 3px 0 var(--carbon); }
 .loadingState { display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--mono); font-size: 11px; font-weight: 800; text-transform: uppercase; }
@@ -52,20 +65,23 @@
 .pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 2px solid var(--carbon); border-radius: 5px; background: var(--limestone); font-family: var(--mono); font-size: 11px; font-weight: 800; text-transform: uppercase; }
 .pagination > div { display: flex; gap: 8px; }
 
-@media (max-width: 900px) {
-  .recordRow { grid-template-columns: 58px minmax(180px, 1fr) auto; grid-template-areas: "image identity actions" "image state updated"; }
+@media (max-width: 1080px) {
+  .recordRow { grid-template-columns: 58px minmax(150px, 1fr) auto; grid-template-areas: "image identity actions" "image state updated"; }
   .thumbnail { width: 58px; }
   .state { display: flex; flex-wrap: wrap; align-items: center; }
   .updated { justify-self: end; text-align: end; }
 }
 
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (max-width: 760px) {
   .header { align-items: stretch; flex-direction: column; }
   .addButton { width: 100%; }
-  .toolbar { grid-template-columns: 1fr; }
+  .toolbar { padding: 12px; }
   .searchRow { flex-wrap: wrap; }
   .searchControl { flex-basis: 100%; }
-  .resultCount { margin: 0; }
   .recordRow { grid-template-columns: 54px minmax(0, 1fr); grid-template-areas: "image identity" "state state" "updated actions"; gap: 10px; }
   .thumbnail { width: 54px; }
   .state { justify-self: start; }

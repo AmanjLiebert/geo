@@ -19,6 +19,21 @@ export function formatRecordStatus(status: ScientificRecordStatus): string {
   }
 }
 
+export function getRecordPrimaryActionLabel(status: ScientificRecordStatus): string {
+  switch (status) {
+    case "unclassified_draft":
+      return "Classify";
+    case "draft":
+      return "Edit";
+    case "in_review":
+      return "Review";
+    case "published":
+      return "Manage";
+    case "archived":
+      return "View";
+  }
+}
+
 export function formatResearchStatus(status: ResearchStatus): string {
   switch (status) {
     case "draft":

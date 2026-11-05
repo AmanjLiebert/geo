@@ -37,6 +37,11 @@ import { RecordLocations } from "./record-locations";
 import { RecordReviewPanel } from "./record-review-panel";
 import { RecordScientificSummary } from "./record-scientific-summary";
 import {
+  buildNewRecordHref,
+  buildRecordEditHref,
+  buildRecordsSignInHref,
+} from "@/lib/record-list-state";
+import {
   getRecordWorkspaceSections,
   RecordWorkspaceNav,
   type RecordWorkspaceSectionId,
@@ -55,10 +60,18 @@ import styles from "./record-editor.module.css";
 type RecordEditorProps = {
   mode: RecordEditorMode;
   recordId?: string;
+  returnTo?: string;
 };
 
-export function RecordEditor({ mode, recordId }: RecordEditorProps) {
+export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
   const router = useRouter();
+  const recordsHref = returnTo ?? "/dashboard/records";
+  const workspaceHref =
+    mode === "edit"
+      ? recordId
+        ? buildRecordEditHref(recordId, returnTo)
+        : recordsHref
+      : buildNewRecordHref(returnTo);
 
   const [step, setStep] = useState<"structure" | "fields">(
     mode === "create" ? "structure" : "fields",
@@ -262,7 +275,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
       );
       if (!confirmed) return;
     }
-    router.push("/dashboard/records");
+    router.push(recordsHref);
   }
 
   async function handleFormSubmit(data: {
@@ -294,9 +307,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
         setIsDirty(false);
         setIsSaving(false);
         // Navigate to the saved draft via query-parameter edit route
-        router.push(
-          `/dashboard/records/edit?recordId=${encodeURIComponent(newRecord.id)}`,
-        );
+        router.push(buildRecordEditHref(newRecord.id, returnTo));
       } else if (mode === "edit" && recordId) {
         if (isCategoryArchived) {
           throw new DashboardApiError(
@@ -442,7 +453,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
     <div className={styles.container}>
       {/* Page Header */}
       <header className={styles.header}>
-        <Link href="/dashboard/records" className={styles.backLink}>
+        <Link href={recordsHref} className={styles.backLink}>
           <ArrowLeft size={16} aria-hidden="true" /> Records
         </Link>
         <div className={styles.titleRow}>
@@ -485,7 +496,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
               the category in category management to edit or publish this draft.
             </p>
             <div style={{ marginTop: "12px" }}>
-              <Link href="/dashboard/records" className={styles.button}>
+              <Link href={recordsHref} className={styles.button}>
                 Return to records list
               </Link>
             </div>
@@ -513,7 +524,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                 <span className={styles.bannerTitle}>Session expired</span>
                 <p className={styles.bannerText}>{error.message}</p>
                 <div style={{ marginTop: "12px" }}>
-                  <Link href="/account" className={styles.button}>
+                  <Link href={buildRecordsSignInHref(workspaceHref)} className={styles.button}>
                     Sign in to continue
                   </Link>
                 </div>
@@ -541,7 +552,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                 </span>
                 <p className={styles.bannerText}>{error.message}</p>
                 <div style={{ marginTop: "12px" }}>
-                  <Link href="/dashboard/records" className={styles.button}>
+                  <Link href={recordsHref} className={styles.button}>
                     Return to records list
                   </Link>
                 </div>
@@ -562,7 +573,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
               details.
             </p>
             <div style={{ marginTop: "12px" }}>
-              <Link href="/dashboard/records" className={styles.button}>
+              <Link href={recordsHref} className={styles.button}>
                 Return to records list
               </Link>
             </div>
@@ -592,7 +603,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
               </p>
               {recordDetail.status === "archived" && (
                 <div style={{ marginTop: "12px" }}>
-                  <Link href="/dashboard/records" className={styles.button}>
+                  <Link href={recordsHref} className={styles.button}>
                     Return to records list
                   </Link>
                 </div>
@@ -810,6 +821,7 @@ export function RecordEditor({ mode, recordId }: RecordEditorProps) {
                     <RecordReviewPanel
                       recordId={recordDetail.id}
                       status={recordDetail.status}
+                      returnTo={returnTo}
                       onRecordChanged={() => setReloadKey((value) => value + 1)}
                       onSelectSection={setActiveWorkspaceSection}
                     />
