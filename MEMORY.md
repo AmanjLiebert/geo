@@ -8,7 +8,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Teacher Record Manager — category-first record discovery |
 | Task folder | `docs/agent-work/teacher-record-manager/` |
-| Status | `IMPLEMENTED_AWAITING_REVIEW` |
+| Status | `CHANGES_REQUIRED` |
 | Implementer | OpenCode |
 | Reviewer | Codex |
 | Plan gate | A teacher or administrator can browse or filter records by category branch, combine category/status/search, open the correct management action, and return to exactly the preserved list context; signed-out users and visitors remain denied and record lifecycle behavior is unchanged. |
