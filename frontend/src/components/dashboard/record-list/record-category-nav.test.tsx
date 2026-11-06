@@ -106,43 +106,51 @@ describe("buildRecordCategoryTree", () => {
 });
 
 describe("RecordCategoryNav", () => {
-  it("presents All categories, the hierarchy, and the descendant hint", () => {
+  it("starts with every top-level category and hides nested rows until drilled in", () => {
     const html = render(null);
     expect(html).toContain('aria-label="Filter records by category"');
-    expect(html).toContain("All categories");
-    expect(html).toContain('aria-current="true"');
-    expect(html).toContain("Fossils");
+    expect(html).toContain("Top-level categories");
     expect(html).toContain("Rocks and minerals");
-    expect(html).toContain("Selecting a category includes its subcategories.");
-    expect(html).toContain("Show subcategories of Fossils");
+    expect(html).toContain("Fossils");
+    expect(html).toContain("2 subcategories");
+    expect(html).not.toContain("Invertebrate fossils");
+    expect(html).toContain(
+      "Choose a category to see its subcategories and records.",
+    );
   });
 
-  it("marks the selected category and reveals its path", () => {
-    const html = render("invertebrate-fossils");
-    expect(html).toContain('aria-current="true"');
+  it("drills into a selected category's subcategories", () => {
+    const html = render("fossils");
+    expect(html).toContain("Subcategories of Fossils");
     expect(html).toContain("Invertebrate fossils");
     expect(html).toContain("Vertebrate fossils");
+    expect(html).toContain('aria-current="page">Fossils');
+    expect(html).toContain("All categories");
+    expect(html).toContain(
+      "Fossils includes records in its subcategories. Choose one to narrow further.",
+    );
   });
 
-  it("always offers a flat, labelled mobile selector with descendant options", () => {
-    const html = render(null);
-    expect(html).toContain('for="record-category-select"');
-    expect(html).toContain('<option value=""');
-    expect(html).toContain("All categories</option>");
-    expect(html).toContain("Fossils (includes subcategories)</option>");
-    expect(html).toContain("— Invertebrate fossils</option>");
+  it("keeps the selected leaf visible with its siblings and a path back", () => {
+    const html = render("invertebrate-fossils");
+    expect(html).toContain("Subcategories of Fossils");
+    expect(html).toContain("Vertebrate fossils");
+    expect(html).toContain("Invertebrate fossils");
+    expect(html).toContain('aria-current="true"');
+    expect(html).toContain('aria-current="page">Invertebrate fossils');
   });
 
-  it("keeps a fallback option when the selected category is not in the list", () => {
+  it("falls back to the full tree when the selected category is not listed", () => {
     const html = render("legacy-category");
-    expect(html).toContain('<option value="legacy-category"');
-    expect(html).toContain("Selected category</option>");
+    expect(html).toContain("Selected category is not in the current category list.");
+    expect(html).toContain("Show all categories");
+    expect(html).toContain("Rocks and minerals");
   });
 
-  it("shows a loading state without hiding All categories", () => {
+  it("shows a loading state without inventing categories", () => {
     const html = render(null, { loading: true });
     expect(html).toContain("Loading categories…");
-    expect(html).toContain("All categories");
+    expect(html).not.toContain("Rocks and minerals");
   });
 
   it("explains a category-loading failure while leaving record filters usable", () => {
@@ -154,17 +162,12 @@ describe("RecordCategoryNav", () => {
 
   it("keeps every interactive category target at least 44px", () => {
     for (const selector of [
-      ".allButton",
       ".categoryButton",
-      ".mobileField select",
+      ".breadcrumbButton",
       ".retryButton",
+      ".resetButton",
     ]) {
       expect(cssPx(cssDeclarations(selector), "min-height"), selector).toBeGreaterThanOrEqual(44);
     }
-
-    const toggle = cssDeclarations(".toggle");
-    expect(cssPx(toggle, "width")).toBeGreaterThanOrEqual(44);
-    expect(cssPx(toggle, "min-width")).toBeGreaterThanOrEqual(44);
-    expect(cssPx(toggle, "height")).toBeGreaterThanOrEqual(44);
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo } from "react";
 import { ChevronRight, FolderTree, RotateCcw } from "lucide-react";
 import type { StructureCategory } from "@/lib/dashboard-api";
 import styles from "./record-category-nav.module.css";
@@ -53,94 +53,16 @@ export function getRecordCategoryPathSlugs(
   return [];
 }
 
-function renderMobileOptions(
+function findRecordCategoryNode(
   nodes: RecordCategoryNode[],
-  depth: number,
-): ReactNode[] {
-  return nodes.flatMap((node) => [
-    <option key={node.slug} value={node.slug}>
-      {`${"— ".repeat(depth)}${node.name}${
-        node.children.length > 0 ? " (includes subcategories)" : ""
-      }`}
-    </option>,
-    ...renderMobileOptions(node.children, depth + 1),
-  ]);
-}
-
-function CategoryBranch({
-  node,
-  depth,
-  selectedSlug,
-  isExpanded,
-  onToggle,
-  onSelect,
-}: {
-  node: RecordCategoryNode;
-  depth: number;
-  selectedSlug: string | null;
-  isExpanded: (slug: string) => boolean;
-  onToggle: (slug: string) => void;
-  onSelect: (slug: string) => void;
-}) {
-  const hasChildren = node.children.length > 0;
-  const expanded = isExpanded(node.slug);
-  const isSelected = selectedSlug === node.slug;
-  const groupId = `record-category-children-${node.slug}`;
-
-  return (
-    <li className={styles.branch}>
-      <div
-        className={styles.categoryRow}
-        style={depth > 0 ? { paddingInlineStart: `${depth * 16}px` } : undefined}
-      >
-        {hasChildren ? (
-          <button
-            type="button"
-            className={styles.toggle}
-            aria-expanded={expanded}
-            aria-controls={groupId}
-            aria-label={`${expanded ? "Hide" : "Show"} subcategories of ${node.name}`}
-            onClick={() => onToggle(node.slug)}
-          >
-            <ChevronRight
-              size={16}
-              aria-hidden="true"
-              className={expanded ? styles.chevronOpen : styles.chevron}
-            />
-          </button>
-        ) : (
-          <span className={styles.toggleSpacer} aria-hidden="true" />
-        )}
-        <button
-          type="button"
-          className={
-            isSelected
-              ? `${styles.categoryButton} ${styles.categoryButtonSelected}`
-              : styles.categoryButton
-          }
-          aria-current={isSelected ? "true" : undefined}
-          onClick={() => onSelect(node.slug)}
-        >
-          {node.name}
-        </button>
-      </div>
-      {hasChildren && expanded && (
-        <ul id={groupId} className={styles.children}>
-          {node.children.map((child) => (
-            <CategoryBranch
-              key={child.slug}
-              node={child}
-              depth={depth + 1}
-              selectedSlug={selectedSlug}
-              isExpanded={isExpanded}
-              onToggle={onToggle}
-              onSelect={onSelect}
-            />
-          ))}
-        </ul>
-      )}
-    </li>
-  );
+  slug: string,
+): RecordCategoryNode | null {
+  for (const node of nodes) {
+    if (node.slug === slug) return node;
+    const match = findRecordCategoryNode(node.children, slug);
+    if (match) return match;
+  }
+  return null;
 }
 
 export function RecordCategoryNav({
@@ -163,80 +85,93 @@ export function RecordCategoryNav({
     () => (selectedSlug ? getRecordCategoryPathSlugs(tree, selectedSlug) : []),
     [tree, selectedSlug],
   );
-  const selectedExists = pathSlugs.length > 0;
-  const [expansion, setExpansion] = useState<{
-    selection: string | null;
-    expanded: Set<string>;
-    collapsed: Set<string>;
-  }>({
-    selection: selectedSlug,
-    expanded: new Set(),
-    collapsed: new Set(),
+  const trail = pathSlugs.flatMap((slug) => {
+    const node = findRecordCategoryNode(tree, slug);
+    return node ? [node] : [];
   });
-  const activeExpansion =
-    expansion.selection === selectedSlug
-      ? expansion
-      : { selection: selectedSlug, expanded: new Set<string>(), collapsed: new Set<string>() };
+  const selectedNode = trail.length > 0 ? trail[trail.length - 1] : null;
+  const selectedExists = selectedNode !== null;
 
-  function isExpanded(slug: string): boolean {
-    return (
-      (pathSlugs.includes(slug) || activeExpansion.expanded.has(slug)) &&
-      !activeExpansion.collapsed.has(slug)
-    );
-  }
+  // Clicking a category both filters the records and opens that branch. A leaf
+  // keeps its parent level open so its siblings remain one click away.
+  const openNode = selectedNode
+    ? selectedNode.children.length > 0
+      ? selectedNode
+      : trail.length > 1
+        ? trail[trail.length - 2]
+        : null
+    : null;
+  const levelNodes = openNode ? openNode.children : tree;
+  const levelHeading = openNode
+    ? `Subcategories of ${openNode.name}`
+    : "Top-level categories";
 
-  function toggle(slug: string) {
-    setExpansion((current) => {
-      const base =
-        current.selection === selectedSlug
-          ? current
-          : {
-              selection: selectedSlug,
-              expanded: new Set<string>(),
-              collapsed: new Set<string>(),
-            };
-      const nextExpanded = new Set(base.expanded);
-      const nextCollapsed = new Set(base.collapsed);
-      const currentlyExpanded =
-        (pathSlugs.includes(slug) || nextExpanded.has(slug)) &&
-        !nextCollapsed.has(slug);
-      if (currentlyExpanded) {
-        nextCollapsed.add(slug);
-        nextExpanded.delete(slug);
-      } else {
-        nextCollapsed.delete(slug);
-        nextExpanded.add(slug);
-      }
-      return {
-        selection: selectedSlug,
-        expanded: nextExpanded,
-        collapsed: nextCollapsed,
-      };
-    });
-  }
-
-  const helperText = "Selecting a category includes its subcategories.";
+  const helperText = !selectedNode
+    ? "Choose a category to see its subcategories and records."
+    : selectedNode.children.length > 0
+      ? `${selectedNode.name} includes records in its subcategories. Choose one to narrow further.`
+      : "Choose a sibling category, or use the path above to go back.";
 
   return (
     <section className={styles.root} aria-label="Filter records by category">
-      <div className={styles.desktopNavigator}>
+      <div className={styles.navigator}>
         <div className={styles.navHeading}>
           <FolderTree size={18} aria-hidden="true" />
           <h2>Categories</h2>
         </div>
 
-        <button
-          type="button"
-          className={
-            selectedSlug === null
-              ? `${styles.allButton} ${styles.allButtonSelected}`
-              : styles.allButton
-          }
-          aria-current={selectedSlug === null ? "true" : undefined}
-          onClick={() => onSelect(null)}
-        >
-          All categories
-        </button>
+        {selectedNode && (
+          <nav className={styles.breadcrumbs} aria-label="Category path">
+            <ol className={styles.breadcrumbList}>
+              <li>
+                <button
+                  type="button"
+                  className={styles.breadcrumbButton}
+                  onClick={() => onSelect(null)}
+                >
+                  All categories
+                </button>
+              </li>
+              {trail.map((node, index) => {
+                const isCurrent = index === trail.length - 1;
+                return (
+                  <li key={node.slug}>
+                    {isCurrent ? (
+                      <span
+                        className={styles.breadcrumbCurrent}
+                        aria-current="page"
+                      >
+                        {node.name}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.breadcrumbButton}
+                        onClick={() => onSelect(node.slug)}
+                      >
+                        {node.name}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        )}
+
+        {selectedSlug && !selectedExists && (
+          <div className={styles.notice}>
+            <p>Selected category is not in the current category list.</p>
+            <button
+              type="button"
+              className={styles.resetButton}
+              onClick={() => onSelect(null)}
+            >
+              Show all categories
+            </button>
+          </div>
+        )}
+
         <p className={styles.hint}>{helperText}</p>
 
         {loading && (
@@ -259,52 +194,54 @@ export function RecordCategoryNav({
 
         {!loading && !error && tree.length === 0 && (
           <p className={styles.state}>
-            No categories are available yet. Use All categories to browse every
-            record.
+            No categories are available yet. Records remain searchable without a
+            category.
           </p>
         )}
 
-        {!loading && !error && tree.length > 0 && (
-          <ul className={styles.tree}>
-            {tree.map((node) => (
-              <CategoryBranch
-                key={node.slug}
-                node={node}
-                depth={0}
-                selectedSlug={selectedSlug}
-                isExpanded={isExpanded}
-                onToggle={toggle}
-                onSelect={onSelect}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className={styles.mobileNavigator}>
-        <label className={styles.mobileField} htmlFor="record-category-select">
-          <span>Categories</span>
-          <select
-            id="record-category-select"
-            value={selectedSlug ?? ""}
-            onChange={(event) => onSelect(event.target.value || null)}
-          >
-            <option value="">All categories</option>
-            {selectedSlug && !selectedExists && (
-              <option value={selectedSlug}>Selected category</option>
-            )}
-            {renderMobileOptions(tree, 0)}
-          </select>
-        </label>
-        <p className={styles.hint}>{helperText}</p>
-        {error && !loading && (
-          <div className={styles.mobileError} role="alert">
-            <span>Category browsing is temporarily unavailable. Search and status filters still work.</span>
-            {onRetry && (
-              <button type="button" className={styles.retryButton} onClick={onRetry}>
-                <RotateCcw size={15} aria-hidden="true" /> Retry
-              </button>
-            )}
+        {!loading && !error && levelNodes.length > 0 && (
+          <div className={styles.level}>
+            <h3 className={styles.levelHeading}>{levelHeading}</h3>
+            <ul className={styles.levelList}>
+              {levelNodes.map((node) => {
+                const isSelected = selectedSlug === node.slug;
+                const hasChildren = node.children.length > 0;
+                return (
+                  <li key={node.slug}>
+                    <button
+                      type="button"
+                      className={
+                        isSelected
+                          ? `${styles.categoryButton} ${styles.categoryButtonSelected}`
+                          : styles.categoryButton
+                      }
+                      aria-current={isSelected ? "true" : undefined}
+                      onClick={() => onSelect(node.slug)}
+                    >
+                      <span className={styles.categoryText}>
+                        <span className={styles.categoryName}>{node.name}</span>
+                        <span className={styles.categoryMeta}>
+                          {hasChildren
+                            ? `${node.children.length} ${
+                                node.children.length === 1
+                                  ? "subcategory"
+                                  : "subcategories"
+                              }`
+                            : "View records"}
+                        </span>
+                      </span>
+                      {hasChildren && (
+                        <ChevronRight
+                          size={16}
+                          aria-hidden="true"
+                          className={styles.chevron}
+                        />
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
       </div>

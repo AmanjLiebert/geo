@@ -2,9 +2,9 @@
   min-width: 0;
 }
 
-.desktopNavigator {
+.navigator {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   max-height: calc(100vh - 220px);
   overflow: auto;
   padding: 14px;
@@ -12,10 +12,6 @@
   border-radius: 5px;
   background: var(--limestone);
   box-shadow: 3px 3px 0 var(--carbon);
-}
-
-.mobileNavigator {
-  display: none;
 }
 
 .navHeading {
@@ -33,30 +29,65 @@
   text-transform: uppercase;
 }
 
-.allButton,
-.categoryButton,
-.mobileField select,
-.retryButton {
+.breadcrumbs {
+  min-width: 0;
+}
+
+.breadcrumbList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.breadcrumbList li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.breadcrumbList li + li::before {
+  content: "/";
+  color: var(--soft-ink);
+}
+
+.breadcrumbButton,
+.breadcrumbCurrent {
+  max-width: 100%;
   min-height: 44px;
-  border: 2px solid var(--carbon);
+  display: inline-flex;
+  align-items: center;
+  padding: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breadcrumbButton {
+  border: 0;
   border-radius: 4px;
-  background: #fff;
+  background: transparent;
   color: var(--carbon);
   font: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
-.allButton {
-  width: 100%;
-  padding: 8px 12px;
-  font-family: var(--mono);
-  font-weight: 800;
-  text-align: start;
+.breadcrumbButton:hover {
+  background: color-mix(in srgb, var(--carbon) 10%, transparent);
 }
 
-.allButtonSelected,
-.categoryButtonSelected {
-  background: var(--ochre);
+.breadcrumbCurrent {
+  color: var(--iron);
 }
 
 .hint,
@@ -67,82 +98,86 @@
   line-height: 1.4;
 }
 
-.tree,
-.children {
+.level {
+  display: grid;
+  gap: 6px;
+}
+
+.levelHeading {
+  margin: 0;
+  color: var(--soft-ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.levelList {
+  display: grid;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.tree {
-  display: grid;
-  gap: 4px;
-}
-
-.children {
-  display: grid;
-  gap: 4px;
-  margin-block-start: 4px;
-}
-
-.branch {
-  min-width: 0;
-}
-
-.categoryRow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-}
-
-.toggle,
-.toggleSpacer {
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-}
-
-.toggle {
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--carbon);
-  cursor: pointer;
-}
-
-.toggle:hover {
-  background: color-mix(in srgb, var(--carbon) 10%, transparent);
-}
-
-.chevron {
-  transition: transform 120ms ease;
-}
-
-.chevronOpen {
-  transform: rotate(90deg);
-  transition: transform 120ms ease;
-}
-
 .categoryButton {
   width: 100%;
   min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 8px 10px;
-  overflow: hidden;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--carbon);
+  font: inherit;
   text-align: start;
+  cursor: pointer;
+}
+
+.categoryButton:hover {
+  background: color-mix(in srgb, var(--ochre) 45%, #fff);
+}
+
+.categoryButtonSelected {
+  background: var(--ochre);
+}
+
+.categoryText {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.categoryName {
+  overflow: hidden;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.categoryButton:hover,
-.allButton:hover {
-  background: color-mix(in srgb, var(--ochre) 45%, #fff);
+.categoryMeta {
+  color: var(--soft-ink);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
-.errorState,
-.mobileError {
+.categoryButtonSelected .categoryMeta {
+  color: var(--carbon);
+}
+
+.chevron {
+  flex: none;
+}
+
+.notice,
+.errorState {
   display: grid;
   gap: 6px;
   padding: 10px;
@@ -152,66 +187,41 @@
   font-size: 12px;
 }
 
-.errorState p,
-.mobileError span {
+.notice p,
+.errorState p {
   margin: 0;
 }
 
-.retryButton {
+.retryButton,
+.resetButton {
   width: fit-content;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 7px 11px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
   background: var(--limestone);
+  color: var(--carbon);
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
+  cursor: pointer;
 }
 
-.mobileField {
-  display: grid;
-  gap: 6px;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
+.retryButton:hover,
+.resetButton:hover {
+  background: var(--ochre);
 }
 
-.mobileField select {
-  width: 100%;
-  padding: 8px 12px;
-  background: #fff;
-}
-
-@media (max-width: 900px) {
-  .desktopNavigator {
-    display: none;
-  }
-
-  .mobileNavigator {
-    display: grid;
-    gap: 6px;
-  }
-
-  .mobileError {
-    margin-block-start: 4px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chevron,
-  .chevronOpen {
-    transition: none;
-  }
-}
-
-[dir="rtl"] .chevron,
-[dir="rtl"] .chevronOpen {
+[dir="rtl"] .chevron {
   transform: scaleX(-1);
 }
 
-[dir="rtl"] .chevronOpen {
-  transform: rotate(90deg) scaleX(-1);
+@media (max-width: 900px) {
+  .navigator {
+    max-height: none;
+  }
 }
