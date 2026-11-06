@@ -42,3 +42,18 @@ No live PostgreSQL or browser/E2E harness was available, matching the implementa
 - Full suites and production builds were not repeated because the correction changes no dependency, routing, schema, shared contract, or build configuration.
 
 The acceptance-blocking finding is resolved. The protected category-first Record Manager satisfies the authorized gate subject to the already-recorded absence of live PostgreSQL and browser/E2E verification. No deployment, push, merge, or shared-database operation is approved by this decision.
+
+## Post-completion UX revision re-verification
+
+Decision: `COMPLETE`
+
+Reviewed through commit `e0e0c45` after the task was returned to review for the category drill-down and dashboard navigation revision.
+
+- Verified category/status/search/page URL state, safe record return destinations, and the category-first discovery gate remain intact.
+- Verified the revised dashboard shell still treats the backend session and role as authoritative; visitor and signed-out denial states remain present.
+- Verified the category drill-down, sidebar state, keyboard escape behavior, route-aware navigation, and responsive navigation have focused coverage.
+- Independent focused frontend Vitest: 7 files, 166 tests passed.
+- Independent frontend TypeScript: passed.
+- Independent affected-file ESLint and `git diff --check`: passed.
+
+The working tree also contains an uncommitted category-image follow-up. It was preserved, is not part of commit `e0e0c45`, and is not included in this decision.
