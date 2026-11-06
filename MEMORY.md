@@ -8,8 +8,8 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Teacher record editor simplification |
 | Task folder | `docs/agent-work/record-editor-simplification/` |
-| Status | `READY_FOR_IMPLEMENTATION` |
-| Implementer | OpenCode |
+| Status | `IMPLEMENTED_AWAITING_REVIEW` |
+| Implementer | Codex (user-authorized override) |
 | Reviewer | Codex |
 | Plan gate | A teacher completes the required record, evidence, main-image, and review path through four clear stages; optional location, relationships, and additional files stay progressively disclosed and preserved; public citations and locations use only verified/public-safe projections; retained permission, geography, media, publication, revision, and audit boundaries pass independent review. |
 
