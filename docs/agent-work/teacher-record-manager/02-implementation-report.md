@@ -78,6 +78,15 @@ Commands were run from `backend/` and `frontend/` as noted.
 - No signed-in browser smoke test, deployment, push, merge, or shared-database operation was performed.
 - The task remains `IMPLEMENTED_AWAITING_REVIEW`; Codex must inspect the actual diff and perform independent verification.
 
+## Correction round
+
+- Applied the reviewer finding: raised the minimum block size to `44px` for All categories, category buttons, the mobile selector, and Retry, and made the disclosure toggle `44px` in width, minimum width, and height.
+- Added a focused static assertion in `record-category-nav.test.tsx` that reads the module stylesheet and checks the 44px contract for every interactive selector.
+- Focused test: `npx vitest run src/components/dashboard/record-list/record-category-nav.test.tsx` — 1 file, 10 tests passed.
+- Frontend TypeScript: `npx tsc --noEmit` — passed.
+- Full suites and production builds were not rerun; this correction changes no dependency, routing, schema, or build configuration.
+- Correction commit: `2ec5a036865de1d3d8d40214488956b525702a59`.
+
 ## Recovery
 
 Revert commit `343bba7fb01c65027197fa3a084a42889b0d2ec9`. The change is backward compatible and schema-free; no record or category data requires transformation.
