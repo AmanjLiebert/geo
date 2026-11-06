@@ -1,7 +1,23 @@
 "use client";
 
-import { AlertTriangle, Clock, FileText, Lock, Plus, RotateCcw, Search, ShieldAlert } from "lucide-react";
-import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  Clock,
+  FileText,
+  Lock,
+  Plus,
+  RotateCcw,
+  Search,
+  ShieldAlert,
+} from "lucide-react";
+import {
+  FormEvent,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "@/components/safe-link";
 import {
@@ -37,7 +53,10 @@ import {
 } from "@/lib/record-list-state";
 import styles from "./page.module.css";
 
-const STATUS_OPTIONS: ReadonlyArray<{ value: RecordListStatus; label: string }> = [
+const STATUS_OPTIONS: ReadonlyArray<{
+  value: RecordListStatus;
+  label: string;
+}> = [
   { value: "all", label: "All" },
   { value: "unclassified_draft", label: "Needs classification" },
   { value: "draft", label: "Draft" },
@@ -64,10 +83,18 @@ function RecordsLoading({ label }: { label: string }) {
 function RecordsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const state = useMemo(() => parseRecordListState(searchParams), [searchParams]);
-  const { category, status, query, page } = state;
+  const state = useMemo(
+    () => parseRecordListState(searchParams),
+    [searchParams],
+  );
+  const { category, status, query, page, view } = state;
   const listHref = useMemo(() => buildRecordListHref(state), [state]);
   const offset = (state.page - 1) * RECORD_LIST_PAGE_SIZE;
+  const showRecords =
+    view === "all_records" ||
+    category !== null ||
+    status !== "all" ||
+    query.length > 0;
 
   const [records, setRecords] = useState<DashboardRecordItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -92,7 +119,10 @@ function RecordsContent() {
         setCategoriesLoading(false);
       })
       .catch((cause) => {
-        if (ignore || (cause instanceof DashboardApiError && cause.kind === "aborted")) {
+        if (
+          ignore ||
+          (cause instanceof DashboardApiError && cause.kind === "aborted")
+        ) {
           return;
         }
         setCategoriesError(true);
@@ -105,6 +135,9 @@ function RecordsContent() {
   }, [categoryRetryKey]);
 
   useEffect(() => {
+    if (!showRecords) {
+      return;
+    }
     let ignore = false;
     const controller = new AbortController();
     const requestOffset = (page - 1) * RECORD_LIST_PAGE_SIZE;
@@ -124,10 +157,14 @@ function RecordsContent() {
           requestOffset,
         );
         if (recoveredOffset !== null) {
-          const recoveredPage = Math.floor(recoveredOffset / RECORD_LIST_PAGE_SIZE) + 1;
+          const recoveredPage =
+            Math.floor(recoveredOffset / RECORD_LIST_PAGE_SIZE) + 1;
           router.replace(
             buildRecordListHref(
-              withRecordListPage({ category, status, query, page }, recoveredPage),
+              withRecordListPage(
+                { category, status, query, page, view },
+                recoveredPage,
+              ),
             ),
           );
           return;
@@ -138,13 +175,20 @@ function RecordsContent() {
         setLoading(false);
       })
       .catch((cause) => {
-        if (ignore || (cause instanceof DashboardApiError && cause.kind === "aborted")) {
+        if (
+          ignore ||
+          (cause instanceof DashboardApiError && cause.kind === "aborted")
+        ) {
           return;
         }
         setError(
           cause instanceof DashboardApiError
             ? cause
-            : new DashboardApiError("An unexpected error occurred.", 0, "server"),
+            : new DashboardApiError(
+                "An unexpected error occurred.",
+                0,
+                "server",
+              ),
         );
         setLoading(false);
       });
@@ -152,7 +196,7 @@ function RecordsContent() {
       ignore = true;
       controller.abort();
     };
-  }, [router, category, status, query, page, retryKey]);
+  }, [router, category, status, query, page, view, showRecords, retryKey]);
 
   function navigate(nextState: RecordListState) {
     const href = buildRecordListHref(nextState);
@@ -163,7 +207,21 @@ function RecordsContent() {
   }
 
   function changeCategory(slug: string | null) {
-    navigate(applyRecordListFilter(state, { category: slug }));
+    navigate(
+      applyRecordListFilter(state, {
+        category: slug,
+        view: "categories",
+      }),
+    );
+  }
+
+  function showAllRecords() {
+    navigate(
+      applyRecordListFilter(state, {
+        category: null,
+        view: "all_records",
+      }),
+    );
   }
 
   function changeStatus(status: RecordListStatus) {
@@ -202,13 +260,18 @@ function RecordsContent() {
   }
 
   const pagination = calculatePagination(total, RECORD_LIST_PAGE_SIZE, offset);
-  const hasFilters =
-    state.category !== null || state.status !== "all" || state.query.length > 0;
+  const hasContentFilters =
+    state.category !== null ||
+    state.status !== "all" ||
+    state.query.length > 0;
+  const hasFilters = state.view === "all_records" || hasContentFilters;
   const selectedCategoryName = state.category
-    ? categories.find((category) => category.slug === state.category)?.name ?? null
+    ? (categories.find((category) => category.slug === state.category)?.name ??
+      null)
     : null;
   const statusLabel =
-    STATUS_OPTIONS.find((option) => option.value === state.status)?.label ?? "All";
+    STATUS_OPTIONS.find((option) => option.value === state.status)?.label ??
+    "All";
   const summary = buildRecordListSummary(
     total,
     state,
@@ -234,19 +297,23 @@ function RecordsContent() {
       </header>
 
       <div className={styles.layout}>
-        <aside className={styles.sidebar}>
+        <section className={styles.categoryStage}>
           <RecordCategoryNav
             items={categories}
             selectedSlug={state.category}
             onSelect={changeCategory}
+            onShowAll={showAllRecords}
             loading={categoriesLoading}
             error={categoriesError}
             onRetry={retryCategories}
           />
-        </aside>
+        </section>
 
         <div className={styles.results}>
-          <section className={styles.toolbar} aria-label="Search and filter records">
+          <section
+            className={styles.toolbar}
+            aria-label="Search and filter records"
+          >
             <form className={styles.searchForm} onSubmit={submitSearch}>
               <label htmlFor="record-search">Search records</label>
               <div className={styles.searchRow}>
@@ -311,12 +378,18 @@ function RecordsContent() {
             </div>
 
             <div className={styles.resultBar}>
-              <p className={styles.resultCount} role="status" aria-live="polite">
-                {loading
-                  ? "Loading records…"
-                  : error
-                    ? ""
-                    : summary}
+              <p
+                className={styles.resultCount}
+                role="status"
+                aria-live="polite"
+              >
+                {!showRecords
+                  ? "Choose a category, search, or select a status to see records."
+                  : loading
+                    ? "Loading records…"
+                    : error
+                      ? ""
+                      : summary}
               </p>
               {hasFilters && (
                 <button
@@ -324,15 +397,22 @@ function RecordsContent() {
                   className={styles.clearFilters}
                   onClick={clearFilters}
                 >
-                  Clear filters
+                  {state.view === "all_records" &&
+                  state.category === null &&
+                  state.status === "all" &&
+                  state.query.length === 0
+                    ? "Back to categories"
+                    : "Clear filters"}
                 </button>
               )}
             </div>
           </section>
 
-          {loading && <RecordsLoading label="Loading records…" />}
+          {showRecords && loading && (
+            <RecordsLoading label="Loading records…" />
+          )}
 
-          {!loading && error && (
+          {showRecords && !loading && error && (
             <section className={styles.errorState} role="alert">
               {error.kind === "unauthorized" ? (
                 <Lock aria-hidden="true" />
@@ -365,22 +445,28 @@ function RecordsContent() {
                   Return to dashboard
                 </Link>
               ) : (
-                <button type="button" onClick={retry} className={styles.secondaryButton}>
+                <button
+                  type="button"
+                  onClick={retry}
+                  className={styles.secondaryButton}
+                >
                   <RotateCcw size={16} aria-hidden="true" /> Retry
                 </button>
               )}
             </section>
           )}
 
-          {!loading && !error && records.length === 0 && (
+          {showRecords && !loading && !error && records.length === 0 && (
             <section className={styles.emptyState}>
-              <h2>{hasFilters ? "No matching records" : "No records yet"}</h2>
+              <h2>
+                {hasContentFilters ? "No matching records" : "No records yet"}
+              </h2>
               <p>
-                {hasFilters
+                {hasContentFilters
                   ? "Try another category, status, or search."
                   : "Add the first geological record when you are ready."}
               </p>
-              {hasFilters ? (
+              {hasContentFilters ? (
                 <button
                   type="button"
                   className={styles.secondaryButton}
@@ -399,7 +485,7 @@ function RecordsContent() {
             </section>
           )}
 
-          {!loading && !error && records.length > 0 && (
+          {showRecords && !loading && !error && records.length > 0 && (
             <ul className={styles.recordList} aria-label="Scientific records">
               {records.map((record) => {
                 const editUrl = buildRecordEditHref(record.id, listHref);
@@ -417,7 +503,9 @@ function RecordsContent() {
                     </div>
                     <div className={styles.identity}>
                       <h2>
-                        <Link href={editUrl}>{record.title || "Untitled record"}</Link>
+                        <Link href={editUrl}>
+                          {record.title || "Untitled record"}
+                        </Link>
                       </h2>
                       <p>{record.categoryName || "Not classified"}</p>
                     </div>
@@ -433,7 +521,10 @@ function RecordsContent() {
                         </span>
                       )}
                     </div>
-                    <time className={styles.updated} dateTime={record.updatedAt}>
+                    <time
+                      className={styles.updated}
+                      dateTime={record.updatedAt}
+                    >
                       <span>Updated</span>
                       {formatDate(record.updatedAt)}
                     </time>
@@ -448,30 +539,40 @@ function RecordsContent() {
             </ul>
           )}
 
-          {!loading && !error && total > RECORD_LIST_PAGE_SIZE && (
-            <nav className={styles.pagination} aria-label="Records pagination">
-              <span>
-                Page {pagination.currentPage} of {pagination.totalPages} ·{" "}
-                {pagination.rangeText}
-              </span>
-              <div>
-                <button
-                  type="button"
-                  onClick={() => navigate(withRecordListPage(state, state.page - 1))}
-                  disabled={!pagination.hasPrev}
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate(withRecordListPage(state, state.page + 1))}
-                  disabled={!pagination.hasNext}
-                >
-                  Next
-                </button>
-              </div>
-            </nav>
-          )}
+          {showRecords &&
+            !loading &&
+            !error &&
+            total > RECORD_LIST_PAGE_SIZE && (
+              <nav
+                className={styles.pagination}
+                aria-label="Records pagination"
+              >
+                <span>
+                  Page {pagination.currentPage} of {pagination.totalPages} ·{" "}
+                  {pagination.rangeText}
+                </span>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(withRecordListPage(state, state.page - 1))
+                    }
+                    disabled={!pagination.hasPrev}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(withRecordListPage(state, state.page + 1))
+                    }
+                    disabled={!pagination.hasNext}
+                  >
+                    Next
+                  </button>
+                </div>
+              </nav>
+            )}
         </div>
       </div>
     </main>

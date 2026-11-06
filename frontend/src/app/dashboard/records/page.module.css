@@ -6,8 +6,8 @@
 .titleMark { width: 54px; height: 54px; flex: none; display: grid; place-items: center; border: 2px solid var(--carbon); border-radius: 5px; background: var(--shale); color: #fff; box-shadow: 3px 3px 0 var(--carbon); }
 .addButton, .editButton, .secondaryButton { min-height: 44px; width: fit-content; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 14px; border: 2px solid var(--carbon); border-radius: 4px; background: var(--iron); color: #fff; box-shadow: 2px 2px 0 var(--carbon); font-family: var(--mono); font-weight: 800; text-decoration: none; text-transform: uppercase; cursor: pointer; }
 
-.layout { display: grid; grid-template-columns: minmax(230px, 280px) minmax(0, 1fr); align-items: start; gap: 18px; }
-.sidebar, .results { min-width: 0; }
+.layout { display: grid; gap: 18px; }
+.categoryStage, .results { min-width: 0; }
 .results { display: grid; gap: 14px; }
 
 .toolbar { display: grid; gap: 14px; padding: 14px; border: 2px solid var(--carbon); border-radius: 5px; background: var(--limestone); }
@@ -70,10 +70,6 @@
   .thumbnail { width: 58px; }
   .state { display: flex; flex-wrap: wrap; align-items: center; }
   .updated { justify-self: end; text-align: end; }
-}
-
-@media (max-width: 900px) {
-  .layout { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 760px) {

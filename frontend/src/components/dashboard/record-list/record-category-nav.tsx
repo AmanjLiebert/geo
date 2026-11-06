@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { ChevronRight, FolderTree, RotateCcw } from "lucide-react";
+import { ChevronRight, Files, FolderTree, RotateCcw } from "lucide-react";
 import type { StructureCategory } from "@/lib/dashboard-api";
 import styles from "./record-category-nav.module.css";
 
@@ -69,6 +69,7 @@ export function RecordCategoryNav({
   items,
   selectedSlug,
   onSelect,
+  onShowAll,
   loading = false,
   error = false,
   onRetry,
@@ -76,6 +77,7 @@ export function RecordCategoryNav({
   items: StructureCategory[];
   selectedSlug: string | null;
   onSelect: (slug: string | null) => void;
+  onShowAll: () => void;
   loading?: boolean;
   error?: boolean;
   onRetry?: () => void;
@@ -185,7 +187,11 @@ export function RecordCategoryNav({
             <p>Category browsing is temporarily unavailable.</p>
             <p>You can still search and filter records by status.</p>
             {onRetry && (
-              <button type="button" className={styles.retryButton} onClick={onRetry}>
+              <button
+                type="button"
+                className={styles.retryButton}
+                onClick={onRetry}
+              >
                 <RotateCcw size={15} aria-hidden="true" /> Retry
               </button>
             )}
@@ -243,6 +249,20 @@ export function RecordCategoryNav({
               })}
             </ul>
           </div>
+        )}
+
+        {!loading && !error && !selectedNode && (
+          <button
+            type="button"
+            className={styles.showAllButton}
+            onClick={onShowAll}
+          >
+            <Files size={18} aria-hidden="true" />
+            <span>
+              <strong>View all records</strong>
+              <small>Skip category selection</small>
+            </span>
+          </button>
         )}
       </div>
     </section>

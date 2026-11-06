@@ -2,7 +2,8 @@ import type { ScientificRecordStatus } from "./dashboard-api";
 
 export const RECORD_LIST_PATH = "/dashboard/records";
 export const RECORD_LIST_PAGE_SIZE = 30;
-export const RECORD_LIST_MAX_PAGE = Math.floor(100_000 / RECORD_LIST_PAGE_SIZE) + 1;
+export const RECORD_LIST_MAX_PAGE =
+  Math.floor(100_000 / RECORD_LIST_PAGE_SIZE) + 1;
 export const RECORD_CATEGORY_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const MAX_CATEGORY_SLUG_LENGTH = 120;
@@ -18,16 +19,18 @@ export const RECORD_LIST_STATUSES: readonly ScientificRecordStatus[] = [
 ];
 
 export type RecordListStatus = "all" | ScientificRecordStatus;
+export type RecordListView = "categories" | "all_records";
 
 export type RecordListState = {
   category: string | null;
   status: RecordListStatus;
   query: string;
   page: number;
+  view: RecordListView;
 };
 
 export type RecordListFilterPatch = Partial<
-  Pick<RecordListState, "category" | "status" | "query">
+  Pick<RecordListState, "category" | "status" | "query" | "view">
 >;
 
 export const defaultRecordListState: RecordListState = {
@@ -35,6 +38,7 @@ export const defaultRecordListState: RecordListState = {
   status: "all",
   query: "",
   page: 1,
+  view: "categories",
 };
 
 function parseCategory(value: string | null): string | null {
@@ -51,7 +55,8 @@ function parseCategory(value: string | null): string | null {
 }
 
 function parseStatus(value: string | null): RecordListStatus {
-  return value !== null && (RECORD_LIST_STATUSES as readonly string[]).includes(value)
+  return value !== null &&
+    (RECORD_LIST_STATUSES as readonly string[]).includes(value)
     ? (value as ScientificRecordStatus)
     : "all";
 }
@@ -70,12 +75,17 @@ function parsePage(value: string | null): number {
   return Math.min(parsed, RECORD_LIST_MAX_PAGE);
 }
 
+function parseView(value: string | null): RecordListView {
+  return value === "all" ? "all_records" : "categories";
+}
+
 export function parseRecordListState(params: URLSearchParams): RecordListState {
   return {
     category: parseCategory(params.get("category")),
     status: parseStatus(params.get("status")),
     query: parseQuery(params.get("query")),
     page: parsePage(params.get("page")),
+    view: parseView(params.get("view")),
   };
 }
 
@@ -86,6 +96,7 @@ export function buildRecordListHref(state: RecordListState): string {
   const query = state.query.trim();
   if (query) params.set("query", query);
   if (state.page > 1) params.set("page", String(state.page));
+  if (state.view === "all_records") params.set("view", "all");
   const queryString = params.toString();
   return queryString ? `${RECORD_LIST_PATH}?${queryString}` : RECORD_LIST_PATH;
 }
@@ -103,10 +114,14 @@ export function applyRecordListFilter(
     status: patch.status ?? state.status,
     query: patch.query !== undefined ? patch.query : state.query,
     page: 1,
+    view: patch.view ?? state.view,
   };
 }
 
-export function withRecordListPage(state: RecordListState, page: number): RecordListState {
+export function withRecordListPage(
+  state: RecordListState,
+  page: number,
+): RecordListState {
   const safePage = Number.isSafeInteger(page) ? page : 1;
   return {
     ...state,
@@ -116,7 +131,7 @@ export function withRecordListPage(state: RecordListState, page: number): Record
 
 /**
  * Accepts only a known internal `/dashboard/records` destination and rebuilds
- * it from the four supported parameters. External URLs, other paths,
+ * it from the five supported parameters. External URLs, other paths,
  * fragment-bearing values, and unknown parameters are rejected or dropped.
  */
 export function sanitizeRecordsReturnTo(
@@ -124,7 +139,8 @@ export function sanitizeRecordsReturnTo(
 ): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > MAX_RETURN_TO_LENGTH) return null;
+  if (trimmed.length === 0 || trimmed.length > MAX_RETURN_TO_LENGTH)
+    return null;
   if (trimmed.includes("#") || trimmed.includes("\\")) return null;
   if (!trimmed.startsWith(RECORD_LIST_PATH)) return null;
 
@@ -132,8 +148,11 @@ export function sanitizeRecordsReturnTo(
   const path = questionIndex === -1 ? trimmed : trimmed.slice(0, questionIndex);
   if (path !== RECORD_LIST_PATH) return null;
 
-  const queryString = questionIndex === -1 ? "" : trimmed.slice(questionIndex + 1);
-  return buildRecordListHref(parseRecordListState(new URLSearchParams(queryString)));
+  const queryString =
+    questionIndex === -1 ? "" : trimmed.slice(questionIndex + 1);
+  return buildRecordListHref(
+    parseRecordListState(new URLSearchParams(queryString)),
+  );
 }
 
 export function buildRecordEditHref(

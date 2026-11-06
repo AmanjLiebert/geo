@@ -5,8 +5,6 @@
 .navigator {
   display: grid;
   gap: 12px;
-  max-height: calc(100vh - 220px);
-  overflow: auto;
   padding: 14px;
   border: 2px solid var(--carbon);
   border-radius: 5px;
@@ -115,6 +113,7 @@
 
 .levelList {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin: 0;
   padding: 0;
@@ -193,7 +192,8 @@
 }
 
 .retryButton,
-.resetButton {
+.resetButton,
+.showAllButton {
   width: fit-content;
   min-height: 44px;
   display: inline-flex;
@@ -212,8 +212,35 @@
 }
 
 .retryButton:hover,
-.resetButton:hover {
+.resetButton:hover,
+.showAllButton:hover {
   background: var(--ochre);
+}
+
+.showAllButton {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 10px 12px;
+  background: var(--fossil);
+  text-align: start;
+}
+
+.showAllButton span {
+  display: grid;
+  gap: 2px;
+}
+
+.showAllButton strong {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.showAllButton small {
+  color: var(--soft-ink);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: none;
 }
 
 [dir="rtl"] .chevron {
@@ -221,7 +248,13 @@
 }
 
 @media (max-width: 900px) {
-  .navigator {
-    max-height: none;
+  .levelList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .levelList {
+    grid-template-columns: 1fr;
   }
 }

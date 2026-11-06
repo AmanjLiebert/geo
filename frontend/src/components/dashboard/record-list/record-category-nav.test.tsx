@@ -33,8 +33,20 @@ function category(
 
 const categories = [
   category("cat-fossils", "Fossils", "fossils", null, 1),
-  category("cat-fossils-vert", "Vertebrate fossils", "vertebrate-fossils", "cat-fossils", 2),
-  category("cat-fossils-inv", "Invertebrate fossils", "invertebrate-fossils", "cat-fossils", 1),
+  category(
+    "cat-fossils-vert",
+    "Vertebrate fossils",
+    "vertebrate-fossils",
+    "cat-fossils",
+    2,
+  ),
+  category(
+    "cat-fossils-inv",
+    "Invertebrate fossils",
+    "invertebrate-fossils",
+    "cat-fossils",
+    1,
+  ),
   category("cat-rocks", "Rocks and minerals", "rocks", null, 0),
 ];
 
@@ -64,12 +76,16 @@ function cssPx(declarations: string, property: string): number {
   throw new Error(`No ${property} in pixels`);
 }
 
-function render(selectedSlug: string | null, options: { loading?: boolean; error?: boolean } = {}) {
+function render(
+  selectedSlug: string | null,
+  options: { loading?: boolean; error?: boolean } = {},
+) {
   return renderToStaticMarkup(
     createElement(RecordCategoryNav, {
       items: categories,
       selectedSlug,
       onSelect: vi.fn(),
+      onShowAll: vi.fn(),
       onRetry: vi.fn(),
       ...options,
     }),
@@ -117,6 +133,8 @@ describe("RecordCategoryNav", () => {
     expect(html).toContain(
       "Choose a category to see its subcategories and records.",
     );
+    expect(html).toContain("View all records");
+    expect(html).toContain("Skip category selection");
   });
 
   it("drills into a selected category's subcategories", () => {
@@ -142,7 +160,9 @@ describe("RecordCategoryNav", () => {
 
   it("falls back to the full tree when the selected category is not listed", () => {
     const html = render("legacy-category");
-    expect(html).toContain("Selected category is not in the current category list.");
+    expect(html).toContain(
+      "Selected category is not in the current category list.",
+    );
     expect(html).toContain("Show all categories");
     expect(html).toContain("Rocks and minerals");
   });
@@ -156,7 +176,9 @@ describe("RecordCategoryNav", () => {
   it("explains a category-loading failure while leaving record filters usable", () => {
     const html = render(null, { error: true });
     expect(html).toContain("Category browsing is temporarily unavailable.");
-    expect(html).toContain("You can still search and filter records by status.");
+    expect(html).toContain(
+      "You can still search and filter records by status.",
+    );
     expect(html).toContain("Retry");
   });
 
@@ -166,8 +188,12 @@ describe("RecordCategoryNav", () => {
       ".breadcrumbButton",
       ".retryButton",
       ".resetButton",
+      ".showAllButton",
     ]) {
-      expect(cssPx(cssDeclarations(selector), "min-height"), selector).toBeGreaterThanOrEqual(44);
+      expect(
+        cssPx(cssDeclarations(selector), "min-height"),
+        selector,
+      ).toBeGreaterThanOrEqual(44);
     }
   });
 });

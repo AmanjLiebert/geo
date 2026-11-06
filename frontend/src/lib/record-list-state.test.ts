@@ -25,20 +25,28 @@ describe("record-list-state", () => {
     });
 
     it("parses known category, status, query, and page values", () => {
-      expect(parse("category=invertebrate-fossils&status=draft&query=ammonite&page=3")).toEqual({
+      expect(
+        parse(
+          "category=invertebrate-fossils&status=draft&query=ammonite&page=3",
+        ),
+      ).toEqual({
         category: "invertebrate-fossils",
         status: "draft",
         query: "ammonite",
         page: 3,
+        view: "categories",
       });
     });
 
     it("trims category, query, and page values", () => {
-      expect(parse("category=%20fossils%20&query=%20ammonite%20&page=%202%20")).toEqual({
+      expect(
+        parse("category=%20fossils%20&query=%20ammonite%20&page=%202%20"),
+      ).toEqual({
         category: "fossils",
         status: "all",
         query: "ammonite",
         page: 2,
+        view: "categories",
       });
     });
 
@@ -60,7 +68,9 @@ describe("record-list-state", () => {
     });
 
     it("clamps an excessive page to the supported offset ceiling", () => {
-      expect(parse(`page=${RECORD_LIST_MAX_PAGE + 200}`).page).toBe(RECORD_LIST_MAX_PAGE);
+      expect(parse(`page=${RECORD_LIST_MAX_PAGE + 200}`).page).toBe(
+        RECORD_LIST_MAX_PAGE,
+      );
     });
 
     it("ignores unknown parameters", () => {
@@ -73,7 +83,9 @@ describe("record-list-state", () => {
 
   describe("buildRecordListHref", () => {
     it("returns the bare path when every value is default", () => {
-      expect(buildRecordListHref(defaultRecordListState)).toBe(RECORD_LIST_PATH);
+      expect(buildRecordListHref(defaultRecordListState)).toBe(
+        RECORD_LIST_PATH,
+      );
     });
 
     it("serializes known values in a deterministic order and omits defaults", () => {
@@ -83,19 +95,30 @@ describe("record-list-state", () => {
           status: "published",
           query: "ammonite",
           page: 4,
+          view: "all_records",
         }),
-      ).toBe(`${RECORD_LIST_PATH}?category=fossils&status=published&query=ammonite&page=4`);
+      ).toBe(
+        `${RECORD_LIST_PATH}?category=fossils&status=published&query=ammonite&page=4&view=all`,
+      );
     });
 
     it("round-trips a parsed state", () => {
       const href = `${RECORD_LIST_PATH}?category=fossils&status=draft&query=ammonite&page=2`;
-      const state = parseRecordListState(new URLSearchParams(href.split("?")[1] ?? ""));
+      const state = parseRecordListState(
+        new URLSearchParams(href.split("?")[1] ?? ""),
+      );
       expect(buildRecordListHref(state)).toBe(href);
     });
   });
 
   describe("applyRecordListFilter", () => {
-    const base = { category: "fossils", status: "draft", query: "ammonite", page: 4 } as const;
+    const base = {
+      category: "fossils",
+      status: "draft",
+      query: "ammonite",
+      page: 4,
+      view: "categories",
+    } as const;
 
     it("resets pagination when the category changes", () => {
       expect(applyRecordListFilter(base, { category: "rocks" })).toEqual({
@@ -103,6 +126,7 @@ describe("record-list-state", () => {
         status: "draft",
         query: "ammonite",
         page: 1,
+        view: "categories",
       });
     });
 
@@ -112,17 +136,32 @@ describe("record-list-state", () => {
         status: "archived",
         query: "ammonite",
         page: 1,
+        view: "categories",
       });
     });
 
     it("clears filters with explicit null and empty values", () => {
       expect(
-        applyRecordListFilter(base, { category: null, status: "all", query: "" }),
+        applyRecordListFilter(base, {
+          category: null,
+          status: "all",
+          query: "",
+        }),
       ).toEqual(defaultRecordListState);
     });
 
     it("does not reset unrelated values", () => {
       expect(applyRecordListFilter(base, {})).toEqual({ ...base, page: 1 });
+    });
+
+    it("preserves an explicit all-records view in the URL", () => {
+      const allRecords = applyRecordListFilter(defaultRecordListState, {
+        view: "all_records",
+      });
+      expect(buildRecordListHref(allRecords)).toBe(
+        `${RECORD_LIST_PATH}?view=all`,
+      );
+      expect(parse("view=all").view).toBe("all_records");
     });
   });
 
@@ -144,9 +183,11 @@ describe("record-list-state", () => {
     it("accepts a known internal list URL and canonicalizes parameter order", () => {
       expect(
         sanitizeRecordsReturnTo(
-          `${RECORD_LIST_PATH}?page=2&query=ammonite&status=draft&category=fossils`,
+          `${RECORD_LIST_PATH}?view=all&page=2&query=ammonite&status=draft&category=fossils`,
         ),
-      ).toBe(`${RECORD_LIST_PATH}?category=fossils&status=draft&query=ammonite&page=2`);
+      ).toBe(
+        `${RECORD_LIST_PATH}?category=fossils&status=draft&query=ammonite&page=2&view=all`,
+      );
     });
 
     it("drops unknown or unsupported parameters", () => {
@@ -187,9 +228,9 @@ describe("record-list-state", () => {
 
   describe("buildRecordListSummary", () => {
     it("describes the unfiltered collection", () => {
-      expect(buildRecordListSummary(12, defaultRecordListState, null, "All")).toBe(
-        "12 records",
-      );
+      expect(
+        buildRecordListSummary(12, defaultRecordListState, null, "All"),
+      ).toBe("12 records");
     });
 
     it("names the category and status together", () => {
@@ -211,13 +252,17 @@ describe("record-list-state", () => {
           null,
           "Published",
         ),
-      ).toBe("1 record in the selected category · Published · matching “ammonite”");
+      ).toBe(
+        "1 record in the selected category · Published · matching “ammonite”",
+      );
     });
   });
 
   describe("record workspace href helpers", () => {
     it("builds an edit href with an encoded return destination", () => {
-      expect(buildRecordEditHref("record-1", `${RECORD_LIST_PATH}?category=fossils`)).toBe(
+      expect(
+        buildRecordEditHref("record-1", `${RECORD_LIST_PATH}?category=fossils`),
+      ).toBe(
         `${RECORD_LIST_PATH}/edit?recordId=record-1&returnTo=${encodeURIComponent(
           `${RECORD_LIST_PATH}?category=fossils`,
         )}`,
