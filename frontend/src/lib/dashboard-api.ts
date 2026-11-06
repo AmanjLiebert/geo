@@ -98,6 +98,7 @@ export type StructureCategory = {
   description: string | null;
   locale: string;
   translationAvailable: boolean;
+  imageMediaAssetId?: string | null;
 };
 
 export type CategoryRecordType = {
@@ -674,6 +675,7 @@ export function validateCategoryListResponse(data: unknown): {
       description,
       locale,
       translationAvailable,
+      imageMediaAssetId,
     } = item;
 
     if (
@@ -687,7 +689,10 @@ export function validateCategoryListResponse(data: unknown): {
       typeof name !== "string" ||
       (description !== null && typeof description !== "string") ||
       typeof locale !== "string" ||
-      typeof translationAvailable !== "boolean"
+      typeof translationAvailable !== "boolean" ||
+      (imageMediaAssetId !== null &&
+        imageMediaAssetId !== undefined &&
+        typeof imageMediaAssetId !== "string")
     ) {
       throw new DashboardApiError(
         "The scientific server returned an unparseable response.",
@@ -707,6 +712,7 @@ export function validateCategoryListResponse(data: unknown): {
       description: description ? description.trim() : null,
       locale: locale.trim(),
       translationAvailable,
+      imageMediaAssetId: imageMediaAssetId ? imageMediaAssetId.trim() : null,
     });
   }
 

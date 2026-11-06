@@ -169,6 +169,8 @@
   flex: none;
   display: grid;
   place-items: center;
+  position: relative;
+  overflow: hidden;
   border: 2px solid var(--carbon);
   border-radius: 50%;
   background: var(--fossil);
@@ -177,6 +179,15 @@
 .categoryVisual svg {
   width: 27px;
   height: 27px;
+}
+
+.categoryVisualWithImage {
+  border-radius: 4px;
+  background: var(--shale);
+}
+
+.categoryImage {
+  object-fit: cover;
 }
 
 .categoryVisual[data-tone="amber"] { background: #e8c16e; }

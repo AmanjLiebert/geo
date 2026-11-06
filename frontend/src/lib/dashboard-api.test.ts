@@ -683,6 +683,7 @@ describe("dashboard-api", () => {
             description: "Fossil specimens",
             locale: "en",
             translationAvailable: true,
+            imageMediaAssetId: "img-1",
           },
           {
             id: "cat-2",
@@ -695,6 +696,7 @@ describe("dashboard-api", () => {
             description: null,
             locale: "en",
             translationAvailable: true,
+            imageMediaAssetId: null,
           },
         ],
       };
@@ -710,8 +712,10 @@ describe("dashboard-api", () => {
       expect(result.items[0].id).toBe("cat-1");
       expect(result.items[0].parentId).toBeNull();
       expect(result.items[0].recordsAllowed).toBe(false);
+      expect(result.items[0].imageMediaAssetId).toBe("img-1");
       expect(result.items[1].parentId).toBe("cat-1");
       expect(result.items[1].recordsAllowed).toBe(true);
+      expect(result.items[1].imageMediaAssetId).toBeNull();
     });
 
     it("rejects malformed categories response", () => {
@@ -721,6 +725,25 @@ describe("dashboard-api", () => {
       expect(() =>
         validateCategoryListResponse({
           items: [{ id: "cat-1", stableKey: "k" }],
+        }),
+      ).toThrow(DashboardApiError);
+      expect(() =>
+        validateCategoryListResponse({
+          items: [
+            {
+              id: "cat-1",
+              parentId: null,
+              stableKey: "fossils",
+              slug: "fossils",
+              recordsAllowed: false,
+              position: 1,
+              name: "Fossils",
+              description: null,
+              locale: "en",
+              translationAvailable: true,
+              imageMediaAssetId: 42,
+            },
+          ],
         }),
       ).toThrow(DashboardApiError);
     });

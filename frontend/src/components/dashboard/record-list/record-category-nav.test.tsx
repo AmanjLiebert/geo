@@ -16,6 +16,7 @@ function category(
   slug: string,
   parentId: string | null,
   position: number,
+  imageMediaAssetId: string | null = null,
 ): StructureCategory {
   return {
     id,
@@ -28,6 +29,7 @@ function category(
     description: null,
     locale: "en",
     translationAvailable: true,
+    imageMediaAssetId,
   };
 }
 
@@ -118,6 +120,15 @@ describe("buildRecordCategoryTree", () => {
       "invertebrate-fossils",
     ]);
     expect(getRecordCategoryPathSlugs(tree, "missing")).toEqual([]);
+  });
+
+  it("keeps each category image reference for the navigator tile", () => {
+    const tree = buildRecordCategoryTree([
+      category("cat-imaged", "Imaged", "imaged", null, 0, "img-1"),
+      category("cat-plain", "Plain", "plain", null, 1),
+    ]);
+    expect(tree[0]?.imageMediaAssetId).toBe("img-1");
+    expect(tree[1]?.imageMediaAssetId).toBeNull();
   });
 });
 

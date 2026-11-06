@@ -1,50 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  ChevronRight,
-  Files,
-  Folder,
-  Gem,
-  GitBranch,
-  Layers3,
-  Mountain,
-  RotateCcw,
-  Shell,
-  Waves,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronRight, Files, RotateCcw } from "lucide-react";
 import type { StructureCategory } from "@/lib/dashboard-api";
+import { RecordCategoryVisual } from "./record-category-visual";
 import styles from "./record-category-nav.module.css";
 
 export type RecordCategoryNode = {
   slug: string;
   stableKey: string;
   name: string;
+  imageMediaAssetId: string | null;
   children: RecordCategoryNode[];
 };
-
-function getCategoryVisual(stableKey: string): {
-  Icon: LucideIcon;
-  tone: string;
-} {
-  const key = stableKey.toLowerCase();
-  if (key.includes("fossil")) return { Icon: Shell, tone: "amber" };
-  if (key.includes("hydro") || key.includes("water")) {
-    return { Icon: Waves, tone: "blue" };
-  }
-  if (key.includes("rock") || key.includes("mineral")) {
-    return { Icon: Gem, tone: "rust" };
-  }
-  if (key.includes("strat") || key.includes("unit")) {
-    return { Icon: Layers3, tone: "olive" };
-  }
-  if (key.includes("structur")) return { Icon: GitBranch, tone: "slate" };
-  if (key.includes("surface") || key.includes("landform")) {
-    return { Icon: Mountain, tone: "green" };
-  }
-  return { Icon: Folder, tone: "neutral" };
-}
 
 export function buildRecordCategoryTree(
   items: StructureCategory[],
@@ -59,6 +27,7 @@ export function buildRecordCategoryTree(
       slug: item.slug,
       stableKey: item.stableKey,
       name: item.name,
+      imageMediaAssetId: item.imageMediaAssetId ?? null,
       children: [],
     });
   }
@@ -243,7 +212,6 @@ export function RecordCategoryNav({
               {levelNodes.map((node) => {
                 const isSelected = selectedSlug === node.slug;
                 const hasChildren = node.children.length > 0;
-                const { Icon, tone } = getCategoryVisual(node.stableKey);
                 return (
                   <li key={node.slug}>
                     <button
@@ -256,13 +224,10 @@ export function RecordCategoryNav({
                       aria-current={isSelected ? "true" : undefined}
                       onClick={() => onSelect(node.slug)}
                     >
-                      <span
-                        className={styles.categoryVisual}
-                        data-tone={tone}
-                        aria-hidden="true"
-                      >
-                        <Icon />
-                      </span>
+                      <RecordCategoryVisual
+                        stableKey={node.stableKey}
+                        imageMediaAssetId={node.imageMediaAssetId}
+                      />
                       <span className={styles.categoryText}>
                         <span className={styles.categoryName}>{node.name}</span>
                         <span className={styles.categoryMeta}>
