@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -35,6 +37,32 @@ const categories = [
   category("cat-fossils-inv", "Invertebrate fossils", "invertebrate-fossils", "cat-fossils", 1),
   category("cat-rocks", "Rocks and minerals", "rocks", null, 0),
 ];
+
+const css = readFileSync(
+  path.join(import.meta.dirname, "record-category-nav.module.css"),
+  "utf8",
+);
+
+function cssDeclarations(selector: string): string {
+  for (const rule of css.split("}")) {
+    const [selectors, body] = rule.split("{");
+    if (!body) continue;
+    if (selectors.split(",").some((entry) => entry.trim() === selector)) {
+      return body;
+    }
+  }
+  throw new Error(`No CSS rule declares ${selector}`);
+}
+
+function cssPx(declarations: string, property: string): number {
+  for (const declaration of declarations.split(";")) {
+    const [name, value] = declaration.split(":");
+    if (name?.trim() !== property) continue;
+    const match = /^(\d+)px$/.exec(value?.trim() ?? "");
+    if (match) return Number(match[1]);
+  }
+  throw new Error(`No ${property} in pixels`);
+}
 
 function render(selectedSlug: string | null, options: { loading?: boolean; error?: boolean } = {}) {
   return renderToStaticMarkup(
@@ -122,5 +150,21 @@ describe("RecordCategoryNav", () => {
     expect(html).toContain("Category browsing is temporarily unavailable.");
     expect(html).toContain("You can still search and filter records by status.");
     expect(html).toContain("Retry");
+  });
+
+  it("keeps every interactive category target at least 44px", () => {
+    for (const selector of [
+      ".allButton",
+      ".categoryButton",
+      ".mobileField select",
+      ".retryButton",
+    ]) {
+      expect(cssPx(cssDeclarations(selector), "min-height"), selector).toBeGreaterThanOrEqual(44);
+    }
+
+    const toggle = cssDeclarations(".toggle");
+    expect(cssPx(toggle, "width")).toBeGreaterThanOrEqual(44);
+    expect(cssPx(toggle, "min-width")).toBeGreaterThanOrEqual(44);
+    expect(cssPx(toggle, "height")).toBeGreaterThanOrEqual(44);
   });
 });

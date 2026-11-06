@@ -37,7 +37,7 @@
 .categoryButton,
 .mobileField select,
 .retryButton {
-  min-height: 40px;
+  min-height: 44px;
   border: 2px solid var(--carbon);
   border-radius: 4px;
   background: #fff;
@@ -98,9 +98,9 @@
 
 .toggle,
 .toggleSpacer {
-  width: 32px;
-  min-width: 32px;
-  height: 40px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
 }
