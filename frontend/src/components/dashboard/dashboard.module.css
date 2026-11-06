@@ -21,12 +21,13 @@
 
 .dashboardBody {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 72px minmax(0, 1fr);
   min-height: 0;
+  transition: grid-template-columns 180ms ease;
 }
 
-.dashboardBodyFocused {
-  grid-template-columns: minmax(0, 1fr);
+.dashboardBodySidebarExpanded {
+  grid-template-columns: 260px minmax(0, 1fr);
 }
 
 /* ============================================================
@@ -226,103 +227,184 @@
 }
 
 /* ============================================================
-   Sidebar
+   Collapsible sidebar
    ============================================================ */
 
 .sidebar {
   position: sticky;
   top: 60px;
+  z-index: 20;
   align-self: start;
+  width: 100%;
   height: calc(100dvh - 60px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   background: var(--limestone);
-  border-right: 2px solid var(--carbon);
+  border-inline-end: 2px solid var(--carbon);
+  transition: width 180ms ease, box-shadow 180ms ease;
 }
 
-.sidebarInner {
-  flex: 1;
-  padding: 20px 0 32px;
+.sidebar[data-temporary="true"] {
+  z-index: 60;
+  width: 264px;
+  box-shadow: 8px 0 0 var(--shale), 0 12px 28px rgba(32, 35, 31, 0.22);
+}
+
+[dir="rtl"] .sidebar[data-temporary="true"] {
+  box-shadow: -8px 0 0 var(--shale), 0 12px 28px rgba(32, 35, 31, 0.22);
+}
+
+.sidebarTop {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
 }
 
-.sidebarHomeLink {
+.sidebar[data-expanded="false"] .sidebarTop {
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+}
+
+.sidebarBrand {
+  min-width: 0;
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: var(--touch-target);
-  padding: 8px 16px;
-  margin: 0 12px 4px;
-  color: var(--carbon);
-  text-decoration: none;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  border-radius: 3px;
-  transition: background-color 140ms ease, color 140ms ease;
+  overflow: hidden;
 }
 
-.sidebarHomeLink:hover {
-  background: var(--fossil);
+.sidebar[data-expanded="false"] .sidebarBrand {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  justify-content: center;
 }
 
-.sidebarHomeLink[aria-current="page"] {
+.sidebarBrandMark {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
   color: var(--limestone);
-  background: var(--carbon);
+  background: var(--shale);
+  border: 2px solid var(--carbon);
+  border-radius: 3px;
+  box-shadow: 2px 2px 0 var(--carbon);
 }
 
-.sidebarHomeLink:focus-visible {
+.sidebarBrandMark svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebarBrandText {
+  max-width: 160px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: opacity 140ms ease, max-width 180ms ease;
+}
+
+.sidebar[data-expanded="false"] .sidebarBrandText {
+  max-width: 0;
+  opacity: 0;
+}
+
+.sidebarToggle {
+  width: var(--touch-target);
+  height: var(--touch-target);
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--carbon);
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.sidebarToggle:hover {
+  background: var(--ochre);
+}
+
+.sidebarToggle:focus-visible {
   outline: 2px solid var(--iron);
   outline-offset: 2px;
 }
 
-.sidebarHomeLinkIcon {
-  width: 32px;
-  height: 32px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  background: var(--shale);
-  border: 1px solid var(--carbon);
-  border-radius: 3px;
-  color: var(--limestone);
+.sidebarToggle svg {
+  width: 18px;
+  height: 18px;
 }
 
-.sidebarHomeLinkIcon svg {
-  width: 16px;
-  height: 16px;
+[dir="rtl"] .sidebarToggle svg {
+  transform: scaleX(-1);
 }
 
-.sidebarHomeLink[aria-current="page"] .sidebarHomeLinkIcon {
-  background: var(--iron);
+.sidebarInner {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0 24px;
+  overflow: visible;
+}
+
+.sidebar[data-expanded="true"] .sidebarInner {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .sidebarSection {
   display: flex;
   flex-direction: column;
-  padding-top: 8px;
+  padding-top: 6px;
 }
 
 .sidebarSection + .sidebarSection {
-  margin-top: 8px;
-  padding-top: 16px;
+  margin-top: 6px;
+  padding-top: 12px;
   border-top: 1px solid var(--line);
 }
 
 .sidebarSectionLabel {
-  padding: 0 16px 8px;
+  margin: 0;
+  padding: 0 16px 6px;
+  overflow: hidden;
+  color: var(--ink-soft);
   font-family: var(--mono);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.sidebar[data-expanded="false"] .sidebarSectionLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .sidebarSectionList {
@@ -334,12 +416,14 @@
 }
 
 .sidebarItem {
+  position: relative;
+  width: calc(100% - 24px);
+  min-height: var(--touch-target);
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: var(--touch-target);
-  padding: 8px 16px;
   margin: 0 12px;
+  padding: 8px 12px;
   color: var(--carbon);
   text-decoration: none;
   font-family: var(--mono);
@@ -351,6 +435,12 @@
   transition: background-color 140ms ease, color 140ms ease;
 }
 
+.sidebar[data-expanded="false"] .sidebarItem {
+  justify-content: center;
+  gap: 0;
+  padding: 8px;
+}
+
 .sidebarItem:not(.sidebarItemComingSoon):hover {
   background: var(--fossil);
 }
@@ -360,50 +450,70 @@
   background: var(--shale);
 }
 
+.sidebar[data-expanded="false"] .sidebarItem[aria-current="page"] {
+  background: var(--carbon);
+}
+
 .sidebarItem:focus-visible {
   outline: 2px solid var(--iron);
   outline-offset: 2px;
 }
 
-/* "Coming next" state: visible but clearly unavailable */
 .sidebarItemComingSoon {
   color: var(--ink-soft);
   cursor: default;
-  pointer-events: none;
 }
 
 .sidebarItemComingSoon:focus-visible {
-  pointer-events: auto;
+  outline: 2px solid var(--iron);
+  outline-offset: 2px;
 }
 
 .sidebarItemIcon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   flex: none;
   display: grid;
   place-items: center;
+  color: var(--carbon);
+  background: var(--limestone);
   border: 1px solid var(--line);
   border-radius: 3px;
 }
 
 .sidebarItemIcon svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .sidebarItem[aria-current="page"] .sidebarItemIcon {
+  color: var(--limestone);
   background: var(--shale);
   border-color: transparent;
-  color: var(--limestone);
+}
+
+.sidebar[data-expanded="false"] .sidebarItem[aria-current="page"] .sidebarItemIcon {
+  background: var(--iron);
+  border-color: var(--ochre);
 }
 
 .sidebarItemComingSoon .sidebarItemIcon {
-  opacity: 0.5;
+  opacity: 0.55;
+  border-style: dashed;
 }
 
 .sidebarItemLabel {
-  flex: 1;
+  max-width: 160px;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 140ms ease, max-width 180ms ease;
+}
+
+.sidebar[data-expanded="false"] .sidebarItemLabel {
+  max-width: 0;
+  opacity: 0;
 }
 
 .comingSoonTag {
@@ -418,6 +528,54 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-soft);
+}
+
+.sidebar[data-expanded="false"] .comingSoonTag {
+  display: none;
+}
+
+.sidebarTooltip {
+  position: absolute;
+  inset-inline-start: calc(100% + 8px);
+  top: 50%;
+  z-index: 70;
+  max-width: min(260px, calc(100vw - 96px));
+  padding: 6px 9px;
+  transform: translateY(-50%);
+  background: var(--carbon);
+  color: var(--limestone);
+  border: 1px solid var(--ochre);
+  border-radius: 3px;
+  box-shadow: 2px 2px 0 var(--shale);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 140ms ease, visibility 140ms ease;
+}
+
+.sidebar[data-expanded="false"] .sidebarItem:hover .sidebarTooltip,
+.sidebar[data-expanded="false"] .sidebarItem:focus-visible .sidebarTooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboardBody,
+  .sidebar,
+  .sidebarBrandText,
+  .sidebarItem,
+  .sidebarItemLabel,
+  .sidebarToggle,
+  .sidebarTooltip {
+    transition: none;
+  }
 }
 
 /* ============================================================
@@ -438,7 +596,7 @@
   max-width: 960px;
 }
 
-.mainInnerFocused {
+.mainInnerWide {
   width: 100%;
   max-width: 1440px;
   margin-inline: auto;
@@ -727,10 +885,6 @@
   transition: background-color 140ms ease;
 }
 
-.mobileNavTriggerPersistent {
-  display: inline-flex;
-}
-
 .mobileNavTrigger:hover {
   background: rgba(251, 248, 241, 0.1);
 }
@@ -907,10 +1061,18 @@
    Responsive overrides
    ============================================================ */
 
-/* Tablet: 761–1179px — reduce sidebar width, keep sidebar visible */
+/* Tablet: 761–1179px — keep the rail, cap the expanded overlay */
 @media (max-width: 1179px) {
   .dashboardBody {
-    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .dashboardBodySidebarExpanded {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .sidebar[data-temporary="true"] {
+    width: 240px;
   }
 
   .mainInner {
@@ -919,18 +1081,15 @@
 
   .sidebarItem {
     font-size: 9px;
-    padding: 7px 12px;
-  }
-
-  .sidebarHomeLink {
-    font-size: 9px;
   }
 }
 
-/* Mobile: ≤760px — hide sidebar, show mobile trigger, optimize header down to 320px */
+/* Mobile: ≤760px — preserve the existing drawer and hide the desktop rail */
 @media (max-width: 760px) {
-  .dashboardBody {
+  .dashboardBody,
+  .dashboardBodySidebarExpanded {
     grid-template-columns: 1fr;
+    transition: none;
   }
 
   .sidebar {

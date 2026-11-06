@@ -3,22 +3,18 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "@/components/safe-link";
-import { LayoutDashboard, FileText, BookOpen, Newspaper, Globe, Users, X } from "lucide-react";
+import { LayoutDashboard, X } from "lucide-react";
 import type { ApplicationRole } from "@/lib/auth-api";
-import { getDashboardNavigation, type NavItem } from "./dashboard-nav-config";
+import { DashboardNavIcon } from "./dashboard-nav-icons";
+import {
+  getDashboardNavigation,
+  isDashboardNavItemCurrent,
+  type NavItem,
+} from "./dashboard-nav-config";
 import { MOBILE_DRAWER_ID } from "./dashboard-header";
 import styles from "./dashboard.module.css";
 
-const ITEM_ICONS: Record<string, typeof LayoutDashboard> = {
-  records: FileText,
-  research: BookOpen,
-  news: Newspaper,
-  "site-pages": Globe,
-  users: Users,
-};
-
 function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }) {
-  const Icon = ITEM_ICONS[item.id] ?? FileText;
   const pathname = usePathname();
 
   // Coming-next: render as <li> containing a non-interactive span.
@@ -31,7 +27,7 @@ function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }
           aria-disabled="true"
         >
           <span className={styles.mobileNavItemIcon} aria-hidden="true">
-            <Icon aria-hidden="true" />
+            <DashboardNavIcon id={item.id} aria-hidden="true" />
           </span>
           <span>{item.label}</span>
         </span>
@@ -39,7 +35,7 @@ function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }
     );
   }
 
-  const isCurrent = pathname === item.href || pathname.startsWith(`${item.href}/`);
+  const isCurrent = isDashboardNavItemCurrent(pathname, item.href);
   return (
     <li>
       <Link
@@ -49,7 +45,7 @@ function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }
         onClick={onClose}
       >
         <span className={styles.mobileNavItemIcon} aria-hidden="true">
-          <Icon aria-hidden="true" />
+          <DashboardNavIcon id={item.id} aria-hidden="true" />
         </span>
         <span>{item.label}</span>
       </Link>

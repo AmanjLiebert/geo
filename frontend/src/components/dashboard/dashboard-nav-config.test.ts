@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getDashboardNavigation } from "./dashboard-nav-config";
+import {
+  getDashboardNavigation,
+  isDashboardNavItemCurrent,
+} from "./dashboard-nav-config";
 
 // Identifiers that must never appear in any role's navigation.
 const FORBIDDEN_IDS = [
@@ -146,5 +149,66 @@ describe("getDashboardNavigation", () => {
         }
       }
     });
+  });
+});
+
+describe("isDashboardNavItemCurrent", () => {
+  it("matches the item's own route", () => {
+    expect(isDashboardNavItemCurrent("/dashboard/records", "/dashboard/records")).toBe(true);
+    expect(isDashboardNavItemCurrent("/dashboard/research", "/dashboard/research")).toBe(true);
+  });
+
+  it("keeps a section current on nested list, create, and editor routes", () => {
+    expect(isDashboardNavItemCurrent("/dashboard/records/new", "/dashboard/records")).toBe(true);
+    expect(
+      isDashboardNavItemCurrent(
+        "/dashboard/records/5f0b0e6e-0000-4000-8000-000000000000/edit",
+        "/dashboard/records",
+      ),
+    ).toBe(true);
+    expect(isDashboardNavItemCurrent("/dashboard/research/new", "/dashboard/research")).toBe(true);
+  });
+
+  it("does not match unrelated sibling routes", () => {
+    expect(
+      isDashboardNavItemCurrent("/dashboard/records-archive", "/dashboard/records"),
+    ).toBe(false);
+    expect(
+      isDashboardNavItemCurrent("/dashboard/research-notes", "/dashboard/research"),
+    ).toBe(false);
+    expect(isDashboardNavItemCurrent("/dashboard", "/dashboard/records")).toBe(false);
+  });
+
+  it("gives each role's routes exactly one current item", () => {
+    const routes = [
+      "/dashboard/records",
+      "/dashboard/records/new",
+      "/dashboard/records/record-id/edit",
+      "/dashboard/research",
+      "/dashboard/research/research-id",
+    ];
+
+    for (const role of ["teacher", "admin"] as const) {
+      const hrefs = getDashboardNavigation(role)
+        .sections.flatMap((section) => section.items)
+        .flatMap((item) => (item.href ? [item.href] : []));
+
+      for (const route of routes) {
+        const current = hrefs.filter((href) =>
+          isDashboardNavItemCurrent(route, href),
+        );
+        expect(current, `${role} ${route}`).toHaveLength(1);
+      }
+    }
+  });
+
+  it("does not report a current item for the dashboard home route", () => {
+    const hrefs = getDashboardNavigation("admin")
+      .sections.flatMap((section) => section.items)
+      .flatMap((item) => (item.href ? [item.href] : []));
+
+    expect(
+      hrefs.filter((href) => isDashboardNavItemCurrent("/dashboard", href)),
+    ).toHaveLength(0);
   });
 });

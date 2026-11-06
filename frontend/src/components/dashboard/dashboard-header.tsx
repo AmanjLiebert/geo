@@ -39,15 +39,12 @@ type DashboardHeaderProps = {
   onMenuOpen: () => void;
   /** Ref forwarded to the mobile trigger button so focus can be restored. */
   triggerRef: React.RefObject<HTMLButtonElement | null>;
-  /** Keeps navigation in the drawer for focused workspaces at every width. */
-  persistentMenuTrigger?: boolean;
 };
 
 export function DashboardHeader({
   menuOpen,
   onMenuOpen,
   triggerRef,
-  persistentMenuTrigger = false,
 }: DashboardHeaderProps) {
   const { user, signOut } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
@@ -75,11 +72,7 @@ export function DashboardHeader({
       <button
         ref={triggerRef}
         type="button"
-        className={
-          persistentMenuTrigger
-            ? `${styles.mobileNavTrigger} ${styles.mobileNavTriggerPersistent}`
-            : styles.mobileNavTrigger
-        }
+        className={styles.mobileNavTrigger}
         aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
         aria-expanded={menuOpen}
         aria-controls={MOBILE_DRAWER_ID}

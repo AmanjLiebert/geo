@@ -109,3 +109,15 @@ export function getDashboardNavigation(role: ApplicationRole): DashboardNav {
       return { sections: [] };
   }
 }
+
+/**
+ * Shared current-route check for desktop and mobile dashboard navigation.
+ * The trailing slash keeps `/dashboard/records` from matching unrelated paths
+ * such as `/dashboard/records-archive`.
+ */
+export function isDashboardNavItemCurrent(
+  pathname: string,
+  href: string,
+): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}

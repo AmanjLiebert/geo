@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useSyncExternalStore, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "@/components/safe-link";
 import { LogIn, Home, Lock } from "lucide-react";
@@ -8,6 +8,12 @@ import { useAuth } from "@/components/auth-provider";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardMobileNav } from "./dashboard-mobile-nav";
+import {
+  getSidebarPinnedPreferenceServerSnapshot,
+  getSidebarPinnedPreferenceSnapshot,
+  setSidebarPinnedPreference,
+  subscribeSidebarPinnedPreference,
+} from "./dashboard-sidebar-state";
 import styles from "./dashboard.module.css";
 
 // ---------------------------------------------------------------------------
@@ -99,11 +105,20 @@ function DashboardVisitorAccess() {
 // Authorized dashboard layout (teacher / admin)
 // ---------------------------------------------------------------------------
 
-function DashboardLayout({ role, children }: { role: "teacher" | "admin"; children: ReactNode }) {
+export function DashboardLayout({ role, children }: { role: "teacher" | "admin"; children: ReactNode }) {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const sidebarPinnedExpanded = useSyncExternalStore(
+    subscribeSidebarPinnedPreference,
+    getSidebarPinnedPreferenceSnapshot,
+    getSidebarPinnedPreferenceServerSnapshot,
+  );
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const isFocusedWorkspace = pathname.startsWith("/dashboard/records");
+  const isRecordsWorkspace = pathname.startsWith("/dashboard/records");
+
+  function toggleSidebarPin() {
+    setSidebarPinnedPreference(!sidebarPinnedExpanded);
+  }
 
   return (
     <div className={styles.dashboardRoot}>
@@ -111,23 +126,26 @@ function DashboardLayout({ role, children }: { role: "teacher" | "admin"; childr
         menuOpen={mobileNavOpen}
         onMenuOpen={() => setMobileNavOpen((prev) => !prev)}
         triggerRef={triggerRef}
-        persistentMenuTrigger={isFocusedWorkspace}
       />
 
       <div
         className={
-          isFocusedWorkspace
-            ? `${styles.dashboardBody} ${styles.dashboardBodyFocused}`
+          sidebarPinnedExpanded
+            ? `${styles.dashboardBody} ${styles.dashboardBodySidebarExpanded}`
             : styles.dashboardBody
         }
       >
-        {!isFocusedWorkspace && <DashboardSidebar role={role} />}
+        <DashboardSidebar
+          role={role}
+          pinnedExpanded={sidebarPinnedExpanded}
+          onTogglePin={toggleSidebarPin}
+        />
 
         <main className={styles.main} id="main-content">
           <div
             className={
-              isFocusedWorkspace
-                ? `${styles.mainInner} ${styles.mainInnerFocused}`
+              isRecordsWorkspace
+                ? `${styles.mainInner} ${styles.mainInnerWide}`
                 : styles.mainInner
             }
           >
