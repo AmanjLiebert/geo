@@ -87,6 +87,17 @@ Commands were run from `backend/` and `frontend/` as noted.
 - Full suites and production builds were not rerun; this correction changes no dependency, routing, schema, or build configuration.
 - Correction commit: `2ec5a036865de1d3d8d40214488956b525702a59`.
 
+## UX revision — drill-down category browsing
+
+- Replaced the always-expanded hierarchy with a URL-driven drill-down: the navigator starts with top-level categories, selecting a category filters the records and opens its subcategories, and a leaf keeps its parent level visible so siblings remain one click away.
+- Added a breadcrumb path (`All categories` / ancestors / current) so teachers can jump back up without losing the record filters.
+- Removed the separate 32px disclosure toggle and the mobile-only native selector. The whole category row is now the single interactive target at every breakpoint, with a 44px minimum; breadcrumb and reset actions are also 44px.
+- Kept category, status (including **Needs classification**), search, pagination, and URL/return-context behavior unchanged.
+- Updated focused tests for the root level, drilled level, leaf breadcrumb, unknown-category fallback, loading/error states, and the 44px target contract.
+- Focused test: `npx vitest run src/components/dashboard/record-list/record-category-nav.test.tsx` — 1 file, 10 tests passed.
+- Frontend TypeScript: `npx tsc --noEmit` — passed. ESLint on the touched component and test — passed.
+- UX revision commit: `2b99dfea566b6a1bafdbb68ef0dc835177b8e960`.
+
 ## Recovery
 
 Revert commit `343bba7fb01c65027197fa3a084a42889b0d2ec9`. The change is backward compatible and schema-free; no record or category data requires transformation.
