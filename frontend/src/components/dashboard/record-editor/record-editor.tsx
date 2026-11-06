@@ -63,6 +63,8 @@ type RecordEditorProps = {
   returnTo?: string;
 };
 
+type RecordContentCountId = "sources" | "location" | "related" | "media";
+
 export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
   const router = useRouter();
   const recordsHref = returnTo ?? "/dashboard/records";
@@ -78,7 +80,7 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
   );
   const [activeWorkspaceSection, setActiveWorkspaceSection] =
     useState<RecordWorkspaceSectionId>(
-      mode === "create" ? "scientific" : "details",
+      "record",
     );
 
   const [categories, setCategories] = useState<StructureCategory[]>([]);
@@ -116,11 +118,11 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
   const [englishDetailsDirty, setEnglishDetailsDirty] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [sectionCounts, setSectionCounts] = useState<
-    Partial<Record<RecordWorkspaceSectionId, number>>
+    Partial<Record<RecordContentCountId, number>>
   >({});
 
   const updateSectionCount = useCallback(
-    (section: RecordWorkspaceSectionId, count: number) => {
+    (section: RecordContentCountId, count: number) => {
       setSectionCounts((current) =>
         current[section] === count ? current : { ...current, [section]: count },
       );
@@ -241,7 +243,7 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
       setActiveTemplate(tmpl);
       setSelection(sel);
       setStep("fields");
-      setActiveWorkspaceSection("scientific");
+      setActiveWorkspaceSection("record");
       setLoading(false);
     } catch (err) {
       setError(
@@ -420,7 +422,7 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
       );
     }).length;
     const countLabel = (
-      section: RecordWorkspaceSectionId,
+      section: RecordContentCountId,
       singular: string,
       plural: string,
     ) => {
@@ -432,14 +434,17 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
           : `${count} ${count === 1 ? singular : plural}`;
     };
     return {
-      details: translation?.title?.trim() ? "Saved" : "Not added",
-      scientific: activeFields.length
-        ? `${completedFields} of ${activeFields.length} completed`
-        : "No extra fields",
-      sources: countLabel("sources", "source", "sources"),
-      location: countLabel("location", "location", "locations"),
-      related: countLabel("related", "connection", "connections"),
-      media: countLabel("media", "file", "files"),
+      record: translation?.title?.trim()
+        ? activeFields.length
+          ? `${completedFields} of ${activeFields.length} scientific facts`
+          : "Details saved"
+        : "Add title and explanation",
+      evidence: `${countLabel("sources", "source", "sources")} · ${countLabel("media", "file", "files")}`,
+      optional:
+        sectionCounts.location === undefined &&
+        sectionCounts.related === undefined
+          ? "Add only when useful"
+          : `${sectionCounts.location ?? 0} locations · ${sectionCounts.related ?? 0} connections`,
       review:
         recordDetail?.status === "published"
           ? "Published"
@@ -695,67 +700,64 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
             />
 
             <div className={styles.workspacePanels}>
-              {workspaceSections.some(
-                (section) => section.id === "details",
-              ) && (
+              {workspaceSections.some((section) => section.id === "record") && (
                 <div
-                  id="record-panel-details"
+                  id="record-panel-record"
                   role="tabpanel"
-                  aria-labelledby="record-tab-details"
-                  hidden={activeWorkspaceSection !== "details"}
+                  aria-labelledby="record-tab-record"
+                  hidden={activeWorkspaceSection !== "record"}
                   className={styles.workspacePanel}
                 >
-                  <RecordEnglishDetails
-                    record={recordDetail}
-                    onSaved={setRecordDetail}
-                    onDirtyChange={setEnglishDetailsDirty}
-                    readOnly={isReadOnly}
-                  />
+                  <div className={styles.stageStack}>
+                    <RecordEnglishDetails
+                      record={recordDetail}
+                      onSaved={setRecordDetail}
+                      onDirtyChange={setEnglishDetailsDirty}
+                      readOnly={isReadOnly}
+                    />
+                    {isReadOnly ? (
+                      <RecordScientificSummary
+                        template={activeTemplate}
+                        attributes={recordDetail.attributes ?? {}}
+                      />
+                    ) : (
+                      <RecordTemplateForm
+                        template={activeTemplate}
+                        categoryName={categoryName}
+                        subcategoryName={subcategoryName}
+                        recordTypeName={recordTypeName}
+                        initialSlug={initialSlug}
+                        initialAttributes={initialAttributes}
+                        mode={mode}
+                        isSaving={isSaving}
+                        serverError={saveError}
+                        serverValidationIssues={saveValidationIssues}
+                        saveSuccessMessage={saveSuccessMessage}
+                        showClassificationSummary={false}
+                        onChangeClassification={undefined}
+                        onSubmit={handleFormSubmit}
+                        onCancel={handleCancel}
+                        onDirtyChange={setIsDirty}
+                      />
+                    )}
+                  </div>
                 </div>
               )}
 
               <div
-                id="record-panel-scientific"
+                id="record-panel-evidence"
                 role="tabpanel"
-                aria-labelledby="record-tab-scientific"
-                hidden={activeWorkspaceSection !== "scientific"}
+                aria-labelledby="record-tab-evidence"
+                hidden={activeWorkspaceSection !== "evidence"}
                 className={styles.workspacePanel}
               >
-                {isReadOnly ? (
-                  <RecordScientificSummary
-                    template={activeTemplate}
-                    attributes={recordDetail.attributes ?? {}}
-                  />
-                ) : (
-                  <RecordTemplateForm
-                    template={activeTemplate}
-                    categoryName={categoryName}
-                    subcategoryName={subcategoryName}
-                    recordTypeName={recordTypeName}
-                    initialSlug={initialSlug}
-                    initialAttributes={initialAttributes}
-                    mode={mode}
-                    isSaving={isSaving}
-                    serverError={saveError}
-                    serverValidationIssues={saveValidationIssues}
-                    saveSuccessMessage={saveSuccessMessage}
-                    showClassificationSummary={false}
-                    onChangeClassification={undefined}
-                    onSubmit={handleFormSubmit}
-                    onCancel={handleCancel}
-                    onDirtyChange={setIsDirty}
-                  />
-                )}
-              </div>
-
-              <>
+                <div className={styles.stageStack}>
                 <div
-                  id="record-panel-sources"
-                  role="tabpanel"
-                  aria-labelledby="record-tab-sources"
-                  hidden={activeWorkspaceSection !== "sources"}
-                  className={styles.workspacePanel}
-                >
+                    className={styles.stageIntro}
+                    role="note"
+                  >
+                    Add one verified source and one approved main image before review.
+                  </div>
                   <RecordEvidence
                     recordId={recordDetail.id}
                     fields={activeTemplate.fields}
@@ -764,44 +766,6 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
                       updateSectionCount("sources", count)
                     }
                   />
-                </div>
-                <div
-                  id="record-panel-location"
-                  role="tabpanel"
-                  aria-labelledby="record-tab-location"
-                  hidden={activeWorkspaceSection !== "location"}
-                  className={styles.workspacePanel}
-                >
-                  <RecordLocations
-                    recordId={recordDetail.id}
-                    readOnly={isReadOnly}
-                    onCountChange={(count) =>
-                      updateSectionCount("location", count)
-                    }
-                  />
-                </div>
-                <div
-                  id="record-panel-related"
-                  role="tabpanel"
-                  aria-labelledby="record-tab-related"
-                  hidden={activeWorkspaceSection !== "related"}
-                  className={styles.workspacePanel}
-                >
-                  <RecordRelationships
-                    recordId={recordDetail.id}
-                    readOnly={isReadOnly}
-                    onCountChange={(count) =>
-                      updateSectionCount("related", count)
-                    }
-                  />
-                </div>
-                <div
-                  id="record-panel-media"
-                  role="tabpanel"
-                  aria-labelledby="record-tab-media"
-                  hidden={activeWorkspaceSection !== "media"}
-                  className={styles.workspacePanel}
-                >
                   <RecordMedia
                     recordId={recordDetail.id}
                     readOnly={isReadOnly}
@@ -810,7 +774,38 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
                     }
                   />
                 </div>
-                {recordDetail.status !== "archived" &&
+              </div>
+
+              <div
+                id="record-panel-optional"
+                role="tabpanel"
+                aria-labelledby="record-tab-optional"
+                hidden={activeWorkspaceSection !== "optional"}
+                className={styles.workspacePanel}
+              >
+                  <div className={styles.stageStack}>
+                    <div className={styles.stageIntro} role="note">
+                      These sections are optional. Add them only when they improve the record.
+                    </div>
+                    <RecordLocations
+                      recordId={recordDetail.id}
+                      readOnly={isReadOnly}
+                      onCountChange={(count) =>
+                        updateSectionCount("location", count)
+                      }
+                    />
+                    <RecordRelationships
+                      recordId={recordDetail.id}
+                      readOnly={isReadOnly}
+                      loadCandidates={activeWorkspaceSection === "optional"}
+                      onCountChange={(count) =>
+                        updateSectionCount("related", count)
+                      }
+                    />
+                  </div>
+                </div>
+
+              {recordDetail.status !== "archived" &&
                   activeWorkspaceSection === "review" && (
                   <div
                     id="record-panel-review"
@@ -827,7 +822,6 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
                     />
                   </div>
                 )}
-              </>
             </div>
           </div>
         </>

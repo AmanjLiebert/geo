@@ -417,52 +417,23 @@ export function RecordEvidence({
           >
             <button
               type="button"
-              className={
-                mode === "new"
-                  ? styles.sourceModeButtonActive
-                  : styles.sourceModeButton
-              }
-              aria-pressed={mode === "new"}
+              className={styles.buttonSecondary}
               onClick={() => {
                 clearFeedback();
-                setMode("new");
+                setMode(mode === "new" ? "saved" : "new");
               }}
             >
-              <Plus aria-hidden="true" />
-              <span>
-                <strong>Add a new source</strong>
-                <small>Enter a citation for the first time</small>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={
-                mode === "saved"
-                  ? styles.sourceModeButtonActive
-                  : styles.sourceModeButton
-              }
-              aria-pressed={mode === "saved"}
-              onClick={() => {
-                clearFeedback();
-                setMode("saved");
-              }}
-            >
-              <Search aria-hidden="true" />
-              <span>
-                <strong>Use a saved source</strong>
-                <small>Reuse a citation already in Geo-Kurdistan</small>
-              </span>
+              {mode === "new" ? <Search aria-hidden="true" /> : <Plus aria-hidden="true" />}
+              {mode === "new" ? "Use a saved source" : "Add a new source"}
             </button>
           </div>
 
           {mode === "new" ? (
             <form className={styles.sourceForm} onSubmit={createAndAttach}>
               <div className={styles.sourceFormHeader}>
-                <span className={styles.stepNumber}>New citation</span>
-                <h3>Describe the source</h3>
-                <p>
-                  Choose the source type first. The labels below will adapt.
-                </p>
+                <span className={styles.stepNumber}>Required evidence</span>
+                <h3>Add a source</h3>
+                <p>Enter the information another reader needs to recognize and find it.</p>
               </div>
 
               <div className={styles.fieldGroup}>
@@ -503,8 +474,7 @@ export function RecordEvidence({
                 />
               </div>
 
-              <div className={styles.formGrid}>
-                <div className={styles.fieldGroup}>
+              <div className={styles.fieldGroup}>
                   <label className={styles.fieldLabel} htmlFor="source-author">
                     {sourceConfig.contributorLabel}{" "}
                     <span className={styles.requiredTag}>Required</span>
@@ -517,24 +487,6 @@ export function RecordEvidence({
                     value={sourceAuthor}
                     onChange={(event) => setSourceAuthor(event.target.value)}
                   />
-                </div>
-                <div className={styles.fieldGroup}>
-                  <label
-                    className={styles.fieldLabel}
-                    htmlFor="source-publication"
-                  >
-                    {sourceConfig.publicationLabel}
-                  </label>
-                  <input
-                    id="source-publication"
-                    className={styles.input}
-                    maxLength={300}
-                    value={sourcePublication}
-                    onChange={(event) =>
-                      setSourcePublication(event.target.value)
-                    }
-                  />
-                </div>
               </div>
 
               <div className={styles.formGrid}>
@@ -579,8 +531,25 @@ export function RecordEvidence({
 
               <details className={styles.sourceDetailsDisclosure}>
                 <summary>
-                  Add year, pages, rights, or other citation details
+                  More citation details
                 </summary>
+                <div className={styles.fieldGroup}>
+                  <label
+                    className={styles.fieldLabel}
+                    htmlFor="source-publication"
+                  >
+                    {sourceConfig.publicationLabel} (optional)
+                  </label>
+                  <input
+                    id="source-publication"
+                    className={styles.input}
+                    maxLength={300}
+                    value={sourcePublication}
+                    onChange={(event) =>
+                      setSourcePublication(event.target.value)
+                    }
+                  />
+                </div>
                 <div className={styles.formGrid}>
                   <div className={styles.fieldGroup}>
                     <label className={styles.fieldLabel} htmlFor="source-year">
@@ -622,9 +591,8 @@ export function RecordEvidence({
                     placeholder="Especially useful for maps, datasets, and online images."
                   />
                 </div>
+                {targetFields}
               </details>
-
-              {targetFields}
 
               <p className={styles.sourceMediaHint}>
                 To upload a photograph, PDF, or video to the record, use Images
@@ -713,7 +681,10 @@ export function RecordEvidence({
                 </div>
               )}
 
-              {targetFields}
+              <details className={styles.sourceDetailsDisclosure}>
+                <summary>Choose a specific field or add a supporting note</summary>
+                {targetFields}
+              </details>
 
               <div className={styles.actionsBar}>
                 <button

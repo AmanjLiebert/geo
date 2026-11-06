@@ -24,7 +24,7 @@ describe("RecordEvidence component", () => {
     );
 
     expect(html).toContain("Sources and evidence");
-    expect(html).toContain("Add a new source");
+    expect(html).toContain("Add a source");
     expect(html).toContain("Use a saved source");
     expect(html).toContain("What kind of source is it?");
     expect(html).toContain("Journal article");
@@ -32,6 +32,7 @@ describe("RecordEvidence component", () => {
     expect(html).toContain("Article title");
     expect(html).toContain("Author or authors");
     expect(html).toContain("Journal name");
+    expect(html).toContain("More citation details");
     expect(html).toContain("Web address (optional)");
     expect(html).toContain("DOI or article identifier (optional)");
     expect(html).toContain("What does this source support?");
@@ -48,7 +49,7 @@ describe("RecordEvidence component", () => {
     );
 
     expect(html).toContain("Sources connected to this record");
-    expect(html).not.toContain("Add a new source");
+    expect(html).not.toContain("Add a source");
     expect(html).not.toContain("Use a saved source");
     expect(html).not.toContain("Save and connect source");
   });

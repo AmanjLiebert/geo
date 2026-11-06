@@ -9,11 +9,21 @@ import type { ActiveScientificTemplate } from "@/lib/dashboard-api";
 const recordId = "11111111-1111-4111-8111-111111111111";
 
 describe("read-only record sections", () => {
+  it("keeps the optional location form closed until requested", () => {
+    const html = renderToStaticMarkup(
+      createElement(RecordLocations, { recordId }),
+    );
+    expect(html).toContain("This does not block publication");
+    expect(html).toContain("Add location");
+    expect(html).not.toContain("Exact latitude");
+    expect(html).not.toContain("What may visitors see?");
+  });
+
   it("shows location state without duplicate entry controls", () => {
     const html = renderToStaticMarkup(
       createElement(RecordLocations, { recordId, readOnly: true }),
     );
-    expect(html).toContain("No locations added yet");
+    expect(html).toContain("No location added");
     expect(html).not.toContain("Exact latitude");
     expect(html).not.toContain("Add location");
   });

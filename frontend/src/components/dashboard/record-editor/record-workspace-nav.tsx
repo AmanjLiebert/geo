@@ -3,22 +3,16 @@
 import {
   BookOpen,
   FilePenLine,
-  FlaskConical,
-  Images,
-  Link2,
-  MapPin,
   ClipboardCheck,
+  ListPlus,
   type LucideIcon,
 } from "lucide-react";
 import styles from "./record-editor.module.css";
 
 export type RecordWorkspaceSectionId =
-  | "details"
-  | "scientific"
-  | "sources"
-  | "location"
-  | "related"
-  | "media"
+  | "record"
+  | "evidence"
+  | "optional"
   | "review";
 
 export type RecordWorkspaceSection = {
@@ -28,45 +22,27 @@ export type RecordWorkspaceSection = {
 };
 
 const icons: Record<RecordWorkspaceSectionId, LucideIcon> = {
-  details: FilePenLine,
-  scientific: FlaskConical,
-  sources: BookOpen,
-  location: MapPin,
-  related: Link2,
-  media: Images,
+  record: FilePenLine,
+  evidence: BookOpen,
+  optional: ListPlus,
   review: ClipboardCheck,
 };
 
 export const defaultRecordWorkspaceSections: RecordWorkspaceSection[] = [
   {
-    id: "details",
-    label: "Record details",
-    description: "Title and explanation",
+    id: "record",
+    label: "Record",
+    description: "Details and scientific facts",
   },
   {
-    id: "scientific",
-    label: "Scientific fields",
-    description: "Type-specific observations",
+    id: "evidence",
+    label: "Evidence",
+    description: "Required source and main image",
   },
   {
-    id: "sources",
-    label: "Sources",
-    description: "Books, articles, and websites",
-  },
-  {
-    id: "location",
-    label: "Location",
-    description: "Place and public visibility",
-  },
-  {
-    id: "related",
-    label: "Related items",
-    description: "Connected records and research",
-  },
-  {
-    id: "media",
-    label: "Images and files",
-    description: "Visual evidence and documents",
+    id: "optional",
+    label: "Optional",
+    description: "Location, connections, and extra files",
   },
   {
     id: "review",

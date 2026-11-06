@@ -58,6 +58,9 @@ export function RecordMedia({
   const [licence, setLicence] = useState("");
   const [description, setDescription] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(
+    !(initialItems ?? []).some((item) => item.isPrimary),
+  );
   const [isDragging, setIsDragging] = useState(false);
   const [selectedPreviewUrl, setSelectedPreviewUrl] = useState<string | null>(
     null,
@@ -100,7 +103,10 @@ export function RecordMedia({
     let active = true;
     listRecordMedia(recordId)
       .then((loaded) => {
-        if (active) setItems(loaded);
+        if (active) {
+          setItems(loaded);
+          if (loaded.some((item) => item.isPrimary)) setUploadOpen(false);
+        }
       })
       .catch(() => {
         if (active) setError("Files could not be loaded.");
@@ -149,11 +155,24 @@ export function RecordMedia({
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
+    if (
+      selected &&
+      !items.some((item) => item.isPrimary) &&
+      !selected.type.startsWith("image/")
+    ) {
+      setFile(null);
+      setSelectedPreviewUrl(null);
+      setIsPrimary(false);
+      setError("Add the record's main image before adding documents or video.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     setFile(selected);
     if (selected?.type.startsWith("image/")) {
       const previewUrl = URL.createObjectURL(selected);
       selectedPreviewUrlRef.current = previewUrl;
       setSelectedPreviewUrl(previewUrl);
+      setIsPrimary(!items.some((item) => item.isPrimary));
     } else {
       setSelectedPreviewUrl(null);
     }
@@ -194,7 +213,9 @@ export function RecordMedia({
           : undefined,
         isPrimary: isPrimary && file.type.startsWith("image/"),
       });
-      setItems(await listRecordMedia(recordId));
+      const loaded = await listRecordMedia(recordId);
+      setItems(loaded);
+      if (loaded.some((item) => item.isPrimary)) setUploadOpen(false);
       // Reset only upon success; preserve inputs on failure
       chooseFile(null);
       setRights("");
@@ -367,16 +388,19 @@ export function RecordMedia({
   }
 
   const isChosenFileImage = Boolean(file && file.type.startsWith("image/"));
+  const hasPrimaryImage = items.some(
+    (item) => item.isPrimary && item.mediaKind === "image",
+  );
 
   return (
     <section className={styles.stepCard} aria-labelledby="record-media-title">
       <div className={styles.stepHeader}>
         <h2 id="record-media-title" className={styles.stepTitle}>
-          Images and files
+          Main image
         </h2>
         <p className={styles.stepDescription}>
-          Show the record clearly with field photographs, supporting documents,
-          or approved video. Every file is checked before it becomes viewable.
+          Add one clear image for the public record. It stays private while it is
+          checked and must include a description and usage permission.
         </p>
       </div>
 
@@ -393,7 +417,7 @@ export function RecordMedia({
 
       <div className={styles.mediaCollectionHeader}>
         <div>
-          <h3>Attached files</h3>
+          <h3>{hasPrimaryImage ? "Main image and attached files" : "Main image required"}</h3>
           <p>
             {items.length === 0
               ? "No files have been added."
@@ -747,13 +771,27 @@ export function RecordMedia({
       )}
 
       {!readOnly && (
+        <details
+          className={styles.mediaUploadDisclosure}
+          open={!hasPrimaryImage || uploadOpen}
+          onToggle={(event) => {
+            if (hasPrimaryImage) setUploadOpen(event.currentTarget.open);
+          }}
+        >
+          <summary>
+            {hasPrimaryImage ? "Optional: add another file" : "Add required main image"}
+          </summary>
         <form className={styles.mediaUploadForm} onSubmit={upload}>
           <div className={styles.mediaUploadHeading}>
             <div>
-              <span className={styles.stepNumber}>Add another file</span>
-              <h3>Upload protected media</h3>
+              <span className={styles.stepNumber}>{hasPrimaryImage ? "Optional" : "Required"}</span>
+              <h3>{hasPrimaryImage ? "Add another file" : "Add main image"}</h3>
             </div>
-            <p>One file at a time. It stays private while it is checked.</p>
+            <p>
+              {hasPrimaryImage
+                ? "Additional files remain private and are not shown on the current public record page."
+                : "Choose an image. It stays private while it is checked."}
+            </p>
           </div>
 
           <div
@@ -808,14 +846,19 @@ export function RecordMedia({
               id="record-media-file"
               className={styles.mediaFileInput}
               type="file"
-              accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"
+              accept={
+                hasPrimaryImage
+                  ? "image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"
+                  : "image/jpeg,image/png,image/webp"
+              }
               required
               onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
             />
           </div>
           <small className={styles.fieldHelp}>
-            JPEG, PNG, or WebP up to 25 MB; PDF up to 20 MB; MP4 or WebM up to
-            50 MB.
+            {hasPrimaryImage
+              ? "JPEG, PNG, or WebP up to 25 MB; PDF up to 20 MB; MP4 or WebM up to 50 MB."
+              : "JPEG, PNG, or WebP image up to 25 MB."}
           </small>
 
           <div className={styles.fieldGroup}>
@@ -918,10 +961,15 @@ export function RecordMedia({
               type="submit"
               disabled={uploading || !file}
             >
-              {uploading ? "Uploading…" : "Add file"}
+              {uploading
+                ? "Uploading…"
+                : hasPrimaryImage
+                  ? "Add file"
+                  : "Add main image"}
             </button>
           </div>
         </form>
+        </details>
       )}
 
       {view && (

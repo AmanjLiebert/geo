@@ -248,7 +248,7 @@ function RecordReader({
         {detail.formationContext && <section><p className="eyebrow">Geological context</p><h3>What the evidence supports</h3><p>{detail.formationContext}</p></section>}
         {detail.sections.map((section, index) => {
           if (section.kind === "gallery") return null;
-          if (section.kind === "facts") return <section key={`${section.title}-${index}`}><p className="eyebrow">Structured evidence</p><h3>{section.title}</h3><dl className="catalog-reader-facts">{section.items.map((item) => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>;
+          if (section.kind === "facts") return <section key={`${section.title}-${index}`}><p className="eyebrow">Structured evidence</p><h3>{section.title}</h3><dl className="catalog-reader-facts">{section.items.map((item, itemIndex) => <div key={`${item.label}-${itemIndex}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>;
           if (section.kind === "classification") return <section key={`${section.title}-${index}`}><p className="eyebrow">Classification</p><h3>{section.title}</h3><ul className="catalog-reader-classification">{section.items.map((item) => <li key={item}>{item}</li>)}</ul></section>;
           if (section.kind === "references") return <section key={`${section.title}-${index}`}><p className="eyebrow">References</p><h3>{section.title}</h3><ReferenceList items={section.items} /></section>;
           return <section key={`${section.title}-${index}`}><p className="eyebrow">Interpretation</p><h3>{section.title}</h3>{section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section>;

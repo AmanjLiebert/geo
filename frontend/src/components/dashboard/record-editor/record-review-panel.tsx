@@ -17,13 +17,13 @@ import type { RecordWorkspaceSectionId } from "./record-workspace-nav";
 import styles from "./record-editor.module.css";
 
 const issueSections: Record<string, RecordWorkspaceSectionId> = {
-  translations: "details",
-  classification: "scientific",
-  attributes: "scientific",
-  category: "scientific",
-  evidence: "sources",
-  location: "location",
-  media: "media",
+  translations: "record",
+  classification: "record",
+  attributes: "record",
+  category: "record",
+  evidence: "evidence",
+  location: "optional",
+  media: "evidence",
 };
 
 export function issueActionLabel(field: string, code: string): string {
@@ -113,6 +113,12 @@ export function RecordReviewPanel({
         )}
       </div>
 
+      <p className={styles.reviewRequirements}>
+        Review checks the record details, required scientific facts, verified
+        evidence, and approved main image. Location, connections, and extra
+        files are optional unless a saved value has a specific problem.
+      </p>
+
       {error && (
         <div className={styles.reviewError} role="alert">
           <p>{error.message}</p>
@@ -134,7 +140,7 @@ export function RecordReviewPanel({
             const section =
               issue.field === "reviewer"
                 ? undefined
-                : (issueSections[issue.field] ?? "scientific");
+                : (issueSections[issue.field] ?? "record");
             return (
               <li key={`${issue.field}:${issue.code}`}>
                 <CircleAlert aria-hidden="true" />

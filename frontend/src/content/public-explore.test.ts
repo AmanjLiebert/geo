@@ -74,6 +74,15 @@ describe("public Explore mapping", () => {
           precisionMetres: null,
           geometry: null,
         },
+        {
+          label: "Safe public area",
+          visibility: "approximate",
+          regionLabel: "Duhok Governorate",
+          precisionMetres: 10000,
+          geometry: { type: "Point", coordinates: [43.2, 37.1] },
+          // Deliberately not part of the public contract. The mapper must ignore it.
+          exactGeometry: { type: "Point", coordinates: [44.99999, 36.99999] },
+        } as PublicRecordDetail["locations"][number],
       ],
       references: [
         {
@@ -100,5 +109,10 @@ describe("public Explore mapping", () => {
     ]);
     expect(mapped.detail.related).toEqual([]);
     expect(mapped.gallery).toEqual([]);
+    const presentation = JSON.stringify(mapped.detail.sections);
+    expect(presentation).toContain("37.1, 43.2");
+    expect(presentation).toContain("About 10,000 metres");
+    expect(presentation).toContain("Evidence: supporting");
+    expect(presentation).not.toContain("44.99999");
   });
 });

@@ -60,9 +60,23 @@ export function RecordTemplateForm({
 }: RecordTemplateFormProps) {
   const formId = useId();
   const sortedFields = sortTemplateFields(template.fields);
+  const requiredFields = sortedFields.filter((field) => field.required);
+  const optionalFields = sortedFields.filter((field) => !field.required);
+  const optionalFieldsHaveValues = optionalFields.some((field) => {
+    const value = initialAttributes[field.stableKey];
+    return (
+      value !== undefined &&
+      value !== null &&
+      value !== "" &&
+      (!Array.isArray(value) || value.length > 0)
+    );
+  });
 
   const [slug, setSlug] = useState<string>(initialSlug ?? "");
   const [slugTouched, setSlugTouched] = useState(false);
+  const [showOptionalFields, setShowOptionalFields] = useState(
+    optionalFieldsHaveValues,
+  );
 
   const [attributes, setAttributes] = useState<Record<string, unknown>>(() => {
     const initial: Record<string, unknown> = {};
@@ -147,6 +161,13 @@ export function RecordTemplateForm({
       const error = validateFieldInput(field, attributes[field.stableKey]);
       if (error) hasClientErrors = true;
     }
+    if (
+      optionalFields.some((field) =>
+        Boolean(validateFieldInput(field, attributes[field.stableKey])),
+      )
+    ) {
+      setShowOptionalFields(true);
+    }
     setTouchedFields(allTouched);
 
     if (hasClientErrors) return;
@@ -230,8 +251,11 @@ export function RecordTemplateForm({
         </header>
 
         <div className={styles.formSection}>
-          {/* Optional Identifier slug */}
-          <div className={styles.formGridFull}>
+          <details
+            className={styles.advancedDisclosure}
+            open={Boolean(slugError)}
+          >
+            <summary>Advanced: edit the public URL identifier</summary>
             <div className={styles.fieldGroup}>
               <div className={styles.fieldLabelRow}>
                 <label htmlFor={`${formId}-slug`} className={styles.fieldLabel}>
@@ -264,7 +288,7 @@ export function RecordTemplateForm({
                 </span>
               )}
             </div>
-          </div>
+          </details>
 
           {/* Dynamic template fields grid */}
           {sortedFields.length === 0 ? (
@@ -274,8 +298,24 @@ export function RecordTemplateForm({
               rather than category-specific attributes.
             </p>
           ) : (
-            <div className={styles.formGrid}>
-              {sortedFields.map((field) => {
+            <>
+              {optionalFields.length > 0 && (
+                <button
+                  type="button"
+                  className={styles.buttonSecondary}
+                  aria-expanded={showOptionalFields}
+                  onClick={() => setShowOptionalFields((current) => !current)}
+                >
+                  {showOptionalFields
+                    ? "Hide optional scientific facts"
+                    : `Add optional scientific facts (${optionalFields.length})`}
+                </button>
+              )}
+              <div className={styles.formGrid}>
+              {[
+                ...requiredFields,
+                ...(showOptionalFields ? optionalFields : []),
+              ].map((field) => {
                 const fieldError = getFieldError(field.stableKey);
                 const fieldId = `${formId}-field-${field.stableKey}`;
                 const helpId = `${fieldId}-help`;
@@ -578,7 +618,8 @@ export function RecordTemplateForm({
                   </div>
                 );
               })}
-            </div>
+              </div>
+            </>
           )}
 
           {/* Form Actions */}

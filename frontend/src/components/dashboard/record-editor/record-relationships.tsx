@@ -19,10 +19,12 @@ const PAGE_SIZE = 50;
 export function RecordRelationships({
   recordId,
   readOnly = false,
+  loadCandidates = true,
   onCountChange,
 }: {
   recordId: string;
   readOnly?: boolean;
+  loadCandidates?: boolean;
   onCountChange?: (count: number) => void;
 }) {
   const [items, setItems] = useState<RecordRelationship[]>([]);
@@ -54,7 +56,7 @@ export function RecordRelationships({
   useEffect(() => onCountChange?.(items.length), [items.length, onCountChange]);
 
   useEffect(() => {
-    if (readOnly) {
+    if (readOnly || !loadCandidates) {
       return;
     }
     let active = true;
@@ -85,7 +87,7 @@ export function RecordRelationships({
     return () => {
       active = false;
     };
-  }, [targetType, recordId, readOnly]);
+  }, [targetType, recordId, readOnly, loadCandidates]);
 
   async function loadMore() {
     setLoadingTargets(true);
@@ -154,7 +156,9 @@ export function RecordRelationships({
           Related items
         </h2>
         <p className={styles.stepDescription}>
-          Connect this record to another record or a research publication.
+          Optional. Connect another record or research publication for internal
+          organization. These connections are not shown on the current public
+          record page.
         </p>
       </div>
       {items.length > 0 && (

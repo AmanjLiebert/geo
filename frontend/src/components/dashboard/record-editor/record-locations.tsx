@@ -123,6 +123,7 @@ export function RecordLocations({
   const [publicLongitude, setPublicLongitude] = useState("");
   const [precision, setPrecision] = useState("");
   const [reason, setReason] = useState("");
+  const [customReason, setCustomReason] = useState("");
   const [embargoUntil, setEmbargoUntil] = useState("");
   const [saving, setSaving] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -135,7 +136,7 @@ export function RecordLocations({
       .then((loaded) => {
         if (active) {
           setItems(loaded);
-          setAdding(loaded.length === 0);
+          setAdding(false);
         }
       })
       .catch(() => {
@@ -161,7 +162,7 @@ export function RecordLocations({
       publicLatitude,
       publicLongitude,
       precision,
-      reason,
+      reason: reason === "other" ? customReason : reason,
       embargoUntil,
     });
     if ("error" in result) {
@@ -180,6 +181,7 @@ export function RecordLocations({
       setPublicLongitude("");
       setPrecision("");
       setReason("");
+      setCustomReason("");
       setEmbargoUntil("");
       setVisibility("restricted");
       setMessage("Location added.");
@@ -205,7 +207,8 @@ export function RecordLocations({
           Locations
         </h2>
         <p className={styles.stepDescription}>
-          Add the place once, then choose how precisely visitors may see it.
+          Optional. Add a place only when it helps readers understand the record,
+          then choose what visitors may see.
         </p>
       </div>
       {items.length ? (
@@ -242,7 +245,14 @@ export function RecordLocations({
           )}
         </>
       ) : (
-        <p className={styles.stepDescription}>No locations added yet.</p>
+        <div className={styles.optionalEmptyState}>
+          <p className={styles.stepDescription}>No location added. This does not block publication.</p>
+          {!readOnly && !adding && (
+            <button className={styles.buttonSecondary} type="button" onClick={() => setAdding(true)}>
+              Add location
+            </button>
+          )}
+        </div>
       )}
       {!readOnly && adding && (
         <form className={styles.formSection} onSubmit={add}>
@@ -273,6 +283,9 @@ export function RecordLocations({
               />
             </div>
           </div>
+          <fieldset className={styles.locationCoordinateGroup}>
+            <legend>Exact point</legend>
+            <p className={styles.fieldHelp}>Enter the coordinate pair once. It stays protected unless you choose to show the exact point.</p>
           <div className={styles.formGrid}>
             <div className={styles.fieldGroup}>
               <label className={styles.fieldLabel} htmlFor="location-latitude">
@@ -303,28 +316,41 @@ export function RecordLocations({
               />
             </div>
           </div>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel} htmlFor="location-visibility">
-              Visibility
+          </fieldset>
+          <fieldset className={styles.visibilityChoices}>
+            <legend>What may visitors see?</legend>
+            <div className={styles.choiceGrid}>
+              {[
+                ["public", "Show exact point", "Visitors see the point entered above."],
+                ["approximate", "Show general area", "Exact coordinates stay private."],
+                ["restricted", "Keep private", "Visitors see only the region label."],
+              ].map(([value, title, description]) => (
+                <label key={value} className={styles.choiceCard}>
+                  <input
+                    type="radio"
+                    name="location-visibility"
+                    value={value}
+                    checked={visibility === value}
+                    onChange={() => setVisibility(value as NewRecordLocation["visibility"])}
+                  />
+                  <span><strong>{title}</strong><small>{description}</small></span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <details className={styles.advancedDisclosure}>
+            <summary>Advanced: keep private until a date</summary>
+            <label className={styles.choiceCard}>
+              <input
+                type="radio"
+                name="location-visibility"
+                value="embargoed"
+                checked={visibility === "embargoed"}
+                onChange={() => setVisibility("embargoed")}
+              />
+              <span><strong>Temporary embargo</strong><small>Keep the point private until the selected date.</small></span>
             </label>
-            <select
-              id="location-visibility"
-              className={styles.select}
-              value={visibility}
-              onChange={(event) =>
-                setVisibility(
-                  event.target.value as NewRecordLocation["visibility"],
-                )
-              }
-            >
-              <option value="restricted">
-                Restricted — exact coordinates stay private
-              </option>
-              <option value="approximate">Approximate public location</option>
-              <option value="public">Public location</option>
-              <option value="embargoed">Embargoed</option>
-            </select>
-          </div>
+          </details>
           {visibility === "public" && (
             <p className={styles.fieldHelp}>
               Visitors will see the exact point entered above.
@@ -377,14 +403,18 @@ export function RecordLocations({
               <label className={styles.fieldLabel} htmlFor="public-precision">
                 Public precision in metres
               </label>
-              <input
+              <select
                 id="public-precision"
-                className={styles.input}
-                inputMode="numeric"
+                className={styles.select}
                 required
                 value={precision}
                 onChange={(event) => setPrecision(event.target.value)}
-              />
+              >
+                <option value="">Choose an area size</option>
+                <option value="1000">About 1 kilometre</option>
+                <option value="10000">About 10 kilometres</option>
+                <option value="50000">Regional area</option>
+              </select>
             </div>
           )}
           {visibility !== "public" && (
@@ -393,14 +423,29 @@ export function RecordLocations({
                 Reason for restricted visibility{" "}
                 <span className={styles.requiredTag}>Required</span>
               </label>
-              <textarea
+              <select
                 id="location-reason"
-                className={styles.textarea}
-                maxLength={2000}
+                className={styles.select}
                 required
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
-              />
+              >
+                <option value="">Choose a reason</option>
+                <option value="Protect a sensitive geological site">Sensitive geological site</option>
+                <option value="Protect a fossil or specimen locality">Fossil or specimen locality</option>
+                <option value="Respect private land or access restrictions">Private land or access restriction</option>
+                <option value="other">Other reason</option>
+              </select>
+              {reason === "other" && (
+                <textarea
+                  className={styles.textarea}
+                  maxLength={2000}
+                  required
+                  value={customReason}
+                  onChange={(event) => setCustomReason(event.target.value)}
+                  aria-label="Other reason for restricted visibility"
+                />
+              )}
             </div>
           )}
           {visibility === "embargoed" && (

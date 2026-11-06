@@ -61,14 +61,46 @@ function readableValue(value: unknown): string | null {
 function referencePresentation(reference: PublicRecordDetail["references"][number]): ContentReference {
   const authors = reference.authors.join(", ");
   const year = reference.year ? ` (${reference.year})` : "";
-  const source = [reference.publication, reference.identifier, reference.pagesOrFigure]
+  const sourceType = reference.sourceType.replaceAll("_", " ");
+  const source = [
+    sourceType,
+    reference.publication,
+    reference.identifier,
+    reference.pagesOrFigure,
+    reference.evidenceKind ? `Evidence: ${reference.evidenceKind.replaceAll("_", " ")}` : null,
+    reference.rightsStatement ? `Rights: ${reference.rightsStatement}` : null,
+  ]
     .filter(Boolean)
     .join(" · ");
   return {
     label: `${authors ? `${authors}${year}. ` : ""}${reference.title}`,
-    detail: source || reference.sourceType,
+    detail: source,
     href: reference.url ?? undefined,
   };
+}
+
+function publicPoint(geometry: unknown): { latitude: number; longitude: number } | null {
+  if (!geometry || typeof geometry !== "object" || Array.isArray(geometry)) return null;
+  const candidate = geometry as { type?: unknown; coordinates?: unknown };
+  if (candidate.type !== "Point" || !Array.isArray(candidate.coordinates)) return null;
+  const [longitude, latitude] = candidate.coordinates;
+  if (
+    typeof latitude !== "number" ||
+    typeof longitude !== "number" ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    return null;
+  }
+  return { latitude, longitude };
+}
+
+function formatPublicCoordinate(value: number): string {
+  return value.toFixed(5).replace(/\.?0+$/, "");
 }
 
 export function mapPublicCategories(categories: PublicCategory[]): GeologicalCategory[] {
@@ -147,11 +179,39 @@ export function mapPublicRecordDetail(
       ? [{ label: field.unit ? `${field.label} (${field.unit})` : field.label, value }]
       : [];
   });
-  const locationItems = detail.locations.flatMap((location) => {
-    const value = location.label ?? location.regionLabel;
-    if (!value) return [];
-    const suffix = location.visibility === "approximate" ? " (approximate)" : "";
-    return [{ label: "Location", value: `${value}${suffix}` }];
+  const locationItems = detail.locations.flatMap((location, index) => {
+    const name = [location.label, location.regionLabel]
+      .filter((value, position, values): value is string =>
+        Boolean(value) && values.indexOf(value) === position,
+      )
+      .join(", ");
+    const visibility =
+      location.visibility === "public"
+        ? "exact public point"
+        : location.visibility === "approximate"
+          ? "general public area"
+          : location.visibility === "region_only"
+            ? "region only"
+            : "location hidden";
+    const facts = name
+      ? [{ label: `Location ${index + 1}`, value: `${name} · ${visibility}` }]
+      : [];
+    const point = ["public", "approximate"].includes(location.visibility)
+      ? publicPoint(location.geometry)
+      : null;
+    if (point) {
+      facts.push({
+        label: "Public coordinates",
+        value: `${formatPublicCoordinate(point.latitude)}, ${formatPublicCoordinate(point.longitude)}`,
+      });
+    }
+    if (location.visibility === "approximate" && location.precisionMetres) {
+      facts.push({
+        label: "Public precision",
+        value: `About ${location.precisionMetres.toLocaleString()} metres`,
+      });
+    }
+    return facts;
   });
   const references = detail.references.map(referencePresentation);
   const sections: GeologicalRecordDetail["sections"] = [];

@@ -7,18 +7,20 @@ import type { RecordMediaAttachment } from "@/lib/record-extras-api";
 const recordId = "11111111-1111-4111-8111-111111111111";
 
 describe("RecordMedia component", () => {
-  it("renders empty state and complete upload form with supported formats including video", () => {
+  it("requires a main image before offering additional file formats", () => {
     const html = renderToStaticMarkup(
       createElement(RecordMedia, { recordId, initialItems: [] }),
     );
 
-    expect(html).toContain("Images and files");
+    expect(html).toContain("Main image");
+    expect(html).toContain("Main image required");
+    expect(html).toContain("Add main image");
     expect(html).toContain("No files have been added.");
     expect(html).toContain("No files attached yet.");
     expect(html).toContain("Drop a file here");
     expect(html).toContain("Choose file");
     expect(html).toContain(
-      'accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"',
+      'accept="image/jpeg,image/png,image/webp"',
     );
     expect(html).toContain("What does this file show or contain?");
     expect(html).toContain("used as image alternative text");
@@ -29,6 +31,7 @@ describe("RecordMedia component", () => {
     expect(html).toContain("More file information");
     expect(html).toContain("Credit line (optional)");
     expect(html).toContain("Licence name (optional)");
+    expect(html).not.toContain("application/pdf");
   });
 
   it("keeps saved media visible but hides mutation controls in read-only mode", () => {
@@ -129,6 +132,11 @@ describe("RecordMedia component", () => {
 
     const html = renderToStaticMarkup(
       createElement(RecordMedia, { recordId, initialItems: sampleItems }),
+    );
+
+    expect(html).toContain("Additional files remain private");
+    expect(html).toContain(
+      'accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm"',
     );
 
     // Filenames present
