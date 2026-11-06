@@ -25,6 +25,10 @@
   min-height: 0;
 }
 
+.dashboardBodyFocused {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* ============================================================
    Dashboard header
    ============================================================ */
@@ -434,6 +438,12 @@
   max-width: 960px;
 }
 
+.mainInnerFocused {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
 /* ============================================================
    Dashboard home — genuine empty state
    ============================================================ */
@@ -715,6 +725,10 @@
   border-radius: 3px;
   cursor: pointer;
   transition: background-color 140ms ease;
+}
+
+.mobileNavTriggerPersistent {
+  display: inline-flex;
 }
 
 .mobileNavTrigger:hover {

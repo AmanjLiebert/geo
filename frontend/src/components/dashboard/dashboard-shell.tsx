@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import Link from "@/components/safe-link";
 import { LogIn, Home, Lock } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
@@ -99,8 +100,10 @@ function DashboardVisitorAccess() {
 // ---------------------------------------------------------------------------
 
 function DashboardLayout({ role, children }: { role: "teacher" | "admin"; children: ReactNode }) {
+  const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const isFocusedWorkspace = pathname.startsWith("/dashboard/records");
 
   return (
     <div className={styles.dashboardRoot}>
@@ -108,13 +111,26 @@ function DashboardLayout({ role, children }: { role: "teacher" | "admin"; childr
         menuOpen={mobileNavOpen}
         onMenuOpen={() => setMobileNavOpen((prev) => !prev)}
         triggerRef={triggerRef}
+        persistentMenuTrigger={isFocusedWorkspace}
       />
 
-      <div className={styles.dashboardBody}>
-        <DashboardSidebar role={role} />
+      <div
+        className={
+          isFocusedWorkspace
+            ? `${styles.dashboardBody} ${styles.dashboardBodyFocused}`
+            : styles.dashboardBody
+        }
+      >
+        {!isFocusedWorkspace && <DashboardSidebar role={role} />}
 
         <main className={styles.main} id="main-content">
-          <div className={styles.mainInner}>
+          <div
+            className={
+              isFocusedWorkspace
+                ? `${styles.mainInner} ${styles.mainInnerFocused}`
+                : styles.mainInner
+            }
+          >
             {children}
           </div>
         </main>

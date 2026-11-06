@@ -128,13 +128,12 @@ describe("RecordCategoryNav", () => {
     expect(html).toContain("Top-level categories");
     expect(html).toContain("Rocks and minerals");
     expect(html).toContain("Fossils");
-    expect(html).toContain("2 subcategories");
+    expect(html).toContain("2 choices");
     expect(html).not.toContain("Invertebrate fossils");
-    expect(html).toContain(
-      "Choose a category to see its subcategories and records.",
-    );
+    expect(html).toContain("Choose a category");
+    expect(html).toContain("Select the picture and name you recognize.");
+    expect(html).toContain('data-tone="amber"');
     expect(html).toContain("View all records");
-    expect(html).toContain("Skip category selection");
   });
 
   it("drills into a selected category's subcategories", () => {
@@ -144,9 +143,8 @@ describe("RecordCategoryNav", () => {
     expect(html).toContain("Vertebrate fossils");
     expect(html).toContain('aria-current="page">Fossils');
     expect(html).toContain("All categories");
-    expect(html).toContain(
-      "Fossils includes records in its subcategories. Choose one to narrow further.",
-    );
+    expect(html).toContain("Choose a Fossils category");
+    expect(html).toContain("Select one below, or use the path to go back.");
   });
 
   it("keeps the selected leaf visible with its siblings and a path back", () => {

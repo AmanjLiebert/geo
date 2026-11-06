@@ -4,8 +4,8 @@
 
 .navigator {
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  gap: 18px;
+  padding: 20px;
   border: 2px solid var(--carbon);
   border-radius: 5px;
   background: var(--limestone);
@@ -15,16 +15,32 @@
 .navHeading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .navHeading h2 {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+}
+
+.navHeading p {
+  margin: 3px 0 0;
+  color: var(--soft-ink);
+  font-size: 13px;
+}
+
+.stepMark {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--carbon);
+  border-radius: 50%;
+  background: var(--ochre);
+  font-family: var(--mono);
+  font-weight: 900;
 }
 
 .breadcrumbs {
@@ -88,7 +104,6 @@
   color: var(--iron);
 }
 
-.hint,
 .state {
   margin: 0;
   color: var(--soft-ink);
@@ -98,7 +113,7 @@
 
 .level {
   display: grid;
-  gap: 6px;
+  gap: 10px;
 }
 
 .levelHeading {
@@ -114,7 +129,7 @@
 .levelList {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -123,12 +138,12 @@
 .categoryButton {
   width: 100%;
   min-width: 0;
-  min-height: 44px;
+  min-height: 108px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 14px;
   border: 2px solid var(--carbon);
   border-radius: 4px;
   background: #fff;
@@ -140,10 +155,40 @@
 
 .categoryButton:hover {
   background: color-mix(in srgb, var(--ochre) 45%, #fff);
+  transform: translateY(-1px);
 }
 
 .categoryButtonSelected {
   background: var(--ochre);
+  box-shadow: 3px 3px 0 var(--carbon);
+}
+
+.categoryVisual {
+  width: 54px;
+  height: 54px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--carbon);
+  border-radius: 50%;
+  background: var(--fossil);
+}
+
+.categoryVisual svg {
+  width: 27px;
+  height: 27px;
+}
+
+.categoryVisual[data-tone="amber"] { background: #e8c16e; }
+.categoryVisual[data-tone="blue"] { background: #b8d8dc; }
+.categoryVisual[data-tone="rust"] { background: #d68b70; }
+.categoryVisual[data-tone="olive"] { background: #c8ca93; }
+.categoryVisual[data-tone="slate"] { background: #b9c8c1; }
+.categoryVisual[data-tone="green"] { background: #b9d0ae; }
+.categoryVisual[data-tone="neutral"] { background: var(--fossil); }
+
+@media (prefers-reduced-motion: reduce) {
+  .categoryButton:hover { transform: none; }
 }
 
 .categoryText {
@@ -153,10 +198,9 @@
 }
 
 .categoryName {
-  overflow: hidden;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .categoryMeta {
@@ -173,6 +217,7 @@
 
 .chevron {
   flex: none;
+  margin-inline-start: auto;
 }
 
 .notice,
@@ -218,29 +263,17 @@
 }
 
 .showAllButton {
-  width: 100%;
+  width: fit-content;
   justify-content: flex-start;
-  padding: 10px 12px;
+  padding: 9px 12px;
   background: var(--fossil);
   text-align: start;
-}
-
-.showAllButton span {
-  display: grid;
-  gap: 2px;
 }
 
 .showAllButton strong {
   font-family: var(--mono);
   font-size: 12px;
   text-transform: uppercase;
-}
-
-.showAllButton small {
-  color: var(--soft-ink);
-  font-size: 12px;
-  font-weight: 400;
-  text-transform: none;
 }
 
 [dir="rtl"] .chevron {
@@ -254,7 +287,10 @@
 }
 
 @media (max-width: 600px) {
+  .navigator { padding: 14px; }
   .levelList {
     grid-template-columns: 1fr;
   }
+
+  .categoryButton { min-height: 92px; }
 }

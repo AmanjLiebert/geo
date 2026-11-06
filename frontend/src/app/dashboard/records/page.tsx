@@ -3,12 +3,13 @@
 import {
   AlertTriangle,
   Clock,
-  FileText,
   Lock,
   Plus,
   RotateCcw,
   Search,
   ShieldAlert,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import {
   FormEvent,
@@ -95,6 +96,9 @@ function RecordsContent() {
     category !== null ||
     status !== "all" ||
     query.length > 0;
+  const [toolsOpen, setToolsOpen] = useState(
+    status !== "all" || query.length > 0,
+  );
 
   const [records, setRecords] = useState<DashboardRecordItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -244,6 +248,7 @@ function RecordsContent() {
   function clearFilters() {
     if (searchInputRef.current) searchInputRef.current.value = "";
     setSearchLength(0);
+    setToolsOpen(false);
     navigate(defaultRecordListState);
   }
 
@@ -278,18 +283,14 @@ function RecordsContent() {
     selectedCategoryName,
     statusLabel,
   );
+  const activeToolCount =
+    (state.query.length > 0 ? 1 : 0) + (state.status !== "all" ? 1 : 0);
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div className={styles.heading}>
-          <div className={styles.titleMark} aria-hidden="true">
-            <FileText />
-          </div>
-          <div>
-            <h1>Scientific records</h1>
-            <p>Browse by category, then find the record you need.</p>
-          </div>
+          <h1>Records</h1>
         </div>
         <Link href={buildNewRecordHref(listHref)} className={styles.addButton}>
           <Plus size={18} aria-hidden="true" /> Add record
@@ -310,10 +311,30 @@ function RecordsContent() {
         </section>
 
         <div className={styles.results}>
-          <section
-            className={styles.toolbar}
-            aria-label="Search and filter records"
-          >
+          <section className={styles.findTools} aria-label="Other ways to find records">
+            <button
+              type="button"
+              className={styles.toolsToggle}
+              aria-expanded={toolsOpen}
+              aria-controls="record-search-filters"
+              onClick={() => setToolsOpen((current) => !current)}
+            >
+              {toolsOpen ? <X aria-hidden="true" /> : <SlidersHorizontal aria-hidden="true" />}
+              {toolsOpen ? "Hide search and filters" : "Search or filter"}
+              {activeToolCount > 0 && (
+                <span className={styles.activeToolCount}>
+                  {activeToolCount} active
+                </span>
+              )}
+            </button>
+          </section>
+
+          {toolsOpen && (
+            <section
+              id="record-search-filters"
+              className={styles.toolbar}
+              aria-label="Search and filter records"
+            >
             <form className={styles.searchForm} onSubmit={submitSearch}>
               <label htmlFor="record-search">Search records</label>
               <div className={styles.searchRow}>
@@ -376,27 +397,16 @@ function RecordsContent() {
                 ))}
               </div>
             </div>
+            </section>
+          )}
 
+          {showRecords && (
             <div className={styles.resultBar}>
-              <p
-                className={styles.resultCount}
-                role="status"
-                aria-live="polite"
-              >
-                {!showRecords
-                  ? "Choose a category, search, or select a status to see records."
-                  : loading
-                    ? "Loading records…"
-                    : error
-                      ? ""
-                      : summary}
+              <p className={styles.resultCount} role="status" aria-live="polite">
+                {loading ? "Loading records…" : error ? "" : summary}
               </p>
               {hasFilters && (
-                <button
-                  type="button"
-                  className={styles.clearFilters}
-                  onClick={clearFilters}
-                >
+                <button type="button" className={styles.clearFilters} onClick={clearFilters}>
                   {state.view === "all_records" &&
                   state.category === null &&
                   state.status === "all" &&
@@ -406,7 +416,7 @@ function RecordsContent() {
                 </button>
               )}
             </div>
-          </section>
+          )}
 
           {showRecords && loading && (
             <RecordsLoading label="Loading records…" />

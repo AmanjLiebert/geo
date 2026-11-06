@@ -1,15 +1,50 @@
 "use client";
 
 import { useMemo } from "react";
-import { ChevronRight, Files, FolderTree, RotateCcw } from "lucide-react";
+import {
+  ChevronRight,
+  Files,
+  Folder,
+  Gem,
+  GitBranch,
+  Layers3,
+  Mountain,
+  RotateCcw,
+  Shell,
+  Waves,
+  type LucideIcon,
+} from "lucide-react";
 import type { StructureCategory } from "@/lib/dashboard-api";
 import styles from "./record-category-nav.module.css";
 
 export type RecordCategoryNode = {
   slug: string;
+  stableKey: string;
   name: string;
   children: RecordCategoryNode[];
 };
+
+function getCategoryVisual(stableKey: string): {
+  Icon: LucideIcon;
+  tone: string;
+} {
+  const key = stableKey.toLowerCase();
+  if (key.includes("fossil")) return { Icon: Shell, tone: "amber" };
+  if (key.includes("hydro") || key.includes("water")) {
+    return { Icon: Waves, tone: "blue" };
+  }
+  if (key.includes("rock") || key.includes("mineral")) {
+    return { Icon: Gem, tone: "rust" };
+  }
+  if (key.includes("strat") || key.includes("unit")) {
+    return { Icon: Layers3, tone: "olive" };
+  }
+  if (key.includes("structur")) return { Icon: GitBranch, tone: "slate" };
+  if (key.includes("surface") || key.includes("landform")) {
+    return { Icon: Mountain, tone: "green" };
+  }
+  return { Icon: Folder, tone: "neutral" };
+}
 
 export function buildRecordCategoryTree(
   items: StructureCategory[],
@@ -22,6 +57,7 @@ export function buildRecordCategoryTree(
   for (const item of sorted) {
     nodesById.set(item.id, {
       slug: item.slug,
+      stableKey: item.stableKey,
       name: item.name,
       children: [],
     });
@@ -108,18 +144,15 @@ export function RecordCategoryNav({
     ? `Subcategories of ${openNode.name}`
     : "Top-level categories";
 
-  const helperText = !selectedNode
-    ? "Choose a category to see its subcategories and records."
-    : selectedNode.children.length > 0
-      ? `${selectedNode.name} includes records in its subcategories. Choose one to narrow further.`
-      : "Choose a sibling category, or use the path above to go back.";
-
   return (
     <section className={styles.root} aria-label="Filter records by category">
       <div className={styles.navigator}>
         <div className={styles.navHeading}>
-          <FolderTree size={18} aria-hidden="true" />
-          <h2>Categories</h2>
+          <span className={styles.stepMark} aria-hidden="true">1</span>
+          <div>
+            <h2>{openNode ? `Choose a ${openNode.name} category` : "Choose a category"}</h2>
+            <p>{openNode ? "Select one below, or use the path to go back." : "Select the picture and name you recognize."}</p>
+          </div>
         </div>
 
         {selectedNode && (
@@ -174,8 +207,6 @@ export function RecordCategoryNav({
           </div>
         )}
 
-        <p className={styles.hint}>{helperText}</p>
-
         {loading && (
           <p className={styles.state} role="status">
             Loading categories…
@@ -212,6 +243,7 @@ export function RecordCategoryNav({
               {levelNodes.map((node) => {
                 const isSelected = selectedSlug === node.slug;
                 const hasChildren = node.children.length > 0;
+                const { Icon, tone } = getCategoryVisual(node.stableKey);
                 return (
                   <li key={node.slug}>
                     <button
@@ -224,16 +256,19 @@ export function RecordCategoryNav({
                       aria-current={isSelected ? "true" : undefined}
                       onClick={() => onSelect(node.slug)}
                     >
+                      <span
+                        className={styles.categoryVisual}
+                        data-tone={tone}
+                        aria-hidden="true"
+                      >
+                        <Icon />
+                      </span>
                       <span className={styles.categoryText}>
                         <span className={styles.categoryName}>{node.name}</span>
                         <span className={styles.categoryMeta}>
                           {hasChildren
-                            ? `${node.children.length} ${
-                                node.children.length === 1
-                                  ? "subcategory"
-                                  : "subcategories"
-                              }`
-                            : "View records"}
+                            ? `${node.children.length} choices`
+                            : "Records"}
                         </span>
                       </span>
                       {hasChildren && (
@@ -258,10 +293,7 @@ export function RecordCategoryNav({
             onClick={onShowAll}
           >
             <Files size={18} aria-hidden="true" />
-            <span>
-              <strong>View all records</strong>
-              <small>Skip category selection</small>
-            </span>
+            <strong>View all records</strong>
           </button>
         )}
       </div>
