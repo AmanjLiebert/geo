@@ -8,7 +8,7 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | Authentication session reliability and usable protected actions |
 | Task folder | `docs/agent-work/auth-session-reliability/` |
-| Status | `READY_FOR_IMPLEMENTATION` |
+| Status | `BLOCKED` |
 | Implementer | OpenCode |
 | Reviewer | Codex |
 | Plan gate | A valid user survives an ordinary Docker stop/start without signing in again; temporary API unavailability is not mislabeled as sign-out; authorized record editing is not interrupted by five-minute identity confirmation; retained authentication, CSRF, permission, publication, revision, and audit boundaries pass independent review. |
