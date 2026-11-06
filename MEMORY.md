@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Authentication session reliability and usable protected actions |
-| Task folder | `docs/agent-work/auth-session-reliability/` |
-| Status | `BLOCKED` |
+| Task | Teacher record editor simplification |
+| Task folder | `docs/agent-work/record-editor-simplification/` |
+| Status | `READY_FOR_IMPLEMENTATION` |
 | Implementer | OpenCode |
 | Reviewer | Codex |
-| Plan gate | A valid user survives an ordinary Docker stop/start without signing in again; temporary API unavailability is not mislabeled as sign-out; authorized record editing is not interrupted by five-minute identity confirmation; retained authentication, CSRF, permission, publication, revision, and audit boundaries pass independent review. |
+| Plan gate | A teacher completes the required record, evidence, main-image, and review path through four clear stages; optional location, relationships, and additional files stay progressively disclosed and preserved; public citations and locations use only verified/public-safe projections; retained permission, geography, media, publication, revision, and audit boundaries pass independent review. |
 
 ## Required file order
 
