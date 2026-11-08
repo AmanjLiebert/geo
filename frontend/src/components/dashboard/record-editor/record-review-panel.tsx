@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, CircleAlert, RotateCcw, Send, Upload } from "lucide-react";
-import Link from "@/components/safe-link";
-import { DashboardApiError, type ScientificRecordStatus } from "@/lib/dashboard-api";
-import { buildRecordEditHref, buildRecordsSignInHref } from "@/lib/record-list-state";
+import {
+  CheckCircle2,
+  CircleAlert,
+  RotateCcw,
+  Send,
+  Upload,
+} from "lucide-react";
+import {
+  DashboardApiError,
+  type ScientificRecordStatus,
+} from "@/lib/dashboard-api";
 import {
   getRecordReadiness,
   publishRecord,
@@ -43,13 +50,11 @@ export function issueActionLabel(field: string, code: string): string {
 export function RecordReviewPanel({
   recordId,
   status,
-  returnTo,
   onRecordChanged,
   onSelectSection,
 }: {
   recordId: string;
   status: ScientificRecordStatus;
-  returnTo?: string;
   onRecordChanged: () => void;
   onSelectSection?: (section: RecordWorkspaceSectionId) => void;
 }) {
@@ -69,7 +74,11 @@ export function RecordReviewPanel({
           setError(
             cause instanceof DashboardApiError
               ? cause
-              : new DashboardApiError("Readiness could not be checked.", 0, "server"),
+              : new DashboardApiError(
+                  "Readiness could not be checked.",
+                  0,
+                  "server",
+                ),
           );
       });
     return () => {
@@ -87,7 +96,11 @@ export function RecordReviewPanel({
       setError(
         cause instanceof DashboardApiError
           ? cause
-          : new DashboardApiError("The record could not be updated.", 0, "server"),
+          : new DashboardApiError(
+              "The record could not be updated.",
+              0,
+              "server",
+            ),
       );
     } finally {
       setBusy(false);
@@ -95,42 +108,52 @@ export function RecordReviewPanel({
   }
 
   if (!readiness && !error) {
-    return <div className={styles.reviewLoading} role="status">Checking readiness…</div>;
+    return (
+      <div className={styles.reviewLoading} role="status">
+        Checking readiness…
+      </div>
+    );
   }
 
   return (
-    <section className={styles.reviewPanel} aria-labelledby="record-review-title">
+    <section
+      className={styles.reviewPanel}
+      aria-labelledby="record-review-title"
+    >
       <div className={styles.reviewHeading}>
         <div>
           <span className={styles.workspaceEyebrow}>Final check</span>
           <h2 id="record-review-title">Review and publish</h2>
         </div>
         {readiness && (
-          <span className={readiness.issues.length === 0 ? styles.reviewReady : styles.reviewNeedsWork}>
-            {readiness.issues.length === 0 ? <CheckCircle2 aria-hidden="true" /> : <CircleAlert aria-hidden="true" />}
-            {readiness.issues.length === 0 ? "Ready" : `${readiness.issues.length} to resolve`}
+          <span
+            className={
+              readiness.issues.length === 0
+                ? styles.reviewReady
+                : styles.reviewNeedsWork
+            }
+          >
+            {readiness.issues.length === 0 ? (
+              <CheckCircle2 aria-hidden="true" />
+            ) : (
+              <CircleAlert aria-hidden="true" />
+            )}
+            {readiness.issues.length === 0
+              ? "Ready"
+              : `${readiness.issues.length} to resolve`}
           </span>
         )}
       </div>
 
       <p className={styles.reviewRequirements}>
-        Review checks the record details, required scientific facts, verified
-        evidence, and approved main image. Location, connections, and extra
-        files are optional unless a saved value has a specific problem.
+        Review checks the record details, required scientific facts, source, and
+        approved main image. Location, connections, and extra files are optional
+        unless a saved value has a specific problem.
       </p>
 
       {error && (
         <div className={styles.reviewError} role="alert">
           <p>{error.message}</p>
-          {error.kind === "reauthentication" && (
-            <Link
-              href={buildRecordsSignInHref(
-                buildRecordEditHref(recordId, returnTo),
-              )}
-            >
-              Confirm identity and return
-            </Link>
-          )}
         </div>
       )}
 
@@ -146,7 +169,10 @@ export function RecordReviewPanel({
                 <CircleAlert aria-hidden="true" />
                 <span>{issue.message}</span>
                 {section && onSelectSection && status === "draft" && (
-                  <button type="button" onClick={() => onSelectSection(section)}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectSection(section)}
+                  >
                     {issueActionLabel(issue.field, issue.code)}
                   </button>
                 )}
@@ -158,7 +184,9 @@ export function RecordReviewPanel({
 
       {readiness && status === "draft" && (
         <div className={styles.reviewActions}>
-          <p>Run the final checks, then move this draft to the publication step.</p>
+          <p>
+            Run the final checks, then move this draft to the publication step.
+          </p>
           <button
             type="button"
             className={styles.button}
@@ -178,7 +206,7 @@ export function RecordReviewPanel({
             <button
               type="button"
               className={styles.button}
-              disabled={!readiness.publishableByCurrentUser || busy || error?.kind === "reauthentication"}
+              disabled={!readiness.publishableByCurrentUser || busy}
               onClick={() => void run(() => publishRecord(recordId))}
             >
               <Upload aria-hidden="true" /> Publish
@@ -199,7 +227,11 @@ export function RecordReviewPanel({
               onChange={(event) => setReason(event.target.value)}
               placeholder="Explain what needs attention"
             />
-            <button type="submit" className={styles.buttonSecondary} disabled={reason.trim().length < 2 || busy}>
+            <button
+              type="submit"
+              className={styles.buttonSecondary}
+              disabled={reason.trim().length < 2 || busy}
+            >
               <RotateCcw aria-hidden="true" /> Return to draft
             </button>
           </form>
@@ -209,8 +241,9 @@ export function RecordReviewPanel({
       {readiness && status === "published" && (
         <div className={styles.reviewActions}>
           <p>
-            Editing returns this record to draft and temporarily hides it from visitors. No
-            content is deleted, and you can publish it again after correcting it.
+            Editing returns this record to draft and temporarily hides it from
+            visitors. No content is deleted, and you can publish it again after
+            correcting it.
           </p>
           <button
             type="button"

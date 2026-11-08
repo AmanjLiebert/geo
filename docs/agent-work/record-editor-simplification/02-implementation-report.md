@@ -57,3 +57,9 @@ Correction verification actually run:
 - `git diff --check`: passed (Git emitted only the repository's existing LF/CRLF conversion warnings).
 - Docker images for the local `migrate`, `api`, and `frontend` services rebuilt successfully. The forward migration applied once to the local Compose database; rebuilt API and frontend containers became healthy, and HTTP smoke returned 200 for `/dashboard/records` and `/health/ready`.
 - No live authenticated browser, push, merge, deployment, or shared-database operation occurred.
+
+## Signed-in publication correction — 2026-11-08
+
+- Removed the recent-login/step-up identity gate from scientific-record publish and unpublish actions. A currently signed-in teacher/admin must still have `PUBLISH_SCIENTIFIC_CONTENT`, pass CSRF protection, and all readiness/database publication rules; the action remains audited.
+- Removed the unreachable identity-confirmation prompt from the record Review panel and replaced the stale “verified evidence” explanation with “source.”
+- Category publication and translation-review security were not changed.

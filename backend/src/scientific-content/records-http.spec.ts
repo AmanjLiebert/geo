@@ -1158,18 +1158,18 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
       }
     });
 
-    it.each(['publish', 'unpublish'])('requires recent authentication for %s', async (action) => {
-      const response = await app.inject({
-        method: 'POST',
-        url: `/api/v1/records/${validRecordId}/${action}`,
-        cookies: { gk_session: 'stale-teacher-session', gk_csrf: validCsrf },
-        headers: { 'x-csrf-token': validCsrf },
-      });
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toMatchObject({
-        code: 'reauthentication_required',
-      });
-    });
+    it.each(['publish', 'unpublish'])(
+      'allows an authorized signed-in user with an older session to %s',
+      async (action) => {
+        const response = await app.inject({
+          method: 'POST',
+          url: `/api/v1/records/${validRecordId}/${action}`,
+          cookies: { gk_session: 'stale-teacher-session', gk_csrf: validCsrf },
+          headers: { 'x-csrf-token': validCsrf },
+        });
+        expect(response.statusCode).toBe(201);
+      },
+    );
 
     it.each(['publish', 'unpublish'])(
       'allows a recently authenticated authorized user to %s',

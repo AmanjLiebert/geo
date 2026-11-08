@@ -815,7 +815,6 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
                     <RecordReviewPanel
                       recordId={recordDetail.id}
                       status={recordDetail.status}
-                      returnTo={returnTo}
                       onRecordChanged={() => setReloadKey((value) => value + 1)}
                       onSelectSection={setActiveWorkspaceSection}
                     />

@@ -98,7 +98,6 @@ export class RecordsController {
 
   @Post(':id/publish')
   @RequirePermissions(Permission.PUBLISH_SCIENTIFIC_CONTENT)
-  @HighRiskAction()
   publish(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) recordId: string) {
     return this.records.publish(auth.user.id, recordId);
   }
@@ -115,7 +114,6 @@ export class RecordsController {
 
   @Post(':id/unpublish')
   @RequirePermissions(Permission.PUBLISH_SCIENTIFIC_CONTENT)
-  @HighRiskAction()
   unpublish(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) recordId: string) {
     return this.records.unpublish(auth.user.id, recordId);
   }
