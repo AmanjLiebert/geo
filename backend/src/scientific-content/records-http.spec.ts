@@ -63,7 +63,7 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
     addLocation: vi.fn(),
     addRelationship: vi.fn(),
     createReference: vi.fn(),
-    verifyReference: vi.fn(),
+    updateReference: vi.fn(),
     publicationIssues: vi.fn(),
   };
   const mockMediaService = {
@@ -458,13 +458,7 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
         cookies: { gk_session: 'teacher-session' },
       });
       expect(response.statusCode).toBe(200);
-      expect(mockRecordsService.list).toHaveBeenCalledWith(
-        50,
-        0,
-        'draft',
-        'ammonite',
-        'fossils',
-      );
+      expect(mockRecordsService.list).toHaveBeenCalledWith(50, 0, 'draft', 'ammonite', 'fossils');
     });
 
     it.each([
@@ -595,6 +589,16 @@ describe('Records and ScientificStructure HTTP requests and authorization', () =
           sourceType: 'journal',
           authors: [{ name: 'Researcher' }],
           title: 'Study',
+          identifier: 'doi:example',
+        },
+      },
+      {
+        method: 'PATCH' as const,
+        url: `/api/v1/references/${validRecordId}`,
+        payload: {
+          sourceType: 'journal',
+          authors: [{ name: 'Researcher' }],
+          title: 'Updated study',
           identifier: 'doi:example',
         },
       },

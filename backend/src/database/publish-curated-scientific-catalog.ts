@@ -22,8 +22,6 @@ interface ReviewerRow {
 
 interface ReferenceStateRow {
   id: string;
-  created_by_user_id: string;
-  verification_status: 'unverified' | 'verified' | 'rejected';
 }
 
 interface AttachmentStateRow {
@@ -65,12 +63,6 @@ async function publishCuratedCatalog(): Promise<void> {
         `The curated seed is incomplete: expected ${referenceIds.length} references, found ${references.length}.`,
       );
     }
-    if (references.some((reference) => reference.created_by_user_id === reviewer.id)) {
-      throw new Error('The independent reviewer cannot verify references they created.');
-    }
-    if (references.some((reference) => reference.verification_status === 'rejected')) {
-      throw new Error('A rejected curated reference must be corrected before publication.');
-    }
 
     const published = states.filter(
       (record) => record.status === ScientificRecordStatus.PUBLISHED,
@@ -85,12 +77,6 @@ async function publishCuratedCatalog(): Promise<void> {
 
     const trust = new ScientificTrustService(appDataSource);
     const records = new RecordsService(appDataSource, trust);
-
-    for (const reference of references) {
-      if (reference.verification_status !== 'verified') {
-        await trust.verifyReference(reviewer.id, reference.id);
-      }
-    }
 
     const stateById = new Map(states.map((record) => [record.id, record]));
     for (const curated of CURATED_SCIENTIFIC_RECORDS) {
@@ -183,7 +169,7 @@ async function loadIndependentReviewer(ownerUserId: string): Promise<ReviewerRow
 
 async function loadReferenceStates(referenceIds: string[]): Promise<ReferenceStateRow[]> {
   return appDataSource.query<ReferenceStateRow[]>(
-    `SELECT id, created_by_user_id, verification_status
+    `SELECT id
      FROM scientific_references
      WHERE id = ANY($1::uuid[])
      ORDER BY id`,

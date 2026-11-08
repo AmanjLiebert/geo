@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { BookOpen, Plus, Search, ShieldCheck } from "lucide-react";
+import { BookOpen, Pencil, Plus, Search } from "lucide-react";
 import { DashboardApiError, type TemplateField } from "@/lib/dashboard-api";
 import {
   addRecordEvidence,
   createReference,
+  getReference,
   listRecordEvidence,
   searchReferences,
-  verifyReference,
+  updateReference,
   type RecordEvidenceItem,
   type ReferenceChoice,
 } from "@/lib/record-trust-api";
@@ -52,6 +53,9 @@ export function RecordEvidence({
   const [sourceYear, setSourceYear] = useState("");
   const [sourcePages, setSourcePages] = useState("");
   const [sourceRights, setSourceRights] = useState("");
+  const [editingReferenceId, setEditingReferenceId] = useState<string | null>(
+    null,
+  );
   const [busy, setBusy] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +98,7 @@ export function RecordEvidence({
   }
 
   function resetNewSource() {
+    setEditingReferenceId(null);
     setSourceTitle("");
     setSourceAuthor("");
     setSourceUrl("");
@@ -108,20 +113,27 @@ export function RecordEvidence({
     setEvidence(await listRecordEvidence(recordId));
   }
 
-  async function verifySource(referenceIdToVerify: string) {
+  async function editSource(referenceIdToEdit: string) {
     clearFeedback();
     setBusy(true);
     try {
-      await verifyReference(referenceIdToVerify);
-      await refreshEvidence();
-      setMessage("Source verified.");
+      const source = await getReference(referenceIdToEdit);
+      setEditingReferenceId(source.id);
+      setMode("new");
+      setSourceType(source.sourceType as SourceType);
+      setSourceTitle(source.title);
+      setSourceAuthor(source.authors[0]?.name ?? "");
+      setSourceUrl(source.sourceUrl ?? "");
+      setSourceIdentifier(source.identifier ?? "");
+      setSourcePublication(source.publication ?? "");
+      setSourceYear(source.publicationYear?.toString() ?? "");
+      setSourcePages(source.pagesOrFigure ?? "");
+      setSourceRights(source.rightsStatement ?? "");
     } catch (cause) {
       setError(
-        cause instanceof DashboardApiError && cause.kind === "forbidden"
-          ? "Confirm your identity from Account, then try again."
-          : cause instanceof DashboardApiError
-            ? cause.message
-            : "The source could not be verified.",
+        cause instanceof DashboardApiError
+          ? cause.message
+          : "The source could not be opened.",
       );
     } finally {
       setBusy(false);
@@ -209,7 +221,7 @@ export function RecordEvidence({
     setBusy(true);
     let createdReferenceId: string | null = null;
     try {
-      createdReferenceId = await createReference({
+      const sourceData = {
         sourceType,
         title: sourceTitle.trim(),
         authors: [{ name: sourceAuthor.trim() }],
@@ -219,13 +231,21 @@ export function RecordEvidence({
         publicationYear: parsedYear.value,
         pagesOrFigure: sourcePages.trim() || undefined,
         rightsStatement: sourceRights.trim() || undefined,
-      });
+      };
+      if (editingReferenceId) {
+        await updateReference(editingReferenceId, sourceData);
+        await refreshEvidence();
+        setReferences(await searchReferences(query));
+        resetNewSource();
+        setMessage("Source changes saved.");
+        return;
+      }
+      createdReferenceId = await createReference(sourceData);
       const savedReference: ReferenceChoice = {
         id: createdReferenceId,
         title: sourceTitle.trim(),
         sourceType,
         identifier: sourceIdentifier.trim() || null,
-        verificationStatus: "unverified",
       };
       setReferences((current) => [
         savedReference,
@@ -361,35 +381,22 @@ export function RecordEvidence({
                     <span className={styles.kindBadge}>
                       {formatSourceType(item.sourceType)}
                     </span>
-                    <span
-                      className={
-                        item.verificationStatus === "verified"
-                          ? styles.statusBadgeReady
-                          : styles.statusBadgeProcessing
-                      }
-                    >
-                      {item.verificationStatus === "verified"
-                        ? "Verified"
-                        : "Awaiting verification"}
-                    </span>
                   </div>
                   <p>
                     Supports:{" "}
                     {fieldLabel ? `Only ${fieldLabel}` : "Whole record"}
                   </p>
                   {item.notes && <small>{item.notes}</small>}
-                  {!readOnly &&
-                    item.verificationStatus !== "verified" &&
-                    item.canVerify && (
-                      <button
-                        type="button"
-                        className={styles.buttonSecondary}
-                        disabled={busy}
-                        onClick={() => void verifySource(item.referenceId)}
-                      >
-                        <ShieldCheck aria-hidden="true" /> Verify source
-                      </button>
-                    )}
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      className={styles.buttonSecondary}
+                      disabled={busy}
+                      onClick={() => void editSource(item.referenceId)}
+                    >
+                      <Pencil aria-hidden="true" /> Edit source
+                    </button>
+                  )}
                 </div>
               </li>
             );
@@ -423,7 +430,11 @@ export function RecordEvidence({
                 setMode(mode === "new" ? "saved" : "new");
               }}
             >
-              {mode === "new" ? <Search aria-hidden="true" /> : <Plus aria-hidden="true" />}
+              {mode === "new" ? (
+                <Search aria-hidden="true" />
+              ) : (
+                <Plus aria-hidden="true" />
+              )}
               {mode === "new" ? "Use a saved source" : "Add a new source"}
             </button>
           </div>
@@ -432,8 +443,11 @@ export function RecordEvidence({
             <form className={styles.sourceForm} onSubmit={createAndAttach}>
               <div className={styles.sourceFormHeader}>
                 <span className={styles.stepNumber}>Required evidence</span>
-                <h3>Add a source</h3>
-                <p>Enter the information another reader needs to recognize and find it.</p>
+                <h3>{editingReferenceId ? "Edit source" : "Add a source"}</h3>
+                <p>
+                  Enter the information another reader needs to recognize and
+                  find it.
+                </p>
               </div>
 
               <div className={styles.fieldGroup}>
@@ -475,18 +489,18 @@ export function RecordEvidence({
               </div>
 
               <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel} htmlFor="source-author">
-                    {sourceConfig.contributorLabel}{" "}
-                    <span className={styles.requiredTag}>Required</span>
-                  </label>
-                  <input
-                    id="source-author"
-                    className={styles.input}
-                    maxLength={240}
-                    required
-                    value={sourceAuthor}
-                    onChange={(event) => setSourceAuthor(event.target.value)}
-                  />
+                <label className={styles.fieldLabel} htmlFor="source-author">
+                  {sourceConfig.contributorLabel}{" "}
+                  <span className={styles.requiredTag}>Required</span>
+                </label>
+                <input
+                  id="source-author"
+                  className={styles.input}
+                  maxLength={240}
+                  required
+                  value={sourceAuthor}
+                  onChange={(event) => setSourceAuthor(event.target.value)}
+                />
               </div>
 
               <div className={styles.formGrid}>
@@ -530,9 +544,7 @@ export function RecordEvidence({
               </div>
 
               <details className={styles.sourceDetailsDisclosure}>
-                <summary>
-                  More citation details
-                </summary>
+                <summary>More citation details</summary>
                 <div className={styles.fieldGroup}>
                   <label
                     className={styles.fieldLabel}
@@ -605,7 +617,11 @@ export function RecordEvidence({
                   type="submit"
                   disabled={busy}
                 >
-                  {busy ? "Saving…" : "Save and connect source"}
+                  {busy
+                    ? "Saving…"
+                    : editingReferenceId
+                      ? "Save source changes"
+                      : "Save and connect source"}
                 </button>
               </div>
             </form>
@@ -672,17 +688,16 @@ export function RecordEvidence({
                   <div>
                     <strong>{selectedReference.title}</strong>
                     <span>
-                      {formatSourceType(selectedReference.sourceType)} ·{" "}
-                      {selectedReference.verificationStatus === "verified"
-                        ? "Verified"
-                        : "Awaiting verification"}
+                      {formatSourceType(selectedReference.sourceType)}
                     </span>
                   </div>
                 </div>
               )}
 
               <details className={styles.sourceDetailsDisclosure}>
-                <summary>Choose a specific field or add a supporting note</summary>
+                <summary>
+                  Choose a specific field or add a supporting note
+                </summary>
                 {targetFields}
               </details>
 

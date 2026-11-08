@@ -4,7 +4,11 @@ import type {
   PublicRecordDetail,
   PublicRecordSummary,
 } from "@/lib/public-scientific-api";
-import { mapPublicCategories, mapPublicRecord, mapPublicRecordDetail } from "./public-explore";
+import {
+  mapPublicCategories,
+  mapPublicRecord,
+  mapPublicRecordDetail,
+} from "./public-explore";
 
 const categories: PublicCategory[] = [
   {
@@ -61,11 +65,13 @@ describe("public Explore mapping", () => {
     expect(record.summary).toBe("No public summary is available yet.");
   });
 
-  it("maps only real public fields, safe locations, and verified references", () => {
+  it("maps only real public fields, safe locations, and attached references", () => {
     const detail: PublicRecordDetail = {
       ...summary,
       description: "Coarse-grained granite.",
-      fields: [{ label: "Grain size", dataType: "text", unit: "mm", value: "5" }],
+      fields: [
+        { label: "Grain size", dataType: "text", unit: "mm", value: "5" },
+      ],
       locations: [
         {
           label: null,
@@ -105,7 +111,7 @@ describe("public Explore mapping", () => {
     expect(mapped.detail.sections.map((section) => section.title)).toEqual([
       "Record details",
       "Published location",
-      "Verified sources",
+      "Sources",
     ]);
     expect(mapped.detail.related).toEqual([]);
     expect(mapped.gallery).toEqual([]);

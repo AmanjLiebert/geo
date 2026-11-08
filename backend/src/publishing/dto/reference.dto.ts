@@ -72,6 +72,8 @@ export class CreateReferenceDto {
   researchPublicationId?: string;
 }
 
+export class UpdateReferenceDto extends CreateReferenceDto {}
+
 export class AddEvidenceDto {
   @IsUUID()
   referenceId!: string;

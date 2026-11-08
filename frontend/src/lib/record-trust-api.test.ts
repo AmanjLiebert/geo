@@ -4,9 +4,11 @@ import {
   addRecordEvidence,
   addRecordLocation,
   createReference,
+  getReference,
   listRecordEvidence,
   listRecordLocations,
   searchReferences,
+  updateReference,
 } from "./record-trust-api";
 
 const recordId = "11111111-1111-4111-8111-111111111111";
@@ -28,7 +30,6 @@ describe("record trust API", () => {
             title: "Limestone study",
             sourceType: "journal",
             identifier: null,
-            verificationStatus: "unverified",
           },
         ],
         total: 1,
@@ -74,6 +75,35 @@ describe("record trust API", () => {
     );
   });
 
+  it("loads and updates a saved source without a verification action", async () => {
+    const source = {
+      id: referenceId,
+      sourceType: "journal",
+      authors: [{ name: "Researcher" }],
+      title: "Study",
+      publication: "Journal",
+      publicationYear: 2026,
+      identifier: "doi:example",
+      pagesOrFigure: null,
+      sourceUrl: null,
+      rightsStatement: null,
+    };
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(ok(source))
+      .mockResolvedValueOnce(ok(source));
+    expect((await getReference(referenceId)).title).toBe("Study");
+    await updateReference(referenceId, {
+      sourceType: "journal",
+      authors: [{ name: "Researcher" }],
+      title: "Updated study",
+      identifier: "doi:example",
+    });
+    expect(vi.mocked(fetch).mock.calls[1][1]?.method).toBe("PATCH");
+    expect(vi.mocked(fetch).mock.calls[1][0]).toContain(
+      `/references/${referenceId}`,
+    );
+  });
+
   it("validates evidence and location response fields", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(
@@ -87,8 +117,6 @@ describe("record trust API", () => {
               evidenceKind: "published_source",
               fieldKey: null,
               notes: null,
-              verificationStatus: "verified",
-              canVerify: false,
             },
           ],
         }),

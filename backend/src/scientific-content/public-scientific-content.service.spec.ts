@@ -120,7 +120,7 @@ describe('PublicScientificContentService', () => {
     expect(sql).not.toContain('owner_user_id');
   });
 
-  it('returns labelled fields, public-safe locations, and verified references only', async () => {
+  it('returns labelled fields, public-safe locations, and attached references', async () => {
     const query = vi
       .fn()
       .mockResolvedValueOnce([recordRow()])
@@ -171,7 +171,7 @@ describe('PublicScientificContentService', () => {
     expect(locationSql).toContain("visibility IN ('public', 'approximate')");
     expect(locationSql).not.toContain('exact_geometry');
     expect(locationSql).not.toContain('sensitivity_reason');
-    expect(referenceSql).toContain("verification_status = 'verified'");
+    expect(referenceSql).not.toContain('verification_status');
     expect(referenceSql).not.toContain('reviewer_notes');
     expect(referenceSql).not.toContain('created_by_user_id');
   });

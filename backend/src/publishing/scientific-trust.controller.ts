@@ -1,8 +1,18 @@
-import { Body, Controller, Get, Header, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Permission } from '../identity/access-control';
-import { CurrentAuth, HighRiskAction, RequirePermissions } from '../identity/access.decorators';
+import { CurrentAuth, RequirePermissions } from '../identity/access.decorators';
 import { AuthContext } from '../identity/auth-context';
-import { AddEvidenceDto, CreateReferenceDto } from './dto/reference.dto';
+import { AddEvidenceDto, CreateReferenceDto, UpdateReferenceDto } from './dto/reference.dto';
 import { CreateLocationDto } from './dto/location.dto';
 import { CreateRelationshipDto } from './dto/relationship.dto';
 import { ScientificTrustService } from './scientific-trust.service';
@@ -31,10 +41,13 @@ export class ScientificTrustController {
     return this.trust.getReference(id);
   }
 
-  @Post('references/:id/verify')
-  @HighRiskAction()
-  verifyReference(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) id: string) {
-    return this.trust.verifyReference(auth.user.id, id);
+  @Patch('references/:id')
+  updateReference(
+    @CurrentAuth() auth: AuthContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() input: UpdateReferenceDto,
+  ) {
+    return this.trust.updateReference(auth.user.id, id, input);
   }
 
   @Post('records/:id/evidence')
@@ -48,8 +61,8 @@ export class ScientificTrustController {
 
   @Get('records/:id/evidence')
   @Header('Cache-Control', 'private, no-store')
-  listEvidence(@CurrentAuth() auth: AuthContext, @Param('id', ParseUUIDPipe) id: string) {
-    return this.trust.listEvidence(id, auth.user.id);
+  listEvidence(@Param('id', ParseUUIDPipe) id: string) {
+    return this.trust.listEvidence(id);
   }
 
   @Post('records/:id/locations')

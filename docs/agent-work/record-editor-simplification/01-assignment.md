@@ -149,3 +149,11 @@ No backend suite is required if backend source/contracts remain unchanged. Any n
 The task passes only when a teacher can understand the editor as four stages, complete the required record/source/main-image path without encountering optional administration, add location information through conditional plain-language choices, reach every existing optional value without data loss, and see retained core public information presented accurately without any protected-coordinate or private-media disclosure.
 
 Implementation stops at `IMPLEMENTED_AWAITING_REVIEW`. OpenCode records exact commits and truthful checks in `02-implementation-report.md`; Codex alone reviews the actual diff, reruns independent checks, and records the decision in `03-verification.md`.
+
+## User-authorized evidence-policy amendment — 2026-11-08
+
+The user explicitly removed reference verification from the product workflow. A source created or attached by an authorized teacher or admin must immediately satisfy the record evidence policy and may appear with a published record. There is no second-person source approval, verification queue, verification status, or verification action in the teacher interface.
+
+Teachers and admins may edit saved source metadata. Updates remain validated, permission-protected, and audited for every record that reuses the source. Existing references and evidence links are preserved. Location privacy, media approval, record lifecycle, CSRF, role authorization, revision, and audit controls are unchanged.
+
+This amendment requires a forward migration that replaces the database publication trigger without rewriting existing reference rows. Rollback restores the former verified-reference trigger. No shared database migration, deployment, merge, or push is authorized by this assignment.

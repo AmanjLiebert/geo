@@ -22,7 +22,7 @@ function completeRecordQueryWithMedia(mediaRow: Record<string, unknown>) {
     if (sql.includes('FROM categories c')) return Promise.resolve([{ exists: 1 }]);
     if (sql.includes('FROM record_translations')) return Promise.resolve([{ count: 1 }]);
     if (sql.includes('WITH policy AS')) {
-      return Promise.resolve([{ minimum: 1, kinds: [], verified_count: 1 }]);
+      return Promise.resolve([{ minimum: 1, kinds: [], reference_count: 1 }]);
     }
     if (sql.includes('FROM record_media rm')) return Promise.resolve([mediaRow]);
     if (sql.includes('FROM record_locations')) return Promise.resolve([{ invalid_count: 0 }]);
@@ -242,8 +242,51 @@ describe('ScientificTrustService record attachments', () => {
     const [sql, params] = query.mock.calls[1] as [string, unknown[]];
     expect(sql).not.toMatch(/SELECT\s+\*/i);
     expect(sql).not.toContain('"createdByUserId"');
-    expect(sql).toContain('AS "canVerify"');
-    expect(params).toEqual([recordId, null]);
+    expect(sql).not.toContain('verification_status');
+    expect(params).toEqual([recordId]);
+  });
+
+  it('updates a trusted source and audits every record that reuses it', async () => {
+    const managerQuery = vi.fn((sql: string, params?: unknown[]) => {
+      void params;
+      if (sql.includes('UPDATE scientific_references'))
+        return Promise.resolve([{ id: referenceId }]);
+      if (sql.includes('SELECT DISTINCT record_id')) return Promise.resolve([{ id: recordId }]);
+      return Promise.resolve([]);
+    });
+    const query = vi.fn().mockResolvedValue([
+      {
+        id: referenceId,
+        sourceType: 'journal',
+        authors: [{ name: 'Researcher' }],
+        title: 'Updated study',
+      },
+    ]);
+    const dataSource = {
+      query,
+      transaction: vi.fn(async (callback: (manager: EntityManager) => Promise<void>) =>
+        callback({ query: managerQuery } as unknown as EntityManager),
+      ),
+    } as unknown as DataSource;
+    const service = new ScientificTrustService(dataSource);
+
+    await service.updateReference('teacher-1', referenceId, {
+      sourceType: 'journal',
+      authors: [{ name: 'Researcher' }],
+      title: 'Updated study',
+      identifier: 'doi:example',
+    });
+
+    expect(
+      managerQuery.mock.calls.some(([sql]) => sql.includes('UPDATE scientific_references')),
+    ).toBe(true);
+    expect(
+      managerQuery.mock.calls.some(
+        ([sql, params]) =>
+          sql.includes('INSERT INTO content_audit_events') &&
+          JSON.stringify(params).includes('scientific-reference.updated'),
+      ),
+    ).toBe(true);
   });
 
   it('rejects evidence writes when category branch is archived, and allows them after restoration', async () => {
@@ -313,7 +356,7 @@ describe('ScientificTrustService record attachments', () => {
       if (sql.includes('FROM categories c')) return Promise.resolve([{ exists: 1 }]);
       if (sql.includes('FROM record_translations')) return Promise.resolve([{ count: 1 }]);
       if (sql.includes('WITH policy AS')) {
-        return Promise.resolve([{ minimum: 1, kinds: [], verified_count: 1 }]);
+        return Promise.resolve([{ minimum: 1, kinds: [], reference_count: 1 }]);
       }
       if (sql.includes('FROM record_media rm')) {
         return Promise.resolve([

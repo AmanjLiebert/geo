@@ -200,7 +200,7 @@ export class PublicScientificContentService {
                 ref.rights_statement, e.evidence_kind
          FROM record_evidence e
          JOIN scientific_references ref ON ref.id = e.reference_id
-         WHERE e.record_id = $1 AND ref.verification_status = 'verified'
+          WHERE e.record_id = $1
          ORDER BY ref.publication_year DESC NULLS LAST, ref.title, ref.id`,
         [row.record_id],
       ),

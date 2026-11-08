@@ -41,6 +41,8 @@ describe("RecordEvidence component", () => {
     expect(html).toContain("Save and connect source");
     expect(html).not.toContain("Evidence type");
     expect(html).not.toContain("published_source");
+    expect(html).not.toContain("Awaiting verification");
+    expect(html).not.toContain("Verify source");
   });
 
   it("hides source mutation controls in read-only mode", () => {

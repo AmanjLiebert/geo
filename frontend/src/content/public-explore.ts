@@ -17,14 +17,19 @@ const missingCategoryImage = (name: string): MediaAsset => ({
   caption: `No public image is available for ${name}.`,
 });
 
-function categoryPath(slug: string, categories: Map<string, PublicCategory>): string[] {
+function categoryPath(
+  slug: string,
+  categories: Map<string, PublicCategory>,
+): string[] {
   const path: string[] = [];
   const visited = new Set<string>();
   let current = categories.get(slug);
   while (current && !visited.has(current.slug)) {
     visited.add(current.slug);
     path.push(current.slug);
-    current = current.parentSlug ? categories.get(current.parentSlug) : undefined;
+    current = current.parentSlug
+      ? categories.get(current.parentSlug)
+      : undefined;
   }
   return path;
 }
@@ -35,30 +40,42 @@ function recordRouteSlug(record: PublicRecordSummary): string {
 
 function mediaFromRecord(record: PublicRecordSummary): MediaAsset {
   if (!record.image) {
-    return { src: "", alt: "", caption: "No public image is available for this record." };
+    return {
+      src: "",
+      alt: "",
+      caption: "No public image is available for this record.",
+    };
   }
   return {
     src: record.image.viewEndpoint,
     alt: record.image.altText ?? "",
-    caption: record.image.caption ?? record.image.description ?? "Published record image",
+    caption:
+      record.image.caption ??
+      record.image.description ??
+      "Published record image",
     credit: record.image.credit ?? record.image.licence ?? undefined,
   };
 }
 
 function readableValue(value: unknown): string | null {
   if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "number" || typeof value === "boolean")
+    return String(value);
   if (Array.isArray(value)) {
     const values = value.filter(
       (item): item is string | number | boolean =>
-        typeof item === "string" || typeof item === "number" || typeof item === "boolean",
+        typeof item === "string" ||
+        typeof item === "number" ||
+        typeof item === "boolean",
     );
     return values.length ? values.join(", ") : null;
   }
   return null;
 }
 
-function referencePresentation(reference: PublicRecordDetail["references"][number]): ContentReference {
+function referencePresentation(
+  reference: PublicRecordDetail["references"][number],
+): ContentReference {
   const authors = reference.authors.join(", ");
   const year = reference.year ? ` (${reference.year})` : "";
   const sourceType = reference.sourceType.replaceAll("_", " ");
@@ -67,7 +84,9 @@ function referencePresentation(reference: PublicRecordDetail["references"][numbe
     reference.publication,
     reference.identifier,
     reference.pagesOrFigure,
-    reference.evidenceKind ? `Evidence: ${reference.evidenceKind.replaceAll("_", " ")}` : null,
+    reference.evidenceKind
+      ? `Evidence: ${reference.evidenceKind.replaceAll("_", " ")}`
+      : null,
     reference.rightsStatement ? `Rights: ${reference.rightsStatement}` : null,
   ]
     .filter(Boolean)
@@ -79,10 +98,14 @@ function referencePresentation(reference: PublicRecordDetail["references"][numbe
   };
 }
 
-function publicPoint(geometry: unknown): { latitude: number; longitude: number } | null {
-  if (!geometry || typeof geometry !== "object" || Array.isArray(geometry)) return null;
+function publicPoint(
+  geometry: unknown,
+): { latitude: number; longitude: number } | null {
+  if (!geometry || typeof geometry !== "object" || Array.isArray(geometry))
+    return null;
   const candidate = geometry as { type?: unknown; coordinates?: unknown };
-  if (candidate.type !== "Point" || !Array.isArray(candidate.coordinates)) return null;
+  if (candidate.type !== "Point" || !Array.isArray(candidate.coordinates))
+    return null;
   const [longitude, latitude] = candidate.coordinates;
   if (
     typeof latitude !== "number" ||
@@ -103,7 +126,9 @@ function formatPublicCoordinate(value: number): string {
   return value.toFixed(5).replace(/\.?0+$/, "");
 }
 
-export function mapPublicCategories(categories: PublicCategory[]): GeologicalCategory[] {
+export function mapPublicCategories(
+  categories: PublicCategory[],
+): GeologicalCategory[] {
   const children = new Map<string, string[]>();
   categories.forEach((category) => {
     if (!category.parentSlug) return;
@@ -116,9 +141,13 @@ export function mapPublicCategories(categories: PublicCategory[]): GeologicalCat
     slug: category.slug,
     parentSlug: category.parentSlug ?? undefined,
     name: category.name,
-    eyebrow: category.parentSlug ? "Geological subcollection" : "Geological collection",
+    eyebrow: category.parentSlug
+      ? "Geological subcollection"
+      : "Geological collection",
     description:
-      category.summary ?? category.description ?? "No public summary is available yet.",
+      category.summary ??
+      category.description ??
+      "No public summary is available yet.",
     recordCount: category.recordCount,
     image: category.image
       ? {
@@ -128,8 +157,12 @@ export function mapPublicCategories(categories: PublicCategory[]): GeologicalCat
         }
       : missingCategoryImage(category.name),
     overview:
-      category.description ?? category.summary ?? "No public description is available yet.",
-    facts: [{ label: "Published records", value: String(category.recordCount) }],
+      category.description ??
+      category.summary ??
+      "No public description is available yet.",
+    facts: [
+      { label: "Published records", value: String(category.recordCount) },
+    ],
     themes: children.get(category.slug) ?? [],
     relatedCategorySlugs: [],
   }));
@@ -139,7 +172,9 @@ export function mapPublicRecord(
   record: PublicRecordSummary,
   categories: PublicCategory[],
 ): GeologicalRecord {
-  const categoryMap = new Map(categories.map((category) => [category.slug, category]));
+  const categoryMap = new Map(
+    categories.map((category) => [category.slug, category]),
+  );
   return {
     slug: recordRouteSlug(record),
     name: record.title,
@@ -161,28 +196,39 @@ export function mapPublicRecord(
 export function mapPublicRecordDetail(
   detail: PublicRecordDetail,
   categories: PublicCategory[],
-): { record: GeologicalRecord; detail: GeologicalRecordDetail; gallery: MediaAsset[] } {
+): {
+  record: GeologicalRecord;
+  detail: GeologicalRecordDetail;
+  gallery: MediaAsset[];
+} {
   const record = mapPublicRecord(detail, categories);
   const firstLocation = detail.locations.find(
     (location) => location.label || location.regionLabel,
   );
-  record.description = detail.description ?? "No public description is available yet.";
+  record.description =
+    detail.description ?? "No public description is available yet.";
   record.locality = firstLocation?.label ?? "";
   record.region = firstLocation?.regionLabel ?? "";
   record.sourceNote = detail.references.length
-    ? `${detail.references.length} verified ${detail.references.length === 1 ? "source" : "sources"}`
-    : "No verified references are displayed for this record.";
+    ? `${detail.references.length} ${detail.references.length === 1 ? "source" : "sources"}`
+    : "No references are displayed for this record.";
 
   const fieldItems = detail.fields.flatMap((field) => {
     const value = readableValue(field.value);
     return value
-      ? [{ label: field.unit ? `${field.label} (${field.unit})` : field.label, value }]
+      ? [
+          {
+            label: field.unit ? `${field.label} (${field.unit})` : field.label,
+            value,
+          },
+        ]
       : [];
   });
   const locationItems = detail.locations.flatMap((location, index) => {
     const name = [location.label, location.regionLabel]
-      .filter((value, position, values): value is string =>
-        Boolean(value) && values.indexOf(value) === position,
+      .filter(
+        (value, position, values): value is string =>
+          Boolean(value) && values.indexOf(value) === position,
       )
       .join(", ");
     const visibility =
@@ -215,12 +261,21 @@ export function mapPublicRecordDetail(
   });
   const references = detail.references.map(referencePresentation);
   const sections: GeologicalRecordDetail["sections"] = [];
-  if (fieldItems.length) sections.push({ kind: "facts", title: "Record details", items: fieldItems });
+  if (fieldItems.length)
+    sections.push({
+      kind: "facts",
+      title: "Record details",
+      items: fieldItems,
+    });
   if (locationItems.length) {
-    sections.push({ kind: "facts", title: "Published location", items: locationItems });
+    sections.push({
+      kind: "facts",
+      title: "Published location",
+      items: locationItems,
+    });
   }
   if (references.length) {
-    sections.push({ kind: "references", title: "Verified sources", items: references });
+    sections.push({ kind: "references", title: "Sources", items: references });
   }
 
   return {
@@ -230,6 +285,8 @@ export function mapPublicRecordDetail(
   };
 }
 
-export function emptyPublicRecordDetail(record: GeologicalRecord): GeologicalRecordDetail {
+export function emptyPublicRecordDetail(
+  record: GeologicalRecord,
+): GeologicalRecordDetail {
   return { recordSlug: record.slug, sections: [], related: [] };
 }

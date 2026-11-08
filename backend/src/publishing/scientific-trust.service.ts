@@ -7,7 +7,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { DataSource, EntityManager } from 'typeorm';
 import { MAX_LIST_LIMIT, MAX_LIST_OFFSET } from '../common/dto/pagination-query.dto';
-import { AddEvidenceDto, CreateReferenceDto } from './dto/reference.dto';
+import { AddEvidenceDto, CreateReferenceDto, UpdateReferenceDto } from './dto/reference.dto';
 import { CreateLocationDto } from './dto/location.dto';
 import { CreateRelationshipDto } from './dto/relationship.dto';
 import { CreateMapLayerDto } from './dto/map-layer.dto';
@@ -72,7 +72,7 @@ export class ScientificTrustService {
     const params = term ? [limit, offset, term] : [limit, offset];
     const rows = (await this.dataSource.query(
       `SELECT id, source_type AS "sourceType", title, publication_year AS "publicationYear",
-         identifier, verification_status AS "verificationStatus", updated_at AS "updatedAt"
+         identifier, updated_at AS "updatedAt"
        FROM scientific_references ${filter}
        ORDER BY updated_at DESC, id LIMIT $1 OFFSET $2`,
       params,
@@ -85,22 +85,41 @@ export class ScientificTrustService {
     return { items: rows, total: counts[0]?.total ?? 0, limit, offset };
   }
 
-  async verifyReference(actorUserId: string, referenceId: string) {
-    const references = (await this.dataSource.query(
-      `SELECT created_by_user_id FROM scientific_references WHERE id = $1`,
-      [referenceId],
-    )) as unknown as Array<{ created_by_user_id: string }>;
-    if (!references[0]) throw new NotFoundException('Reference not found.');
-    if (references[0].created_by_user_id === actorUserId) {
-      throw new BadRequestException('A reference creator cannot verify their own source.');
-    }
-    const result = (await this.dataSource.query(
-      `UPDATE scientific_references SET verification_status = 'verified',
-        verified_by_user_id = $2, updated_at = now()
-       WHERE id = $1 RETURNING id`,
-      [referenceId, actorUserId],
-    )) as unknown as IdRow[];
-    if (!result[0]) throw new NotFoundException('Reference not found.');
+  async updateReference(actorUserId: string, referenceId: string, input: UpdateReferenceDto) {
+    this.validateReference(input);
+    await this.dataSource.transaction(async (manager) => {
+      const result = (await manager.query(
+        `UPDATE scientific_references SET
+          source_type = $2, authors = $3::jsonb, title = $4, publication = $5,
+          publication_year = $6, identifier = $7, pages_or_figure = $8,
+          source_url = $9, rights_statement = $10, research_publication_id = $11,
+          updated_at = now()
+         WHERE id = $1 RETURNING id`,
+        [
+          referenceId,
+          input.sourceType,
+          JSON.stringify(input.authors),
+          input.title.trim(),
+          input.publication?.trim() || null,
+          input.publicationYear ?? null,
+          input.identifier?.trim() || null,
+          input.pagesOrFigure?.trim() || null,
+          input.sourceUrl ?? null,
+          input.rightsStatement?.trim() || null,
+          input.researchPublicationId ?? null,
+        ],
+      )) as unknown as IdRow[];
+      if (!result[0]) throw new NotFoundException('Reference not found.');
+      const records = (await manager.query(
+        `SELECT DISTINCT record_id AS id FROM record_evidence WHERE reference_id = $1`,
+        [referenceId],
+      )) as unknown as IdRow[];
+      for (const record of records) {
+        await this.touchAndAudit(manager, actorUserId, record.id, 'scientific-reference.updated', {
+          referenceId,
+        });
+      }
+    });
     return this.getReference(referenceId);
   }
 
@@ -163,17 +182,16 @@ export class ScientificTrustService {
     return { id, recordId, ...input };
   }
 
-  async listEvidence(recordId: string, actorUserId?: string) {
+  async listEvidence(recordId: string) {
     await this.assertRecordExists(this.dataSource, recordId);
     const rows = (await this.dataSource.query(
       `SELECT e.id, e.reference_id AS "referenceId", e.evidence_kind AS "evidenceKind",
          e.claim_key AS "claimKey", e.field_key AS "fieldKey", e.notes, e.created_at AS "createdAt",
          r.title AS "referenceTitle", r.source_type AS "sourceType",
-         r.verification_status AS "verificationStatus",
-         (r.created_by_user_id IS DISTINCT FROM $2::uuid) AS "canVerify"
+         r.updated_at AS "referenceUpdatedAt"
        FROM record_evidence e JOIN scientific_references r ON r.id = e.reference_id
        WHERE e.record_id = $1 ORDER BY e.created_at, e.id`,
-      [recordId, actorUserId ?? null],
+      [recordId],
     )) as unknown as Record<string, unknown>[];
     return { items: rows };
   }
@@ -401,30 +419,29 @@ export class ScientificTrustService {
         ), defaults AS (SELECT 1 AS minimum, '[]'::jsonb AS kinds)
         SELECT p.minimum, p.kinds,
           (SELECT count(DISTINCT e.reference_id)::int FROM record_evidence e
-           JOIN scientific_references r ON r.id = e.reference_id
-           WHERE e.record_id = $1 AND r.verification_status = 'verified') AS verified_count
+           WHERE e.record_id = $1) AS reference_count
         FROM (SELECT * FROM policy UNION ALL SELECT * FROM defaults WHERE NOT EXISTS (SELECT 1 FROM policy)) p`,
         [recordId, record.record_type_id],
-      )) as unknown as Array<{ minimum: number; kinds: string[]; verified_count: number }>;
+      )) as unknown as Array<{ minimum: number; kinds: string[]; reference_count: number }>;
       const policy = evidence[0];
-      if ((policy?.verified_count ?? 0) < (policy?.minimum ?? 1)) {
+      if ((policy?.reference_count ?? 0) < (policy?.minimum ?? 1)) {
         issues.push({
           field: 'evidence',
-          code: 'verified_reference_required',
-          message: `At least ${policy?.minimum ?? 1} verified reference is required.`,
+          code: 'reference_required',
+          message: `At least ${policy?.minimum ?? 1} reference is required.`,
         });
       }
       for (const kind of policy?.kinds ?? []) {
         const kindRows = (await executor.query(
-          `SELECT 1 FROM record_evidence e JOIN scientific_references r ON r.id = e.reference_id
-           WHERE e.record_id = $1 AND e.evidence_kind = $2 AND r.verification_status = 'verified' LIMIT 1`,
+          `SELECT 1 FROM record_evidence e
+           WHERE e.record_id = $1 AND e.evidence_kind = $2 LIMIT 1`,
           [recordId, kind],
         )) as unknown as IdRow[];
         if (!kindRows[0])
           issues.push({
             field: 'evidence',
             code: 'kind_required',
-            message: `Verified ${kind} evidence is required.`,
+            message: `${kind} evidence is required.`,
           });
       }
     }
@@ -474,9 +491,7 @@ export class ScientificTrustService {
     if (
       primaryCount === 1 &&
       media[0]?.primary_processing_status &&
-      !['approved', 'rejected', 'failed', 'archived'].includes(
-        media[0].primary_processing_status,
-      )
+      !['approved', 'rejected', 'failed', 'archived'].includes(media[0].primary_processing_status)
     ) {
       issues.push({
         field: 'media',
@@ -536,13 +551,26 @@ export class ScientificTrustService {
 
   async getReference(id: string) {
     const rows = (await this.dataSource.query(
-      `SELECT id, source_type, authors, title, publication, publication_year, identifier,
-        pages_or_figure, source_url, rights_statement, verification_status, created_at, updated_at
+      `SELECT id, source_type AS "sourceType", authors, title, publication,
+        publication_year AS "publicationYear", identifier, pages_or_figure AS "pagesOrFigure",
+        source_url AS "sourceUrl", rights_statement AS "rightsStatement", created_at AS "createdAt",
+        updated_at AS "updatedAt"
        FROM scientific_references WHERE id = $1`,
       [id],
     )) as unknown as Record<string, unknown>[];
     if (!rows[0]) throw new NotFoundException('Reference not found.');
     return rows[0];
+  }
+
+  private validateReference(input: CreateReferenceDto) {
+    if (
+      !input.identifier &&
+      !input.sourceUrl &&
+      !input.publication &&
+      !input.researchPublicationId
+    ) {
+      throw new BadRequestException('A reference needs an identifier, HTTPS URL, or publication.');
+    }
   }
 
   private async assertRecordExists(executor: DataSource | EntityManager, id: string) {

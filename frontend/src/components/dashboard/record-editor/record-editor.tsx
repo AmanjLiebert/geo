@@ -79,9 +79,7 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
     mode === "create" ? "structure" : "fields",
   );
   const [activeWorkspaceSection, setActiveWorkspaceSection] =
-    useState<RecordWorkspaceSectionId>(
-      "record",
-    );
+    useState<RecordWorkspaceSectionId>("record");
 
   const [categories, setCategories] = useState<StructureCategory[]>([]);
   const [recordTypes, setRecordTypes] = useState<CategoryRecordType[]>([]);
@@ -529,7 +527,10 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
                 <span className={styles.bannerTitle}>Session expired</span>
                 <p className={styles.bannerText}>{error.message}</p>
                 <div style={{ marginTop: "12px" }}>
-                  <Link href={buildRecordsSignInHref(workspaceHref)} className={styles.button}>
+                  <Link
+                    href={buildRecordsSignInHref(workspaceHref)}
+                    className={styles.button}
+                  >
                     Sign in to continue
                   </Link>
                 </div>
@@ -752,11 +753,8 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
                 className={styles.workspacePanel}
               >
                 <div className={styles.stageStack}>
-                <div
-                    className={styles.stageIntro}
-                    role="note"
-                  >
-                    Add one verified source and one approved main image before review.
+                  <div className={styles.stageIntro} role="note">
+                    Add one source and one approved main image before review.
                   </div>
                   <RecordEvidence
                     recordId={recordDetail.id}
@@ -783,30 +781,31 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
                 hidden={activeWorkspaceSection !== "optional"}
                 className={styles.workspacePanel}
               >
-                  <div className={styles.stageStack}>
-                    <div className={styles.stageIntro} role="note">
-                      These sections are optional. Add them only when they improve the record.
-                    </div>
-                    <RecordLocations
-                      recordId={recordDetail.id}
-                      readOnly={isReadOnly}
-                      onCountChange={(count) =>
-                        updateSectionCount("location", count)
-                      }
-                    />
-                    <RecordRelationships
-                      recordId={recordDetail.id}
-                      readOnly={isReadOnly}
-                      loadCandidates={activeWorkspaceSection === "optional"}
-                      onCountChange={(count) =>
-                        updateSectionCount("related", count)
-                      }
-                    />
+                <div className={styles.stageStack}>
+                  <div className={styles.stageIntro} role="note">
+                    These sections are optional. Add them only when they improve
+                    the record.
                   </div>
+                  <RecordLocations
+                    recordId={recordDetail.id}
+                    readOnly={isReadOnly}
+                    onCountChange={(count) =>
+                      updateSectionCount("location", count)
+                    }
+                  />
+                  <RecordRelationships
+                    recordId={recordDetail.id}
+                    readOnly={isReadOnly}
+                    loadCandidates={activeWorkspaceSection === "optional"}
+                    onCountChange={(count) =>
+                      updateSectionCount("related", count)
+                    }
+                  />
                 </div>
+              </div>
 
               {recordDetail.status !== "archived" &&
-                  activeWorkspaceSection === "review" && (
+                activeWorkspaceSection === "review" && (
                   <div
                     id="record-panel-review"
                     role="tabpanel"

@@ -6,7 +6,6 @@ export type ReferenceChoice = {
   title: string;
   sourceType: string;
   identifier: string | null;
-  verificationStatus: string;
 };
 export type RecordEvidenceItem = {
   id: string;
@@ -16,8 +15,6 @@ export type RecordEvidenceItem = {
   evidenceKind: string;
   fieldKey: string | null;
   notes: string | null;
-  verificationStatus: string;
-  canVerify: boolean;
 };
 export type RecordLocationItem = {
   id: string;
@@ -44,7 +41,9 @@ function invalid(): never {
   );
 }
 
-function geoPoint(value: unknown): { latitude: number; longitude: number } | null {
+function geoPoint(
+  value: unknown,
+): { latitude: number; longitude: number } | null {
   if (
     !object(value) ||
     value.type !== "Point" ||
@@ -73,20 +72,34 @@ export async function searchReferences(
       typeof item.id !== "string" ||
       typeof item.title !== "string" ||
       typeof item.sourceType !== "string" ||
-      (item.identifier !== null && typeof item.identifier !== "string") ||
-      typeof item.verificationStatus !== "string"
+      (item.identifier !== null && typeof item.identifier !== "string")
     )
       return invalid();
     return item as ReferenceChoice;
   });
 }
 
-export async function verifyReference(referenceId: string): Promise<void> {
+export type ReferenceDetails = {
+  id: string;
+  sourceType: string;
+  authors: Array<{ name: string }>;
+  title: string;
+  publication: string | null;
+  publicationYear: number | null;
+  identifier: string | null;
+  pagesOrFigure: string | null;
+  sourceUrl: string | null;
+  rightsStatement: string | null;
+};
+
+export async function getReference(
+  referenceId: string,
+): Promise<ReferenceDetails> {
   const response = await requestRecordResource(
-    `/api/v1/references/${encodeURIComponent(referenceId)}/verify`,
-    "POST",
+    `/api/v1/references/${encodeURIComponent(referenceId)}`,
   );
-  if (!object(response) || typeof response.id !== "string") invalid();
+  if (!object(response) || typeof response.id !== "string") return invalid();
+  return response as ReferenceDetails;
 }
 
 export async function createReference(data: {
@@ -109,6 +122,18 @@ export async function createReference(data: {
   return response.id;
 }
 
+export async function updateReference(
+  referenceId: string,
+  data: Parameters<typeof createReference>[0],
+): Promise<void> {
+  const response = await requestRecordResource(
+    `/api/v1/references/${encodeURIComponent(referenceId)}`,
+    "PATCH",
+    data,
+  );
+  if (!object(response) || typeof response.id !== "string") invalid();
+}
+
 export async function listRecordEvidence(
   recordId: string,
 ): Promise<RecordEvidenceItem[]> {
@@ -125,9 +150,7 @@ export async function listRecordEvidence(
       typeof item.sourceType !== "string" ||
       typeof item.evidenceKind !== "string" ||
       (item.fieldKey !== null && typeof item.fieldKey !== "string") ||
-      (item.notes !== null && typeof item.notes !== "string") ||
-      typeof item.verificationStatus !== "string" ||
-      typeof item.canVerify !== "boolean"
+      (item.notes !== null && typeof item.notes !== "string")
     )
       return invalid();
     return item as RecordEvidenceItem;
