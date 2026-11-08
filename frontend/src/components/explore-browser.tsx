@@ -193,6 +193,12 @@ function RecordReader({
   const image = gallery[activeImage] ?? gallery[0];
   const previousImage = gallery.length ? (activeImage === 0 ? gallery.length - 1 : activeImage - 1) : 0;
   const nextImage = gallery.length ? (activeImage === gallery.length - 1 ? 0 : activeImage + 1) : 0;
+  const factSections = detail.sections.filter((section) => section.kind === "facts");
+  const keyFactSections = factSections.filter((section) => section.title === "Key facts");
+  const contextFactSections = factSections.filter((section) => section.title !== "Key facts");
+  const referenceSections = detail.sections.filter((section) => section.kind === "references");
+  const narrativeSections = detail.sections.filter((section) => !["facts", "references", "gallery"].includes(section.kind));
+  const sourceCount = referenceSections.reduce((total, section) => total + section.items.length, 0);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -213,19 +219,14 @@ function RecordReader({
     </nav>
 
     <header className="catalog-record-page-header">
+      {record.categoryTrail?.length ? <nav className="catalog-record-breadcrumb" aria-label="Record classification">{record.categoryTrail.join(" / ")}</nav> : null}
       <div className="catalog-record-kicker"><NeoBadge>{record.recordType}</NeoBadge><NeoBadge variant="clay">{record.status}</NeoBadge></div>
       <h2 id="catalog-reader-title">{record.name}</h2>
       <p>{record.summary}</p>
-      {(record.locality || record.region || record.geologicalAge || record.formation) && <dl>
-        {record.locality && <div><dt>Locality</dt><dd>{record.locality}</dd></div>}
-        {record.region && <div><dt>Region</dt><dd>{record.region}</dd></div>}
-        {record.geologicalAge && <div><dt>Age</dt><dd>{record.geologicalAge}</dd></div>}
-        {record.formation && <div><dt>Formation</dt><dd>{record.formation}</dd></div>}
-      </dl>}
     </header>
 
     <div className="catalog-record-reading-layout">
-      <aside className="catalog-record-gallery-card" aria-label={`${record.name} media`}>
+      <figure className="catalog-record-gallery-card" aria-label={`${record.name} media`}>
         <header><span>Record image</span>{image && <strong>{activeImage + 1} / {gallery.length}</strong>}</header>
         {image ? <><div className="catalog-record-gallery-stage">
           <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 820px) 100vw, 420px" />
@@ -240,20 +241,21 @@ function RecordReader({
         </div>}
         <p>{image.caption}</p>
         {image.credit && <small>{image.credit}</small>}</> : <div className="catalog-record-gallery-stage catalog-record-gallery-stage--empty"><span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No published image</small></span></div>}
-      </aside>
+      </figure>
 
       <article className="catalog-record-article">
-        <section className="catalog-record-introduction"><p className="eyebrow">Record overview</p><h3>Reading the evidence</h3><p>{record.description}</p></section>
-        {detail.discovery && <section><p className="eyebrow">Discovery</p><h3>How this record was framed</h3><p>{detail.discovery}</p></section>}
-        {detail.formationContext && <section><p className="eyebrow">Geological context</p><h3>What the evidence supports</h3><p>{detail.formationContext}</p></section>}
-        {detail.sections.map((section, index) => {
-          if (section.kind === "gallery") return null;
-          if (section.kind === "facts") return <section key={`${section.title}-${index}`}><p className="eyebrow">Structured evidence</p><h3>{section.title}</h3><dl className="catalog-reader-facts">{section.items.map((item, itemIndex) => <div key={`${item.label}-${itemIndex}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>;
-          if (section.kind === "classification") return <section key={`${section.title}-${index}`}><p className="eyebrow">Classification</p><h3>{section.title}</h3><ul className="catalog-reader-classification">{section.items.map((item) => <li key={item}>{item}</li>)}</ul></section>;
-          if (section.kind === "references") return <section key={`${section.title}-${index}`}><p className="eyebrow">References</p><h3>{section.title}</h3><ReferenceList items={section.items} /></section>;
-          return <section key={`${section.title}-${index}`}><p className="eyebrow">Interpretation</p><h3>{section.title}</h3>{section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section>;
-        })}
-        <section><p className="eyebrow">Publication</p><h3>Published record</h3><p>{record.sourceNote}</p>{record.publishedAt && <p>Published {new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(record.publishedAt))}.</p>}</section>
+        <section className="catalog-record-summary-card">
+          <div className="catalog-record-introduction"><p className="eyebrow">About this record</p><h3>What it describes</h3><p>{record.description}</p></div>
+          {keyFactSections.map((section) => <div className="catalog-record-key-facts" key={section.title}><div><p className="eyebrow">At a glance</p><h3>{section.title}</h3></div><dl className="catalog-reader-facts">{section.items.map((item, itemIndex) => <div key={`${item.label}-${itemIndex}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></div>)}
+          {sourceCount > 0 && <details className="catalog-record-source-disclosure"><summary><span><strong>{sourceCount} {sourceCount === 1 ? "source" : "sources"}</strong><small>Evidence used for this record</small></span><span>View sources</span></summary><div>{referenceSections.map((section, index) => <ReferenceList items={section.items} key={`${section.title}-${index}`} />)}</div></details>}
+        </section>
+        {contextFactSections.map((section, index) => <section className="catalog-record-context-card" key={`${section.title}-${index}`}><p className="eyebrow">Place and context</p><h3>{section.title}</h3><dl className="catalog-reader-facts">{section.items.map((item, itemIndex) => <div key={`${item.label}-${itemIndex}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>)}
+        {detail.discovery && <section className="catalog-record-context-card"><p className="eyebrow">Discovery</p><h3>How this record was framed</h3><p>{detail.discovery}</p></section>}
+        {detail.formationContext && <section className="catalog-record-context-card"><p className="eyebrow">Geological context</p><h3>What the evidence supports</h3><p>{detail.formationContext}</p></section>}
+        {narrativeSections.map((section, index) => section.kind === "classification"
+          ? <section className="catalog-record-context-card" key={`${section.title}-${index}`}><p className="eyebrow">Classification</p><h3>{section.title}</h3><ul className="catalog-reader-classification">{section.items.map((item) => <li key={item}>{item}</li>)}</ul></section>
+          : section.kind === "prose" ? <section className="catalog-record-context-card" key={`${section.title}-${index}`}><p className="eyebrow">Interpretation</p><h3>{section.title}</h3>{section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section> : null)}
+        <footer className="catalog-record-publication-note"><strong>Published scientific record</strong><span>{record.sourceNote}</span>{record.publishedAt && <time dateTime={record.publishedAt}>{new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(record.publishedAt))}</time>}</footer>
       </article>
     </div>
 

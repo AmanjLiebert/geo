@@ -84,9 +84,6 @@ function referencePresentation(
     reference.publication,
     reference.identifier,
     reference.pagesOrFigure,
-    reference.evidenceKind
-      ? `Evidence: ${reference.evidenceKind.replaceAll("_", " ")}`
-      : null,
     reference.rightsStatement ? `Rights: ${reference.rightsStatement}` : null,
   ]
     .filter(Boolean)
@@ -175,11 +172,16 @@ export function mapPublicRecord(
   const categoryMap = new Map(
     categories.map((category) => [category.slug, category]),
   );
+  const path = categoryPath(record.category.slug, categoryMap);
   return {
     slug: recordRouteSlug(record),
     name: record.title,
     category: record.category.slug,
-    categoryPath: categoryPath(record.category.slug, categoryMap),
+    categoryPath: path,
+    categoryTrail: [...path]
+      .reverse()
+      .map((slug) => categoryMap.get(slug)?.name)
+      .filter((name): name is string => Boolean(name)),
     recordType: record.recordType,
     recordId: record.publicId,
     summary: record.summary ?? "No public summary is available yet.",
@@ -264,13 +266,13 @@ export function mapPublicRecordDetail(
   if (fieldItems.length)
     sections.push({
       kind: "facts",
-      title: "Record details",
+      title: "Key facts",
       items: fieldItems,
     });
   if (locationItems.length) {
     sections.push({
       kind: "facts",
-      title: "Published location",
+      title: "Where it was recorded",
       items: locationItems,
     });
   }

@@ -37,6 +37,7 @@ export interface GeologicalRecord {
   name: string;
   category: string;
   categoryPath?: string[];
+  categoryTrail?: string[];
   recordType: string;
   recordId: string;
   summary: string;

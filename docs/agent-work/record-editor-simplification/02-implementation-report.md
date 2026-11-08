@@ -63,3 +63,19 @@ Correction verification actually run:
 - Removed the recent-login/step-up identity gate from scientific-record publish and unpublish actions. A currently signed-in teacher/admin must still have `PUBLISH_SCIENTIFIC_CONTENT`, pass CSRF protection, and all readiness/database publication rules; the action remains audited.
 - Removed the unreachable identity-confirmation prompt from the record Review panel and replaced the stale “verified evidence” explanation with “source.”
 - Category publication and translation-review security were not changed.
+
+## Visitor record reading-path correction — 2026-11-08
+
+- Reorganized the public record into one connected reading path: classification, title and summary, primary image, plain-language description, key facts, optional place/context, sources, and compact publication metadata.
+- Added the human-readable category trail so visitors can recognize where the record belongs without decoding internal slugs.
+- Replaced developer-facing labels such as “Structured evidence” and raw evidence-kind text with visitor language. Sources remain available in a clearly labelled progressive disclosure instead of competing with the main explanation.
+- Kept the existing public projection and safety boundaries unchanged. The page uses only already-public fields, public-safe locations, projected sources, and the approved primary image; no private coordinates, storage data, or unpublished relationships were added.
+- Added responsive layout rules for desktop, tablet, and narrow screens, including a 44px source-disclosure target on mobile.
+
+Correction verification actually run:
+
+- Full frontend suite: 30 files / 325 tests passed before the final semantic breadcrumb correction.
+- Focused public record tests after the final correction: 2 files / 4 tests passed.
+- Frontend type check, lint, and production build: passed; the existing Atkinson Hyperlegible Next fallback-font warning remains.
+- Local Docker frontend image rebuilt and the container became healthy. The public record was inspected live at desktop and narrow widths; reading order and semantic labels were also checked through the accessibility tree.
+- `git diff --check`: passed (Git emitted only the repository's LF/CRLF conversion warnings).

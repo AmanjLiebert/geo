@@ -60,6 +60,7 @@ describe("public Explore mapping", () => {
   it("makes descendant records discoverable through their root category path", () => {
     const record = mapPublicRecord(summary, categories);
     expect(record.categoryPath).toEqual(["igneous-rocks", "rocks"]);
+    expect(record.categoryTrail).toEqual(["Rocks", "Igneous rocks"]);
     expect(record.status).toBe("Published");
     expect(record.image.src).toBe("");
     expect(record.summary).toBe("No public summary is available yet.");
@@ -109,8 +110,8 @@ describe("public Explore mapping", () => {
     const mapped = mapPublicRecordDetail(detail, categories);
     expect(mapped.record.region).toBe("Erbil Governorate");
     expect(mapped.detail.sections.map((section) => section.title)).toEqual([
-      "Record details",
-      "Published location",
+      "Key facts",
+      "Where it was recorded",
       "Sources",
     ]);
     expect(mapped.detail.related).toEqual([]);
@@ -118,7 +119,7 @@ describe("public Explore mapping", () => {
     const presentation = JSON.stringify(mapped.detail.sections);
     expect(presentation).toContain("37.1, 43.2");
     expect(presentation).toContain("About 10,000 metres");
-    expect(presentation).toContain("Evidence: supporting");
+    expect(presentation).not.toContain("Evidence: supporting");
     expect(presentation).not.toContain("44.99999");
   });
 });
