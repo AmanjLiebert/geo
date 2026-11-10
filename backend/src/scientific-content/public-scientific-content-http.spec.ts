@@ -24,6 +24,7 @@ describe('public scientific HTTP boundary', () => {
     getRecord: vi.fn(),
     getCategoryImageAssetId: vi.fn(),
     getRecordImageAssetId: vi.fn(),
+    getRecordAttachmentImageAssetId: vi.fn(),
   };
   const media = { publicInlineImage: vi.fn() };
   const sessions = { authenticate: vi.fn() };
@@ -74,6 +75,7 @@ describe('public scientific HTTP boundary', () => {
     content.getRecord.mockResolvedValue({ publicId });
     content.getCategoryImageAssetId.mockResolvedValue('image-1');
     content.getRecordImageAssetId.mockResolvedValue('image-1');
+    content.getRecordAttachmentImageAssetId.mockResolvedValue('image-2');
     media.publicInlineImage.mockResolvedValue({
       stream: Readable.from(Buffer.from('public-image')),
       contentType: 'image/webp',
@@ -143,6 +145,18 @@ describe('public scientific HTTP boundary', () => {
     expect(response.body).toBe('public-image');
     expect(content.getRecordImageAssetId).toHaveBeenCalledWith(publicId);
     expect(media.publicInlineImage).toHaveBeenCalledWith('image-1');
+  });
+
+  it('streams an attached image only after record and attachment eligibility succeed', async () => {
+    const mediaAssetId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/v1/public/scientific/records/${publicId}/images/${mediaAssetId}`,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['cache-control']).toBe('private, no-store');
+    expect(content.getRecordAttachmentImageAssetId).toHaveBeenCalledWith(publicId, mediaAssetId);
+    expect(media.publicInlineImage).toHaveBeenCalledWith('image-2');
   });
 
   it('does not call media delivery when a category image is not publicly eligible', async () => {

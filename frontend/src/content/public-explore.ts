@@ -9,6 +9,8 @@ import type {
   GeologicalRecord,
   GeologicalRecordDetail,
   MediaAsset,
+  RecordMediaItem,
+  RelatedRecordItem,
 } from "./types";
 
 const missingCategoryImage = (name: string): MediaAsset => ({
@@ -262,6 +264,53 @@ export function mapPublicRecordDetail(
     return facts;
   });
   const references = detail.references.map(referencePresentation);
+  const mediaItems: RecordMediaItem[] = detail.media.map((item) => ({
+    id: item.id,
+    kind: item.kind,
+    purpose: item.purpose.replaceAll("_", " "),
+    caption:
+      item.caption ??
+      item.description ??
+      `${item.kind[0]?.toUpperCase()}${item.kind.slice(1)} attached to this record`,
+    description: item.description ?? undefined,
+    rightsStatement: item.rightsStatement,
+    licence: item.licence ?? undefined,
+    credit: item.credit ?? undefined,
+    image:
+      item.kind === "image" && item.viewEndpoint
+        ? {
+            src: item.viewEndpoint,
+            alt: item.altText ?? "",
+            caption:
+              item.caption ?? item.description ?? "Published record image",
+            credit: item.credit ?? item.licence ?? undefined,
+          }
+        : undefined,
+    isPrimary: item.isPrimary,
+  }));
+  const relatedRecords: RelatedRecordItem[] = detail.relatedRecords.map(
+    (related) => ({
+      slug: related.slug ?? related.publicId,
+      category: related.category.slug,
+      title: related.title,
+      summary: related.summary ?? "No public summary is available yet.",
+      recordType: related.recordType,
+      relationshipType: related.relationshipType.replaceAll("_", " "),
+      notes: related.notes ?? undefined,
+      image: related.image
+        ? {
+            src: related.image.viewEndpoint,
+            alt: related.image.altText ?? "",
+            caption:
+              related.image.caption ??
+              related.image.description ??
+              "Related published record",
+            credit:
+              related.image.credit ?? related.image.licence ?? undefined,
+          }
+        : undefined,
+    }),
+  );
   const sections: GeologicalRecordDetail["sections"] = [];
   if (fieldItems.length)
     sections.push({
@@ -282,8 +331,21 @@ export function mapPublicRecordDetail(
 
   return {
     record,
-    detail: { recordSlug: record.slug, sections, related: [] },
-    gallery: record.image.src ? [record.image] : [],
+    detail: {
+      recordSlug: record.slug,
+      sections,
+      related: relatedRecords.map((related) => ({
+        slug: related.slug,
+        reason: related.relationshipType,
+      })),
+      media: mediaItems,
+      relatedRecords,
+    },
+    gallery: mediaItems.some((item) => item.image)
+      ? mediaItems.flatMap((item) => (item.image ? [item.image] : []))
+      : record.image.src
+        ? [record.image]
+        : [],
   };
 }
 

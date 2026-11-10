@@ -69,6 +69,30 @@ export interface PublicRecordDetail extends PublicRecordSummary {
     rightsStatement: string | null;
     evidenceKind: string;
   }>;
+  media: Array<{
+    id: string;
+    kind: "image" | "document" | "video";
+    purpose: string;
+    caption: string | null;
+    description: string | null;
+    altText: string | null;
+    isPrimary: boolean;
+    rightsStatement: string;
+    licence: string | null;
+    credit: string | null;
+    viewEndpoint: string | null;
+  }>;
+  relatedRecords: Array<{
+    publicId: string;
+    slug: string | null;
+    title: string;
+    summary: string | null;
+    category: { slug: string; name: string };
+    recordType: string;
+    relationshipType: string;
+    notes: string | null;
+    image: PublicImagePresentation | null;
+  }>;
 }
 
 interface PublicList<T> {
@@ -143,7 +167,13 @@ function isPublicRecordDetail(value: unknown): value is PublicRecordDetail {
   if (!isObject(value) || !isPublicRecordSummary(value) || !isNullableString(value.description)) {
     return false;
   }
-  if (!Array.isArray(value.fields) || !Array.isArray(value.locations) || !Array.isArray(value.references)) {
+  if (
+    !Array.isArray(value.fields) ||
+    !Array.isArray(value.locations) ||
+    !Array.isArray(value.references) ||
+    !Array.isArray(value.media) ||
+    !Array.isArray(value.relatedRecords)
+  ) {
     return false;
   }
   const fieldsValid = value.fields.every(
@@ -180,7 +210,44 @@ function isPublicRecordDetail(value: unknown): value is PublicRecordDetail {
       isNullableString(reference.rightsStatement) &&
       typeof reference.evidenceKind === "string",
   );
-  return fieldsValid && locationsValid && referencesValid;
+  const mediaValid = value.media.every(
+    (item) =>
+      isObject(item) &&
+      typeof item.id === "string" &&
+      PUBLIC_ID.test(item.id) &&
+      ["image", "document", "video"].includes(typeof item.kind === "string" ? item.kind : "") &&
+      typeof item.purpose === "string" &&
+      isNullableString(item.caption) &&
+      isNullableString(item.description) &&
+      isNullableString(item.altText) &&
+      typeof item.isPrimary === "boolean" &&
+      typeof item.rightsStatement === "string" &&
+      isNullableString(item.licence) &&
+      isNullableString(item.credit) &&
+      (item.viewEndpoint === null ||
+        (typeof item.viewEndpoint === "string" &&
+          item.viewEndpoint.startsWith(`${PUBLIC_API_PREFIX}/`) &&
+          !item.viewEndpoint.includes("?"))),
+  );
+  const relatedValid = value.relatedRecords.every(
+    (related) =>
+      isObject(related) &&
+      typeof related.publicId === "string" &&
+      PUBLIC_ID.test(related.publicId) &&
+      (related.slug === null ||
+        (typeof related.slug === "string" && PUBLIC_SLUG.test(related.slug))) &&
+      typeof related.title === "string" &&
+      isNullableString(related.summary) &&
+      isObject(related.category) &&
+      typeof related.category.slug === "string" &&
+      PUBLIC_SLUG.test(related.category.slug) &&
+      typeof related.category.name === "string" &&
+      typeof related.recordType === "string" &&
+      typeof related.relationshipType === "string" &&
+      isNullableString(related.notes) &&
+      isPublicImage(related.image, true),
+  );
+  return fieldsValid && locationsValid && referencesValid && mediaValid && relatedValid;
 }
 
 function validateList<T>(

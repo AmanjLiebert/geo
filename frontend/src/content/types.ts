@@ -87,6 +87,30 @@ export interface ContentReference {
   href?: string;
 }
 
+export interface RecordMediaItem {
+  id: string;
+  kind: "image" | "document" | "video";
+  purpose: string;
+  caption: string;
+  description?: string;
+  rightsStatement: string;
+  licence?: string;
+  credit?: string;
+  image?: MediaAsset;
+  isPrimary: boolean;
+}
+
+export interface RelatedRecordItem {
+  slug: string;
+  category: string;
+  title: string;
+  summary: string;
+  recordType: string;
+  relationshipType: string;
+  notes?: string;
+  image?: MediaAsset;
+}
+
 export type RecordDetailSection =
   | { kind: "prose"; title: string; body: string[] }
   | { kind: "facts"; title: string; items: Array<{ label: string; value: string }> }
@@ -100,6 +124,8 @@ export interface GeologicalRecordDetail {
   formationContext?: string;
   sections: RecordDetailSection[];
   related: Array<{ slug: string; reason: string }>;
+  media?: RecordMediaItem[];
+  relatedRecords?: RelatedRecordItem[];
 }
 
 export interface ResearchSection {

@@ -111,3 +111,24 @@ Correction verification actually run:
 - Frontend production build passed in Docker; the existing Atkinson Hyperlegible Next fallback-font warning remains.
 - The final Docker frontend was inspected live using the user's `stratigraphy-units/asasa` record at desktop and 390 × 844. The one-record state showed no disabled navigation, the homepage card appeared within the first viewport, and the reading board began immediately beneath it.
 - A 24-record collection was also inspected at 390 × 844; compact Previous/Next controls, the image action, title, summary, and category context remained visible without horizontal overflow.
+
+### Scientific dossier and public projection correction — 2026-11-10
+
+- Replaced the promotional image-banner composition with a compact scientific identity header, a dedicated evidence/overview board, and one continuous dossier for facts, locations, sources, supporting media, relationships, and publication context.
+- The primary image and every supporting image now use a true `1:1` frame with `object-fit: contain`; the record image is no longer cropped to fill a hero banner. Captions, rights, licence, and credit remain next to the evidence they describe.
+- Expanded the public record contract to include every approved, rights-cleared record attachment and relationships to published records. Additional images receive a record-scoped public derivative endpoint. Document/video metadata is readable, but no storage identifier, original filename, or unsafe direct-download route is exposed.
+- Related-record projection is limited to published records under active, published categories and active record types. Public-safe location projection, publication checks, media approval, and rights checks remain enforced.
+- Sources are now visible as part of the dossier instead of hidden behind a disclosure. Empty optional groups are omitted so a sparse record stays concise while a complete record remains fully readable.
+- Preserved the shared neo-brutalist card grammar and action language while removing oversized promotional treatment and fixing the legacy grid-area collision found during live inspection.
+
+Correction verification actually run:
+
+- Focused public API/HTTP tests: 2 files / 18 tests passed.
+- Focused frontend public-contract, mapping, and reader tests: 3 files / 9 tests passed before the final square-frame assertion was added; the focused reader test was rerun after that assertion.
+- Full backend suite: 51 files / 410 tests passed.
+- Full frontend suite: 30 files / 325 tests passed.
+- Backend and frontend type checks and affected-file lint: passed.
+- Backend and frontend production builds: passed; the existing Atkinson Hyperlegible Next fallback-font warning remains.
+- Local Docker API and frontend images rebuilt successfully; API and frontend containers became healthy.
+- The rebuilt record was inspected live at desktop and iPhone 16 width. Identity, uncropped square image, overview, facts, public-safe location, visible sources, and publication metadata formed one readable path without horizontal overflow.
+- No push, merge, deployment, schema change, migration, shared-database operation, or public document/video download endpoint was added.

@@ -49,6 +49,8 @@ describe("public scientific API", () => {
         fields: [{ label: "Colour", dataType: "text", unit: null, value: "grey" }],
         locations: [],
         references: [],
+        media: [],
+        relatedRecords: [],
       }),
     ).toBe(true);
   });
@@ -95,6 +97,8 @@ describe("public scientific API", () => {
         fields: [{ label: "Colour", dataType: "text", unit: null }],
         locations: [],
         references: [],
+        media: [],
+        relatedRecords: [],
       }),
     ).toBe(false);
     expect(
@@ -117,6 +121,8 @@ describe("public scientific API", () => {
             evidenceKind: "supporting",
           },
         ],
+        media: [],
+        relatedRecords: [],
       }),
     ).toBe(false);
   });

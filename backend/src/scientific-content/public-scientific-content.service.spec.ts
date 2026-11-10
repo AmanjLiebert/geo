@@ -147,6 +147,40 @@ describe('PublicScientificContentService', () => {
           rights_statement: 'Citation permitted',
           evidence_kind: 'identification',
         },
+      ])
+      .mockResolvedValueOnce([
+        {
+          media_asset_id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+          purpose: 'gallery',
+          caption: 'Second view',
+          description: 'A second approved image.',
+          alt_text: 'Second view of the specimen',
+          position: 1,
+          is_primary: false,
+          media_kind: 'image',
+          rights_statement: 'Educational use',
+          licence: 'CC BY 4.0',
+          credit: 'Geo-Kurdistan',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          relationship_type: 'similar_to',
+          notes: 'Compare textures.',
+          public_id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+          slug: 'related-record',
+          title: 'Related record',
+          summary: 'Related published geology.',
+          category_slug: 'rocks',
+          category_name: 'Rocks',
+          record_type_name: 'Rock specimen',
+          image_ready: false,
+          image_caption: null,
+          image_description: null,
+          image_alt_text: null,
+          image_licence: null,
+          image_credit: null,
+        },
       ]);
     const service = new PublicScientificContentService({ query } as unknown as DataSource);
 
@@ -165,8 +199,20 @@ describe('PublicScientificContentService', () => {
       },
     ]);
     expect(result.references[0]?.authors).toEqual(['A. Geologist']);
+    expect(result.media[0]).toMatchObject({
+      kind: 'image',
+      caption: 'Second view',
+      viewEndpoint: `/api/v1/public/scientific/records/${publicId}/images/cccccccc-cccc-4ccc-8ccc-cccccccccccc`,
+    });
+    expect(result.relatedRecords[0]).toMatchObject({
+      slug: 'related-record',
+      relationshipType: 'similar_to',
+      image: null,
+    });
     const locationSql = query.mock.calls[2]?.[0] as string;
     const referenceSql = query.mock.calls[3]?.[0] as string;
+    const mediaSql = query.mock.calls[4]?.[0] as string;
+    const relatedSql = query.mock.calls[5]?.[0] as string;
     expect(locationSql).toContain('FROM public_record_locations');
     expect(locationSql).toContain("visibility IN ('public', 'approximate')");
     expect(locationSql).not.toContain('exact_geometry');
@@ -174,6 +220,12 @@ describe('PublicScientificContentService', () => {
     expect(referenceSql).not.toContain('verification_status');
     expect(referenceSql).not.toContain('reviewer_notes');
     expect(referenceSql).not.toContain('created_by_user_id');
+    expect(mediaSql).toContain("m.processing_status = 'approved'");
+    expect(mediaSql).not.toContain('storage_key');
+    expect(mediaSql).not.toContain('original_filename');
+    expect(relatedSql).toContain("target.status = 'published'");
+    expect(relatedSql).toContain("target_translation.status = 'published'");
+    expect(relatedSql).not.toContain('owner_user_id');
   });
 
   it('checks publication and approval before resolving public image assets', async () => {
@@ -194,5 +246,21 @@ describe('PublicScientificContentService', () => {
       query: vi.fn().mockResolvedValue([]),
     } as unknown as DataSource);
     await expect(service.getCategoryImageAssetId('rocks')).rejects.toThrow(NotFoundException);
+  });
+
+  it('resolves only approved rights-cleared images attached to the published record', async () => {
+    const mediaAssetId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    const query = vi.fn().mockResolvedValueOnce([{ id: mediaAssetId }]);
+    const service = new PublicScientificContentService({ query } as unknown as DataSource);
+
+    await expect(service.getRecordAttachmentImageAssetId(publicId, mediaAssetId)).resolves.toBe(
+      mediaAssetId,
+    );
+    const sql = query.mock.calls[0]?.[0] as string;
+    expect(sql).toContain('rm.media_asset_id = $2');
+    expect(sql).toContain("r.status = 'published'");
+    expect(sql).toContain("m.media_kind = 'image'");
+    expect(sql).toContain("m.processing_status = 'approved'");
+    expect(sql).not.toContain('storage_key');
   });
 });

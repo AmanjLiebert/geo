@@ -105,6 +105,48 @@ describe("public Explore mapping", () => {
           evidenceKind: "supporting",
         },
       ],
+      media: [
+        {
+          id: "5bc818de-f1a9-4f8b-8f3b-f8f65a3e9f12",
+          kind: "image",
+          purpose: "gallery",
+          caption: "Granite surface",
+          description: "Close view of the public specimen.",
+          altText: "Coarse granite crystals",
+          isPrimary: true,
+          rightsStatement: "Public educational use",
+          licence: "CC BY 4.0",
+          credit: "Geo-Kurdistan",
+          viewEndpoint:
+            "/api/v1/public/scientific/records/259a10d9-68c8-4d74-932f-0e75cf8b2fe1/images/5bc818de-f1a9-4f8b-8f3b-f8f65a3e9f12",
+        },
+        {
+          id: "07f8e88f-80e8-4cb1-a337-514fd46d66e9",
+          kind: "document",
+          purpose: "field_notes",
+          caption: "Field notes",
+          description: "Notes attached by the teacher.",
+          altText: null,
+          isPrimary: false,
+          rightsStatement: "Classroom use",
+          licence: null,
+          credit: null,
+          viewEndpoint: null,
+        },
+      ],
+      relatedRecords: [
+        {
+          publicId: "a6eaa1f1-5ce3-4c0f-a6db-270fbcf51970",
+          slug: "related-granite",
+          title: "Related granite",
+          summary: "A related published specimen.",
+          category: { slug: "igneous-rocks", name: "Igneous rocks" },
+          recordType: "Rock specimen",
+          relationshipType: "similar_to",
+          notes: "Compare grain size.",
+          image: null,
+        },
+      ],
     };
 
     const mapped = mapPublicRecordDetail(detail, categories);
@@ -114,8 +156,12 @@ describe("public Explore mapping", () => {
       "Where it was recorded",
       "Sources",
     ]);
-    expect(mapped.detail.related).toEqual([]);
-    expect(mapped.gallery).toEqual([]);
+    expect(mapped.detail.related).toEqual([
+      { slug: "related-granite", reason: "similar to" },
+    ]);
+    expect(mapped.detail.media).toHaveLength(2);
+    expect(mapped.detail.relatedRecords?.[0]?.title).toBe("Related granite");
+    expect(mapped.gallery).toHaveLength(1);
     const presentation = JSON.stringify(mapped.detail.sections);
     expect(presentation).toContain("37.1, 43.2");
     expect(presentation).toContain("About 10,000 metres");

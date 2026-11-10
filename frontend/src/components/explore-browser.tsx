@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import homeStyles from "@/app/home.module.css";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type SyntheticEvent } from "react";
 import {
   ArrowRight,
@@ -21,6 +20,7 @@ import {
 } from "@/components/geo-icons";
 import { ReferenceList } from "@/components/content-interface";
 import { NeoBadge } from "@/components/neo-badge";
+import Link from "@/components/safe-link";
 import type {
   CategoryFilterDefinition,
   GeologicalCategory,
@@ -200,6 +200,9 @@ function RecordReader({
   const referenceSections = detail.sections.filter((section) => section.kind === "references");
   const narrativeSections = detail.sections.filter((section) => !["facts", "references", "gallery"].includes(section.kind));
   const sourceCount = referenceSections.reduce((total, section) => total + section.items.length, 0);
+  const primaryMedia = (detail.media ?? []).find((item) => item.isPrimary);
+  const additionalMedia = (detail.media ?? []).filter((item) => !item.isPrimary);
+  const publicRelatedRecords = detail.relatedRecords ?? [];
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -220,36 +223,54 @@ function RecordReader({
     </nav>
 
     <div className="catalog-record-reading-layout">
-      <header className={`${homeStyles.leadUpdate} catalog-record-hero${image ? "" : " catalog-record-hero--empty"}`}>
-        {image ? <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 760px) 100vw, 1120px" /> : <div className="catalog-record-hero-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No published image</small></div>}
-        <div>
-          <small>{record.recordType} · {record.status}</small>
-          <h2 id="catalog-reader-title">{record.name}</h2>
-          <p>{record.summary}</p>
-          <span>
-            {record.categoryTrail?.length ? <b>{record.categoryTrail.join(" / ")}</b> : <b>Scientific record</b>}
-            {image && <button type="button" data-ui-action="secondary" className="catalog-record-nav-button catalog-record-hero-open" onClick={() => setFullscreen(true)}><ZoomIn aria-hidden="true" /> Open image</button>}
-          </span>
-        </div>
-        {image && gallery.length > 1 && <nav className="catalog-record-hero-images" aria-label="Record images">
-          <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => onImage(previousImage)} aria-label="Previous image"><ChevronLeft aria-hidden="true" /></button>
-          <strong>{activeImage + 1} / {gallery.length}</strong>
-          <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => onImage(nextImage)} aria-label="Next image"><ChevronRight aria-hidden="true" /></button>
-        </nav>}
+      <header className="catalog-record-identity">
+        {record.categoryTrail?.length ? <nav aria-label="Record classification">{record.categoryTrail.join(" / ")}</nav> : null}
+        <div><NeoBadge>{record.recordType}</NeoBadge><NeoBadge variant="clay">{record.status}</NeoBadge></div>
+        <h2 id="catalog-reader-title">{record.name}</h2>
+        <p>{record.summary}</p>
       </header>
 
+      <section className="catalog-record-core" aria-label="Record overview">
+        <figure className="catalog-record-primary-media">
+          <div>
+            {image ? <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 620px) calc(100vw - 48px), 430px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No published image</small></span>}
+            {image && gallery.length > 1 && <>
+              <button type="button" data-ui-action="pagination" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--previous" onClick={() => onImage(previousImage)} aria-label="Previous image"><ChevronLeft aria-hidden="true" /></button>
+              <button type="button" data-ui-action="pagination" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--next" onClick={() => onImage(nextImage)} aria-label="Next image"><ChevronRight aria-hidden="true" /></button>
+            </>}
+          </div>
+          <figcaption>
+            <span>{image?.caption ?? "No public image is available."}</span>
+            {primaryMedia?.rightsStatement && <small>Rights: {primaryMedia.rightsStatement}</small>}
+            {primaryMedia?.licence && <small>Licence: {primaryMedia.licence}</small>}
+            {image?.credit && <small>Credit: {image.credit}</small>}
+          </figcaption>
+          {image && <button type="button" data-ui-action="secondary" className="catalog-record-nav-button" onClick={() => setFullscreen(true)}><ZoomIn aria-hidden="true" /> Open image</button>}
+        </figure>
+
+        <div className="catalog-record-overview">
+          <p className="eyebrow">Record overview</p>
+          <h3>About this record</h3>
+          <p>{record.description}</p>
+          <dl>
+            <div><dt>Record type</dt><dd>{record.recordType}</dd></div>
+            <div><dt>Classification</dt><dd>{record.categoryTrail?.join(" / ") || "Scientific record"}</dd></div>
+            <div><dt>Sources</dt><dd>{sourceCount}</dd></div>
+            {record.publishedAt && <div><dt>Published</dt><dd>{new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(record.publishedAt))}</dd></div>}
+          </dl>
+        </div>
+      </section>
+
       <article className="catalog-record-article">
-        <section className="catalog-record-summary-card">
-          <div className="catalog-record-introduction"><p className="eyebrow">About this record</p><h3>What it describes</h3><p>{record.description}</p></div>
-          {keyFactSections.map((section) => <div className="catalog-record-key-facts" key={section.title}><div><p className="eyebrow">At a glance</p><h3>{section.title}</h3></div><dl className="catalog-reader-facts">{section.items.map((item, itemIndex) => <div key={`${item.label}-${itemIndex}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></div>)}
-          {sourceCount > 0 && <details className="catalog-record-source-disclosure"><summary><span><strong>{sourceCount} {sourceCount === 1 ? "source" : "sources"}</strong><small>Evidence used for this record</small></span><span>View sources</span></summary><div>{referenceSections.map((section, index) => <ReferenceList items={section.items} key={`${section.title}-${index}`} />)}</div></details>}
-        </section>
-        {contextFactSections.map((section, index) => <section className="catalog-record-context-card" key={`${section.title}-${index}`}><p className="eyebrow">Place and context</p><h3>{section.title}</h3><dl className="catalog-reader-facts">{section.items.map((item, itemIndex) => <div key={`${item.label}-${itemIndex}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>)}
+        {keyFactSections.map((section, index) => <section className="catalog-record-dossier-section" key={section.title}><header><span>{String(index + 1).padStart(2, "0")}</span><div><p className="eyebrow">Scientific data</p><h3>{section.title}</h3></div></header><dl className="catalog-reader-facts">{section.items.map((item, itemIndex) => <div key={`${item.label}-${itemIndex}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>)}
+        {contextFactSections.map((section, index) => <section className="catalog-record-dossier-section" key={`${section.title}-${index}`}><header><span>{String(keyFactSections.length + index + 1).padStart(2, "0")}</span><div><p className="eyebrow">Place and context</p><h3>{section.title}</h3></div></header><dl className="catalog-reader-facts">{section.items.map((item, itemIndex) => <div key={`${item.label}-${itemIndex}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>)}
         {detail.discovery && <section className="catalog-record-context-card"><p className="eyebrow">Discovery</p><h3>How this record was framed</h3><p>{detail.discovery}</p></section>}
         {detail.formationContext && <section className="catalog-record-context-card"><p className="eyebrow">Geological context</p><h3>What the evidence supports</h3><p>{detail.formationContext}</p></section>}
         {narrativeSections.map((section, index) => section.kind === "classification"
           ? <section className="catalog-record-context-card" key={`${section.title}-${index}`}><p className="eyebrow">Classification</p><h3>{section.title}</h3><ul className="catalog-reader-classification">{section.items.map((item) => <li key={item}>{item}</li>)}</ul></section>
           : section.kind === "prose" ? <section className="catalog-record-context-card" key={`${section.title}-${index}`}><p className="eyebrow">Interpretation</p><h3>{section.title}</h3>{section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</section> : null)}
+        {additionalMedia.length > 0 && <section className="catalog-record-dossier-section catalog-record-media-section"><header><span>{String(keyFactSections.length + contextFactSections.length + 1).padStart(2, "0")}</span><div><p className="eyebrow">Supporting material</p><h3>Images and files</h3></div></header><div className="catalog-record-media-grid">{additionalMedia.map((item) => <article key={item.id}>{item.image ? <div className="catalog-record-media-square"><Image src={item.image.src} alt={item.image.alt} fill sizes="(max-width: 620px) calc(100vw - 86px), 260px" /></div> : <div className="catalog-record-file-mark"><GeoArchiveIcon aria-hidden="true" /><strong>{item.kind}</strong></div>}<div><small>{item.purpose}</small><h4>{item.caption}</h4>{item.description && <p>{item.description}</p>}<dl><div><dt>Rights</dt><dd>{item.rightsStatement}</dd></div>{item.licence && <div><dt>Licence</dt><dd>{item.licence}</dd></div>}{item.credit && <div><dt>Credit</dt><dd>{item.credit}</dd></div>}</dl></div></article>)}</div></section>}
+        {sourceCount > 0 && <section className="catalog-record-dossier-section"><header><span>{String(keyFactSections.length + contextFactSections.length + (additionalMedia.length ? 2 : 1)).padStart(2, "0")}</span><div><p className="eyebrow">Sources and evidence</p><h3>{sourceCount} {sourceCount === 1 ? "source" : "sources"}</h3></div></header>{referenceSections.map((section, index) => <ReferenceList items={section.items} key={`${section.title}-${index}`} />)}</section>}
         <footer className="catalog-record-publication-note"><strong>Published scientific record</strong><span>{record.sourceNote}</span>{record.publishedAt && <time dateTime={record.publishedAt}>{new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(record.publishedAt))}</time>}</footer>
       </article>
     </div>
@@ -266,9 +287,9 @@ function RecordReader({
         </button>
       </nav>}
 
-    {relatedBundles.length > 0 && <section className="catalog-record-related" aria-labelledby="catalog-related-title">
+    {(publicRelatedRecords.length > 0 || relatedBundles.length > 0) && <section className="catalog-record-related" aria-labelledby="catalog-related-title">
       <header><p className="eyebrow">Related evidence</p><h3 id="catalog-related-title">Continue exploring</h3></header>
-      <div>{relatedBundles.map(({ bundle: related, reason }) => <button type="button" onClick={() => onRelated(related.record)} key={related.record.slug}><span className="catalog-record-related-image">{related.record.image.src ? <Image src={related.record.image.src} alt="" fill sizes="180px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /></span>}</span><span><small>{reason}</small><strong>{related.record.name}</strong></span><ArrowRight aria-hidden="true" /></button>)}</div>
+      <div>{publicRelatedRecords.map((related) => <Link href={`/explore/${related.category}/${related.slug}`} key={`${related.category}-${related.slug}`}><span className="catalog-record-related-image">{related.image?.src ? <Image src={related.image.src} alt="" fill sizes="180px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /></span>}</span><span><small>{related.relationshipType}</small><strong>{related.title}</strong><p>{related.notes ?? related.summary}</p></span><ArrowRight aria-hidden="true" /></Link>)}{publicRelatedRecords.length === 0 && relatedBundles.map(({ bundle: related, reason }) => <button type="button" onClick={() => onRelated(related.record)} key={related.record.slug}><span className="catalog-record-related-image">{related.record.image.src ? <Image src={related.record.image.src} alt="" fill sizes="180px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /></span>}</span><span><small>{reason}</small><strong>{related.record.name}</strong></span><ArrowRight aria-hidden="true" /></button>)}</div>
     </section>}
     {fullscreen && image && <FullscreenImage image={image} recordName={record.name} onClose={() => setFullscreen(false)} />}
   </section>;

@@ -73,6 +73,19 @@ export class PublicScientificContentController {
     return this.streamPublicImage(mediaAssetId);
   }
 
+  @Get('records/:publicId/images/:mediaAssetId')
+  @Header('Cache-Control', 'private, no-store')
+  async getRecordAttachmentImage(
+    @Param('publicId', ParseUUIDPipe) publicId: string,
+    @Param('mediaAssetId', ParseUUIDPipe) mediaAssetId: string,
+  ) {
+    const approvedAssetId = await this.content.getRecordAttachmentImageAssetId(
+      publicId,
+      mediaAssetId,
+    );
+    return this.streamPublicImage(approvedAssetId);
+  }
+
   private async streamPublicImage(mediaAssetId: string) {
     const image = await this.media.publicInlineImage(mediaAssetId);
     return new StreamableFile(image.stream, {
