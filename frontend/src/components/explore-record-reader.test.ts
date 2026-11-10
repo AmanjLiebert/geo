@@ -16,6 +16,9 @@ describe("visitor record reading path", () => {
     expect(sources).toBeGreaterThan(facts);
     expect(source).toContain("catalog-record-breadcrumb");
     expect(source).toContain("View sources");
+    expect(source).toContain("catalog-record-sequence");
+    expect(source).toContain("Previous record");
+    expect(source).toContain("Next record");
     expect(source).not.toContain("Structured evidence");
     expect(source).not.toContain("Reading the evidence");
   });

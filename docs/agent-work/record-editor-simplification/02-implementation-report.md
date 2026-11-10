@@ -79,3 +79,18 @@ Correction verification actually run:
 - Frontend type check, lint, and production build: passed; the existing Atkinson Hyperlegible Next fallback-font warning remains.
 - Local Docker frontend image rebuilt and the container became healthy. The public record was inspected live at desktop and narrow widths; reading order and semantic labels were also checked through the accessibility tree.
 - `git diff --check`: passed (Git emitted only the repository's LF/CRLF conversion warnings).
+
+### Neo layout and navigation follow-up — 2026-11-10
+
+- Removed the desktop sticky left-image rail. The approved primary image is now a wide, non-sticky record hero within the same centered reading column as the information it explains.
+- Restored the product's neo-brutalist visual language with strong two-pixel borders, offset shadows, ochre/iron accents, and explicit interactive states instead of subtle editorial cards.
+- Added a large end-of-record navigator that names the previous and next records. The compact top controls remain available and now expose record names through accessible labels.
+- Reworked the summary and key facts into a balanced two-column card on wide screens and a single recognition-first flow on narrow screens.
+- Corrected the live summary contrast after browser inspection found an inherited dark-header text color.
+
+Follow-up verification actually run:
+
+- Full frontend suite: 30 files / 325 tests passed.
+- Frontend type check, lint, and production build: passed; the existing Atkinson Hyperlegible Next fallback-font warning remains.
+- Local Docker frontend image rebuilt after the final contrast correction and the service responded successfully.
+- Live browser inspection passed at the default desktop viewport and at 390 × 844. The page had no horizontal overflow; the image was non-sticky and full-width; the summary was readable; and the named previous/next navigator remained visible and keyboard-focusable on mobile.

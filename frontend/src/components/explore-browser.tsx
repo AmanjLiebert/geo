@@ -213,8 +213,8 @@ function RecordReader({
       <button type="button" data-ui-action="back" className="catalog-record-nav-button" onClick={onBack} aria-label="Back to collection"><GeoBackIcon aria-hidden="true" /><span>Collection</span></button>
       <span className="catalog-record-position"><strong>{position}</strong> of {total}</span>
       <div>
-        <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => previous && onRecord(previous)} disabled={!previous}><ChevronLeft aria-hidden="true" /><span>Previous</span></button>
-        <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => next && onRecord(next)} disabled={!next}><span>Next</span><ChevronRight aria-hidden="true" /></button>
+        <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => previous && onRecord(previous)} disabled={!previous} aria-label={previous ? `Previous record: ${previous.name}` : "No previous record"}><ChevronLeft aria-hidden="true" /><span>Previous</span></button>
+        <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => next && onRecord(next)} disabled={!next} aria-label={next ? `Next record: ${next.name}` : "No next record"}><span>Next</span><ChevronRight aria-hidden="true" /></button>
       </div>
     </nav>
 
@@ -258,6 +258,18 @@ function RecordReader({
         <footer className="catalog-record-publication-note"><strong>Published scientific record</strong><span>{record.sourceNote}</span>{record.publishedAt && <time dateTime={record.publishedAt}>{new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(record.publishedAt))}</time>}</footer>
       </article>
     </div>
+
+      <nav className="catalog-record-sequence" aria-label="Browse records">
+        <button type="button" onClick={() => previous && onRecord(previous)} disabled={!previous}>
+          <ChevronLeft aria-hidden="true" />
+          <span><small>Previous record</small><strong>{previous?.name ?? "Start of collection"}</strong></span>
+        </button>
+        <span><strong>{position}</strong><small> of {total}</small></span>
+        <button type="button" onClick={() => next && onRecord(next)} disabled={!next}>
+          <span><small>Next record</small><strong>{next?.name ?? "End of collection"}</strong></span>
+          <ChevronRight aria-hidden="true" />
+        </button>
+      </nav>
 
     {relatedBundles.length > 0 && <section className="catalog-record-related" aria-labelledby="catalog-related-title">
       <header><p className="eyebrow">Related evidence</p><h3 id="catalog-related-title">Continue exploring</h3></header>
