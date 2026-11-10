@@ -14,11 +14,13 @@ describe("visitor record reading path", () => {
     expect(meaning).toBeGreaterThan(0);
     expect(facts).toBeGreaterThan(meaning);
     expect(sources).toBeGreaterThan(facts);
-    expect(source).toContain("catalog-record-breadcrumb");
+    expect(source).toContain("homeStyles.leadUpdate");
+    expect(source).toContain("catalog-record-hero");
     expect(source).toContain("View sources");
     expect(source).toContain("catalog-record-sequence");
     expect(source).toContain("Previous record");
     expect(source).toContain("Next record");
+    expect(source).toContain("total > 1");
     expect(source).not.toContain("Structured evidence");
     expect(source).not.toContain("Reading the evidence");
   });

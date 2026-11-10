@@ -94,3 +94,20 @@ Follow-up verification actually run:
 - Frontend type check, lint, and production build: passed; the existing Atkinson Hyperlegible Next fallback-font warning remains.
 - Local Docker frontend image rebuilt after the final contrast correction and the service responded successfully.
 - Live browser inspection passed at the default desktop viewport and at 390 × 844. The page had no horizontal overflow; the image was non-sticky and full-width; the summary was readable; and the named previous/next navigator remained visible and keyboard-focusable on mobile.
+
+### Homepage-card consistency correction — 2026-11-10
+
+- Removed the separate title panel and record-image panel. The first viewport now presents one compact lead card containing the published image, type, status, title, summary, classification, and image action.
+- Reused the homepage `leadUpdate` card class directly, including its image treatment, gradient, border, radius, shadow, metadata label, typography, and responsive behavior.
+- Flattened the record body into one homepage-style bordered reading board with internal rules instead of placing every information group in a separate oversized card.
+- Standardized record actions on `catalog-record-nav-button`; source disclosure uses the same limestone/iron hard-shadow states.
+- Removed Previous/Next controls entirely for one-record collections. Multi-record collections retain compact icon navigation at the top and named navigation after the content.
+- Removed obsolete visitor-specific header and gallery overrides introduced by the superseded layout.
+
+Correction verification actually run:
+
+- Focused visitor tests: 2 files / 4 tests passed.
+- Frontend type check and lint: passed.
+- Frontend production build passed in Docker; the existing Atkinson Hyperlegible Next fallback-font warning remains.
+- The final Docker frontend was inspected live using the user's `stratigraphy-units/asasa` record at desktop and 390 × 844. The one-record state showed no disabled navigation, the homepage card appeared within the first viewport, and the reading board began immediately beneath it.
+- A 24-record collection was also inspected at 390 × 844; compact Previous/Next controls, the image action, title, summary, and category context remained visible without horizontal overflow.

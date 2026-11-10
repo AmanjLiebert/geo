@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import homeStyles from "@/app/home.module.css";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type SyntheticEvent } from "react";
 import {
   ArrowRight,
@@ -211,37 +212,31 @@ function RecordReader({
   return <section className="catalog-reader catalog-record-page" aria-labelledby="catalog-reader-title">
     <nav className="catalog-record-toolbar" aria-label="Record navigation">
       <button type="button" data-ui-action="back" className="catalog-record-nav-button" onClick={onBack} aria-label="Back to collection"><GeoBackIcon aria-hidden="true" /><span>Collection</span></button>
-      <span className="catalog-record-position"><strong>{position}</strong> of {total}</span>
-      <div>
+      <span className="catalog-record-position"><strong>{position}</strong> {total === 1 ? "record" : `of ${total}`}</span>
+      {total > 1 && <div>
         <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => previous && onRecord(previous)} disabled={!previous} aria-label={previous ? `Previous record: ${previous.name}` : "No previous record"}><ChevronLeft aria-hidden="true" /><span>Previous</span></button>
         <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => next && onRecord(next)} disabled={!next} aria-label={next ? `Next record: ${next.name}` : "No next record"}><span>Next</span><ChevronRight aria-hidden="true" /></button>
-      </div>
+      </div>}
     </nav>
 
-    <header className="catalog-record-page-header">
-      {record.categoryTrail?.length ? <nav className="catalog-record-breadcrumb" aria-label="Record classification">{record.categoryTrail.join(" / ")}</nav> : null}
-      <div className="catalog-record-kicker"><NeoBadge>{record.recordType}</NeoBadge><NeoBadge variant="clay">{record.status}</NeoBadge></div>
-      <h2 id="catalog-reader-title">{record.name}</h2>
-      <p>{record.summary}</p>
-    </header>
-
     <div className="catalog-record-reading-layout">
-      <figure className="catalog-record-gallery-card" aria-label={`${record.name} media`}>
-        <header><span>Record image</span>{image && <strong>{activeImage + 1} / {gallery.length}</strong>}</header>
-        {image ? <><div className="catalog-record-gallery-stage">
-          <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 820px) 100vw, 420px" />
-          {gallery.length > 1 && <>
-            <button type="button" data-ui-action="pagination" data-ui-size="icon" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--previous" onClick={() => onImage(previousImage)} aria-label="Previous image"><ChevronLeft aria-hidden="true" /></button>
-            <button type="button" data-ui-action="pagination" data-ui-size="icon" className="catalog-record-gallery-arrow catalog-record-gallery-arrow--next" onClick={() => onImage(nextImage)} aria-label="Next image"><ChevronRight aria-hidden="true" /></button>
-          </>}
-          <button type="button" data-ui-action="secondary" className="catalog-record-gallery-zoom" onClick={() => setFullscreen(true)}><ZoomIn aria-hidden="true" /> Open image</button>
+      <header className={`${homeStyles.leadUpdate} catalog-record-hero${image ? "" : " catalog-record-hero--empty"}`}>
+        {image ? <Image src={image.src} alt={image.alt} fill priority sizes="(max-width: 760px) 100vw, 1120px" /> : <div className="catalog-record-hero-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No published image</small></div>}
+        <div>
+          <small>{record.recordType} · {record.status}</small>
+          <h2 id="catalog-reader-title">{record.name}</h2>
+          <p>{record.summary}</p>
+          <span>
+            {record.categoryTrail?.length ? <b>{record.categoryTrail.join(" / ")}</b> : <b>Scientific record</b>}
+            {image && <button type="button" data-ui-action="secondary" className="catalog-record-nav-button catalog-record-hero-open" onClick={() => setFullscreen(true)}><ZoomIn aria-hidden="true" /> Open image</button>}
+          </span>
         </div>
-        {gallery.length > 1 && <div className="catalog-record-gallery-thumbnails">
-          {gallery.map((item, index) => <button type="button" className={index === activeImage ? "active" : ""} onClick={() => onImage(index)} aria-label={`Show image ${index + 1}: ${item.caption}`} aria-pressed={index === activeImage} key={`${item.src}-${index}`}><Image src={item.src} alt="" fill sizes="70px" /></button>)}
-        </div>}
-        <p>{image.caption}</p>
-        {image.credit && <small>{image.credit}</small>}</> : <div className="catalog-record-gallery-stage catalog-record-gallery-stage--empty"><span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No published image</small></span></div>}
-      </figure>
+        {image && gallery.length > 1 && <nav className="catalog-record-hero-images" aria-label="Record images">
+          <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => onImage(previousImage)} aria-label="Previous image"><ChevronLeft aria-hidden="true" /></button>
+          <strong>{activeImage + 1} / {gallery.length}</strong>
+          <button type="button" data-ui-action="pagination" className="catalog-record-nav-button" onClick={() => onImage(nextImage)} aria-label="Next image"><ChevronRight aria-hidden="true" /></button>
+        </nav>}
+      </header>
 
       <article className="catalog-record-article">
         <section className="catalog-record-summary-card">
@@ -259,17 +254,17 @@ function RecordReader({
       </article>
     </div>
 
-      <nav className="catalog-record-sequence" aria-label="Browse records">
-        <button type="button" onClick={() => previous && onRecord(previous)} disabled={!previous}>
+      {total > 1 && <nav className="catalog-record-sequence" aria-label="Browse records">
+        <button type="button" data-ui-action="pagination" className="catalog-record-nav-button catalog-record-sequence-button" onClick={() => previous && onRecord(previous)} disabled={!previous}>
           <ChevronLeft aria-hidden="true" />
           <span><small>Previous record</small><strong>{previous?.name ?? "Start of collection"}</strong></span>
         </button>
         <span><strong>{position}</strong><small> of {total}</small></span>
-        <button type="button" onClick={() => next && onRecord(next)} disabled={!next}>
+        <button type="button" data-ui-action="pagination" className="catalog-record-nav-button catalog-record-sequence-button" onClick={() => next && onRecord(next)} disabled={!next}>
           <span><small>Next record</small><strong>{next?.name ?? "End of collection"}</strong></span>
           <ChevronRight aria-hidden="true" />
         </button>
-      </nav>
+      </nav>}
 
     {relatedBundles.length > 0 && <section className="catalog-record-related" aria-labelledby="catalog-related-title">
       <header><p className="eyebrow">Related evidence</p><h3 id="catalog-related-title">Continue exploring</h3></header>

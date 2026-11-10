@@ -6030,41 +6030,6 @@ body:has(.not-found-page) .brutal-footer { display: none; }
 }
 
 /* Connected visitor record: one reading path from identity to meaning, facts, and evidence. */
-:root .catalog-explorer-page .catalog-record-page-header {
-  grid-template-columns: 1fr;
-  grid-template-areas: "breadcrumb" "kicker" "title" "summary";
-  row-gap: 10px;
-  width: min(calc(100% - 36px),1120px);
-  margin: 20px auto 0;
-  padding: clamp(28px,4vw,48px);
-  color: var(--carbon);
-  background: var(--limestone);
-  border: 2px solid var(--carbon);
-  box-shadow: 7px 7px 0 var(--iron);
-}
-
-:root .catalog-explorer-page .catalog-record-page-header > p {
-  max-width: 72ch;
-  color: var(--ink-soft);
-}
-
-:root .catalog-explorer-page .catalog-record-breadcrumb {
-  grid-area: breadcrumb;
-  width: fit-content;
-  margin: 0 0 12px;
-  padding: 6px 9px;
-  color: var(--carbon);
-  background: var(--ochre);
-  border: 2px solid var(--carbon);
-  box-shadow: 2px 2px 0 var(--carbon);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 750;
-  letter-spacing: .035em;
-  line-height: 1.45;
-  text-transform: uppercase;
-}
-
 :root .catalog-explorer-page .catalog-record-reading-layout {
   grid-template-columns: minmax(0,1120px);
   grid-template-areas: "gallery" "article";
@@ -6072,28 +6037,6 @@ body:has(.not-found-page) .brutal-footer { display: none; }
   max-width: 1180px;
   margin-inline: auto;
   padding: clamp(34px,5vw,64px) 30px clamp(44px,6vw,76px);
-}
-
-:root .catalog-explorer-page .catalog-record-gallery-card {
-  position: static;
-  top: auto;
-  width: 100%;
-  margin: 0;
-  border: 2px solid var(--carbon);
-  box-shadow: 7px 7px 0 var(--carbon);
-}
-
-:root .catalog-explorer-page .catalog-record-gallery-stage {
-  height: auto;
-  min-height: 320px;
-  aspect-ratio: 16 / 8;
-}
-
-:root .catalog-explorer-page .catalog-record-gallery-card > header {
-  min-height: 50px;
-  padding-inline: 16px;
-  color: var(--carbon);
-  background: var(--ochre);
 }
 
 :root .catalog-explorer-page .catalog-record-article {
@@ -6275,19 +6218,13 @@ body:has(.not-found-page) .brutal-footer { display: none; }
     grid-template-columns: 1fr;
     grid-template-areas: "gallery" "article";
   }
-  :root .catalog-explorer-page .catalog-record-gallery-card {
-    width: 100%;
-  }
   :root .catalog-explorer-page .catalog-record-article { justify-self: center; }
   :root .catalog-explorer-page .catalog-record-summary-card { grid-template-columns: 1fr; }
   :root .catalog-explorer-page .catalog-record-key-facts { padding: 26px 0 0; border-top: 2px solid var(--carbon); border-left: 0; }
 }
 
 @media (max-width: 620px) {
-  :root .catalog-explorer-page .catalog-record-page-header { width: calc(100% - 24px); margin-top: 12px; padding: 24px 18px; box-shadow: 4px 4px 0 var(--iron); }
-  :root .catalog-explorer-page .catalog-record-breadcrumb { margin-bottom: 11px; font-size: 10px; }
   :root .catalog-explorer-page .catalog-record-reading-layout { gap: 24px; padding: 24px 12px 34px; }
-  :root .catalog-explorer-page .catalog-record-gallery-stage { min-height: 220px; aspect-ratio: 4 / 3; }
   :root .catalog-explorer-page .catalog-record-article > section,
   :root .catalog-explorer-page .catalog-record-article > section:first-child { margin-top: 16px; padding: 22px 17px; box-shadow: 2px 2px 0 var(--carbon); }
   :root .catalog-explorer-page .catalog-record-article > section:first-child { margin-top: 0; }
@@ -6302,4 +6239,189 @@ body:has(.not-found-page) .brutal-footer { display: none; }
   :root .catalog-explorer-page .catalog-record-sequence > span { grid-column: 1 / -1; grid-row: 1; }
   :root .catalog-explorer-page .catalog-record-sequence > button { grid-row: 2; min-height: 84px; padding: 13px; }
   :root .catalog-explorer-page .catalog-record-sequence > button strong { font-size: 14px; }
+}
+
+/* Visitor record correction: reuse the homepage lead-card and card grammar. */
+:root .catalog-explorer-page .catalog-record-reading-layout {
+  gap: 24px;
+  padding-top: 30px;
+}
+
+:root .catalog-explorer-page .catalog-record-hero {
+  grid-area: gallery;
+  min-height: clamp(320px,38vw,420px);
+  margin: 0;
+}
+
+:root .catalog-explorer-page .catalog-record-hero > div {
+  gap: 9px;
+  padding: clamp(20px,3vw,32px);
+}
+
+:root .catalog-explorer-page .catalog-record-hero h2 {
+  max-width: 14ch;
+  color: var(--limestone);
+  font-family: var(--sans);
+  font-size: clamp(42px,5vw,68px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: .95;
+}
+
+:root .catalog-explorer-page .catalog-record-hero p {
+  max-width: 64ch;
+  color: var(--limestone);
+}
+
+:root .catalog-explorer-page .catalog-record-hero > div > span {
+  gap: 18px;
+}
+
+:root .catalog-explorer-page .catalog-record-hero > div > span > b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root .catalog-explorer-page .catalog-record-hero-open {
+  min-width: 130px;
+  flex: none;
+  color: var(--carbon);
+  background: var(--limestone);
+}
+
+:root .catalog-explorer-page .catalog-record-hero-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 9px;
+  color: var(--limestone);
+  background: var(--shale);
+}
+
+:root .catalog-explorer-page .catalog-record-hero-placeholder svg { width: 56px; height: 56px; }
+
+:root .catalog-explorer-page .catalog-record-hero-images {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  color: var(--carbon);
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  box-shadow: var(--card-shadow);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+:root .catalog-explorer-page .catalog-record-hero-images .catalog-record-nav-button {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+
+:root .catalog-explorer-page .catalog-record-article {
+  overflow: hidden;
+  background: var(--card-surface);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+}
+
+:root .catalog-explorer-page .catalog-record-article > section,
+:root .catalog-explorer-page .catalog-record-article > section:first-child {
+  margin: 0;
+  padding: clamp(22px,3vw,32px);
+  background: transparent;
+  border: 0 !important;
+  border-bottom: 2px solid var(--carbon) !important;
+  box-shadow: none;
+}
+
+:root .catalog-explorer-page .catalog-record-article > section:last-of-type { border-bottom: 0 !important; }
+
+:root .catalog-explorer-page .catalog-record-summary-card {
+  border-top: 0 !important;
+  border-left: 0 !important;
+}
+
+:root .catalog-explorer-page .catalog-record-context-card { border-left: 0 !important; }
+
+:root .catalog-explorer-page .catalog-record-source-disclosure summary > span:last-child {
+  color: var(--carbon);
+  background: var(--limestone);
+  box-shadow: var(--neo-shadow);
+}
+
+:root .catalog-explorer-page .catalog-record-source-disclosure summary:hover > span:last-child,
+:root .catalog-explorer-page .catalog-record-source-disclosure summary:focus-visible > span:last-child,
+:root .catalog-explorer-page .catalog-record-source-disclosure[open] summary > span:last-child {
+  color: var(--limestone);
+  background: var(--iron);
+  box-shadow: var(--neo-shadow-raised);
+}
+
+:root .catalog-explorer-page .catalog-record-source-disclosure summary:focus-visible {
+  outline: 3px solid var(--ochre);
+  outline-offset: 3px;
+}
+
+:root .catalog-explorer-page .catalog-record-publication-note {
+  margin: 0;
+  padding: 16px clamp(22px,3vw,32px);
+  background: var(--fossil);
+  border-top: 2px solid var(--carbon);
+}
+
+:root .catalog-explorer-page .catalog-record-sequence {
+  width: min(calc(100% - 60px),1120px);
+  min-height: 74px;
+  gap: 12px;
+  margin: 0 auto 42px;
+}
+
+:root .catalog-explorer-page .catalog-record-sequence > .catalog-record-sequence-button {
+  min-height: 68px;
+  grid-template-columns: 22px minmax(0,1fr);
+  gap: 10px;
+  padding: 10px 13px;
+  color: var(--carbon);
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  box-shadow: var(--neo-shadow);
+}
+
+:root .catalog-explorer-page .catalog-record-sequence > .catalog-record-sequence-button:last-child {
+  grid-template-columns: minmax(0,1fr) 22px;
+}
+
+:root .catalog-explorer-page .catalog-record-sequence > .catalog-record-sequence-button:hover:not(:disabled),
+:root .catalog-explorer-page .catalog-record-sequence > .catalog-record-sequence-button:focus-visible:not(:disabled) {
+  color: var(--limestone);
+  background: var(--iron);
+  box-shadow: var(--neo-shadow-raised);
+  transform: translate(-2px,-2px);
+}
+
+:root .catalog-explorer-page .catalog-record-sequence > .catalog-record-sequence-button strong { font-size: 15px; }
+:root .catalog-explorer-page .catalog-record-sequence > span strong { font-size: 25px; }
+
+@media (max-width: 620px) {
+  :root .catalog-explorer-page .catalog-record-reading-layout { padding-top: 14px; }
+  :root .catalog-explorer-page .catalog-record-hero { min-height: 310px; }
+  :root .catalog-explorer-page .catalog-record-hero h2 { font-size: clamp(34px,11vw,46px); }
+  :root .catalog-explorer-page .catalog-record-hero > div > span { align-items: flex-start; flex-direction: column; }
+  :root .catalog-explorer-page .catalog-record-hero-open { min-width: 124px; }
+  :root .catalog-explorer-page .catalog-record-article > section,
+  :root .catalog-explorer-page .catalog-record-article > section:first-child { padding: 20px 17px; }
+  :root .catalog-explorer-page .catalog-record-publication-note { padding-inline: 17px; }
+  :root .catalog-explorer-page .catalog-record-sequence { width: calc(100% - 24px); gap: 9px; }
+  :root .catalog-explorer-page .catalog-record-sequence > .catalog-record-sequence-button { min-height: 68px; padding: 9px; }
 }
