@@ -1,23 +1,19 @@
 import { notFound } from "next/navigation";
 import {
-  getCategoryBySlug,
-  getCategoryFilterDefinitions,
-  getRecordBySlug,
-  getRecordDetail,
-  getRecordFilterOptions,
-  listCategories,
-  listRecords,
-} from "@/content/repository";
-import type { GeologicalRecord, MediaAsset } from "@/content/types";
+  emptyPublicRecordDetail,
+  mapPublicCategories,
+  mapPublicRecord,
+  mapPublicRecordDetail,
+} from "@/content/public-explore";
+import {
+  getPublicRecord,
+  listPublicCategories,
+  listPublicRecords,
+} from "@/lib/public-scientific-api";
 import { ExploreBrowser, type ExploreRecordBundle } from "./explore-browser";
 import { parseExploreQuery, type ExploreSearchParams } from "./explore-utils";
 
-function uniqueGallery(record: GeologicalRecord, configuredImages: MediaAsset[]) {
-  return [record.image, ...configuredImages, ...(record.gallery ?? [])]
-    .filter((image, index, images) => images.findIndex((candidate) => candidate.src === image.src) === index);
-}
-
-export function ExploreRoute({
+export async function ExploreRoute({
   selectedCategorySlug,
   selectedRecordSlug,
   searchParams,
@@ -26,39 +22,77 @@ export function ExploreRoute({
   selectedRecordSlug?: string;
   searchParams: ExploreSearchParams;
 }) {
-  if (selectedCategorySlug && !getCategoryBySlug(selectedCategorySlug)) notFound();
-  if (selectedRecordSlug && (!selectedCategorySlug || !getRecordBySlug(selectedCategorySlug, selectedRecordSlug))) notFound();
+  const publicCategories = await listPublicCategories();
+  const categories = mapPublicCategories(publicCategories);
+  const selectedCategory = selectedCategorySlug
+    ? categories.find((category) => category.slug === selectedCategorySlug)
+    : undefined;
+  if (selectedCategorySlug && !selectedCategory) notFound();
 
-  const categories = listCategories();
-  const records = listRecords();
-  const collections = categories.map((category) => ({
-    category,
-    count: records.filter((record) => record.category === category.slug).length,
-  }));
-  const recordBundles: ExploreRecordBundle[] = records.map((record) => {
-    const detail = getRecordDetail(record);
-    const configuredGallery = detail.sections.find((section) => section.kind === "gallery");
+  const publicRecords = selectedCategorySlug
+    ? await listPublicRecords(selectedCategorySlug)
+    : [];
+  const mappedRecords = publicRecords.map((record) =>
+    mapPublicRecord(record, publicCategories),
+  );
+  const selectedSummary = selectedRecordSlug
+    ? mappedRecords.find(
+        (record) =>
+          record.slug === selectedRecordSlug &&
+          (record.categoryPath ?? [record.category]).includes(selectedCategorySlug ?? ""),
+      )
+    : undefined;
+  if (selectedRecordSlug && !selectedSummary) notFound();
+
+  let selectedBundle: ExploreRecordBundle | undefined;
+  if (selectedSummary) {
+    selectedBundle = mapPublicRecordDetail(
+      await getPublicRecord(selectedSummary.recordId),
+      publicCategories,
+    );
+  }
+
+  const recordBundles: ExploreRecordBundle[] = mappedRecords.map((record) => {
+    if (selectedBundle?.record.recordId === record.recordId) return selectedBundle;
     return {
       record,
-      detail,
-      gallery: uniqueGallery(record, configuredGallery?.kind === "gallery" ? configuredGallery.images : []),
+      detail: emptyPublicRecordDetail(record),
+      gallery: record.image.src ? [record.image] : [],
     };
   });
+  const collections = categories.map((category) => ({
+    category,
+    count: category.recordCount,
+  }));
   const collectionFilters = categories.map((category) => ({
     categorySlug: category.slug,
-    definitions: getCategoryFilterDefinitions(category.slug).map((definition) => ({
-      ...definition,
-      values: getRecordFilterOptions(category.slug, definition.key),
-    })),
+    definitions: [
+      {
+        key: "type" as const,
+        label: "Record type",
+        values: Array.from(
+          new Set(
+            mappedRecords
+              .filter((record) =>
+                (record.categoryPath ?? [record.category]).includes(category.slug),
+              )
+              .map((record) => record.recordType),
+          ),
+        ).sort((a, b) => a.localeCompare(b)),
+      },
+    ].filter((definition) => definition.values.length > 1),
   }));
+  const initialQuery = parseExploreQuery(searchParams);
 
-  return <ExploreBrowser
-    key={`${selectedCategorySlug ?? "root"}:${selectedRecordSlug ?? "list"}`}
-    collections={collections}
-    recordBundles={recordBundles}
-    collectionFilters={collectionFilters}
-    initialCategorySlug={selectedCategorySlug}
-    initialRecordSlug={selectedRecordSlug}
-    initialQuery={parseExploreQuery(searchParams)}
-  />;
+  return (
+    <ExploreBrowser
+      key={`${selectedCategorySlug ?? "root"}:${selectedRecordSlug ?? "list"}:${JSON.stringify(initialQuery)}`}
+      collections={collections}
+      recordBundles={recordBundles}
+      collectionFilters={collectionFilters}
+      initialCategorySlug={selectedCategorySlug}
+      initialRecordSlug={selectedRecordSlug}
+      initialQuery={initialQuery}
+    />
+  );
 }

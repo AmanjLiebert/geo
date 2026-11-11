@@ -1,0 +1,271 @@
+name: geo-kurdistan
+
+services:
+  database:
+    image: postgis/postgis:17-3.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-geo_kurdistan}
+      POSTGRES_USER: ${POSTGRES_USER:-geo_kurdistan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: ${DATABASE_MEMORY_LIMIT:-2g}
+    cpus: ${DATABASE_CPU_LIMIT:-2.0}
+    pids_limit: 200
+
+  migrate:
+    build:
+      context: ./backend
+    command: ["node", "dist/database/migrate.js"]
+    restart: "no"
+    environment: &backend-environment
+      NODE_ENV: production
+      APP_NAME: geo-kurdistan-api
+      HOST: 0.0.0.0
+      PORT: 4000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: ${COMPOSE_DATABASE_URL:?Set COMPOSE_DATABASE_URL in .env}
+      DATABASE_SSL: ${DATABASE_SSL:-false}
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+      DATABASE_CONNECT_TIMEOUT_MS: ${DATABASE_CONNECT_TIMEOUT_MS:-5000}
+      TRUST_PROXY: "true"
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      REQUEST_BODY_LIMIT_BYTES: ${REQUEST_BODY_LIMIT_BYTES:-1048576}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-120}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+      HEALTH_DB_TIMEOUT_MS: ${HEALTH_DB_TIMEOUT_MS:-2000}
+      QUEUE_SCHEMA: ${QUEUE_SCHEMA:-pgboss}
+      QUEUE_CONCURRENCY: ${QUEUE_CONCURRENCY:-2}
+      JOB_PROOF_TIMEOUT_MS: ${JOB_PROOF_TIMEOUT_MS:-15000}
+      AUTH_FIREBASE_PROJECT_ID: ${AUTH_FIREBASE_PROJECT_ID:?Set AUTH_FIREBASE_PROJECT_ID in .env}
+      AUTH_FIREBASE_SERVICE_ACCOUNT_PATH: /run/secrets/firebase_service_account
+      AUTH_SESSION_COOKIE_NAME: ${AUTH_SESSION_COOKIE_NAME:-gk_session}
+      AUTH_CSRF_COOKIE_NAME: ${AUTH_CSRF_COOKIE_NAME:-gk_csrf}
+      AUTH_PREAUTH_CSRF_COOKIE_NAME: ${AUTH_PREAUTH_CSRF_COOKIE_NAME:-gk_preauth_csrf}
+      AUTH_SESSION_TTL_SECONDS: ${AUTH_SESSION_TTL_SECONDS:-86400}
+      AUTH_REAUTH_MAX_AGE_SECONDS: ${AUTH_REAUTH_MAX_AGE_SECONDS:-300}
+      AUTH_INVITATION_TTL_HOURS: ${AUTH_INVITATION_TTL_HOURS:-72}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
+      AUTH_PRIVILEGED_MFA_REQUIRED: ${AUTH_PRIVILEGED_MFA_REQUIRED:-false}
+      MEDIA_STORAGE_ENDPOINT: ${MEDIA_STORAGE_ENDPOINT:-}
+      MEDIA_STORAGE_REGION: ${MEDIA_STORAGE_REGION:-us-west-004}
+      MEDIA_STORAGE_BUCKET: ${MEDIA_STORAGE_BUCKET:-}
+      MEDIA_STORAGE_KEY_ID: ${MEDIA_STORAGE_KEY_ID:-}
+      MEDIA_STORAGE_APPLICATION_KEY: ${MEDIA_STORAGE_APPLICATION_KEY:-}
+      MEDIA_SCANNER_HOST: ${MEDIA_SCANNER_HOST:-clamav}
+      MEDIA_SCANNER_PORT: ${MEDIA_SCANNER_PORT:-3310}
+      MEDIA_SCANNER_TIMEOUT_MS: ${MEDIA_SCANNER_TIMEOUT_MS:-120000}
+      MEDIA_MAX_PDF_PAGES: ${MEDIA_MAX_PDF_PAGES:-100}
+      MEDIA_MAX_VIDEO_BYTES: ${MEDIA_MAX_VIDEO_BYTES:-52428800}
+      MEDIA_MAX_VIDEO_DURATION_SECONDS: ${MEDIA_MAX_VIDEO_DURATION_SECONDS:-300}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - private
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: ${MIGRATION_MEMORY_LIMIT:-512m}
+    cpus: ${MIGRATION_CPU_LIMIT:-1.0}
+    pids_limit: 100
+
+  seed:
+    build:
+      context: ./backend
+    command: ["node", "dist/database/seed.js"]
+    restart: "no"
+    environment: *backend-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - private
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: ${MIGRATION_MEMORY_LIMIT:-512m}
+    cpus: ${MIGRATION_CPU_LIMIT:-1.0}
+    pids_limit: 100
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment: *backend-environment
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    networks:
+      - private
+    secrets:
+      - firebase_service_account
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: ${API_MEMORY_LIMIT:-512m}
+    cpus: ${API_CPU_LIMIT:-1.0}
+    pids_limit: 150
+
+  worker:
+    build:
+      context: ./backend
+    command: ["node", "dist/worker.js"]
+    restart: unless-stopped
+    environment: *backend-environment
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+      clamav:
+        condition: service_healthy
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD", "node", "-e", "try{process.kill(1,0)}catch{process.exit(1)}"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: ${WORKER_MEMORY_LIMIT:-512m}
+    cpus: ${WORKER_CPU_LIMIT:-1.0}
+    pids_limit: 150
+
+  clamav:
+    image: clamav/clamav:1.5.4
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 180s
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: ${CLAMAV_MEMORY_LIMIT:-3g}
+    cpus: ${CLAMAV_CPU_LIMIT:-1.0}
+    pids_limit: 200
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
+        NEXT_PUBLIC_CSRF_COOKIE_NAME: ${NEXT_PUBLIC_CSRF_COOKIE_NAME:-gk_csrf}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:?Set NEXT_PUBLIC_FIREBASE_API_KEY in .env}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:?Set NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in .env}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:?Set NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:?Set NEXT_PUBLIC_FIREBASE_APP_ID in .env}
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_BASE_URL: http://api:4000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
+      NEXT_PUBLIC_CSRF_COOKIE_NAME: ${NEXT_PUBLIC_CSRF_COOKIE_NAME:-gk_csrf}
+      NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:?Set NEXT_PUBLIC_FIREBASE_API_KEY in .env}
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:?Set NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in .env}
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:?Set NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env}
+      NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:?Set NEXT_PUBLIC_FIREBASE_APP_ID in .env}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - private
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    mem_limit: ${FRONTEND_MEMORY_LIMIT:-256m}
+    cpus: ${FRONTEND_CPU_LIMIT:-0.5}
+    pids_limit: 100
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./ops/proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks:
+      - private
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    mem_limit: ${PROXY_MEMORY_LIMIT:-256m}
+    cpus: ${PROXY_CPU_LIMIT:-0.5}
+    pids_limit: 100
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  private:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+  clamav_data:
+
+secrets:
+  firebase_service_account:
+    file: ${FIREBASE_SERVICE_ACCOUNT_FILE:-./secrets/firebase-service-account.json}

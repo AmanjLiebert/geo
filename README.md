@@ -1,38 +1,61 @@
 # Geo-Kurdistan
 
-Geo-Kurdistan is a geological knowledge platform focused on the geology, discoveries, resources, research, and geological heritage of the Kurdistan Region.
+Geo-Kurdistan is a geological knowledge platform for exploring the geology, discoveries, resources, research, places, and geological heritage of the Kurdistan Region.
 
-This repository is currently in the visitor-facing showcase phase. The showcase will use realistic mock data to help geology teachers and domain experts validate the information architecture, content model, and user experience before backend or database design begins.
+The existing Next.js visitor experience is the visual baseline. The repository now contains the Next.js public site/dashboard, NestJS API and worker, PostgreSQL/PostGIS foundation, protected scientific workflows, and runtime public Explore integration. Research, managed organization content, broader discovery, production hardening, and optional AI remain incomplete or future work.
 
-## Repository structure
+## Start here
 
-- frontend/ — Next.js visitor showcase
-- backend/ — intentionally deferred; contains documentation only
-- docs/ — product context, showcase requirements, and frontend architecture proposal
+1. Read [`PLAN.md`](PLAN.md) for the ordered implementation plan.
+2. Read [`MAP.md`](MAP.md) for the system, data, permission, and workflow maps.
+3. Read [`DESIGN.md`](DESIGN.md) before changing the interface.
+4. Follow [`AGENTS.md`](AGENTS.md) for repository-wide development rules.
+5. For formal critical work, follow the active pointer in [`MEMORY.md`](MEMORY.md) and its task assignment.
 
-## Current scope
+## Repository
 
-The current phase includes documentation and a frontend scaffold only. It explicitly excludes a production backend, database schema, authentication, AI, payments, premium accounts, and real administration features.
+- `frontend/` — Next.js public site, account flows, public Explore, and protected dashboard.
+- `backend/` — NestJS modular API and worker with identity, scientific content, evidence, media, research, publishing, and public-safe projections.
+- `docs/` — architecture decisions, maintenance policy, operational runbooks, scientific-structure maintenance, and immutable task evidence.
 
-## Run the frontend
+## Frontend commands
 
-From the frontend directory:
+Run from `frontend/`:
 
-    npm install
-    npm run dev
+```text
+npm install
+npm run dev
+npm run test
+npm run lint
+npm run build
+```
 
-Then open http://localhost:3000.
+Public Explore reads published PostgreSQL content through the public scientific API. Some unfinished or showcase-only routes may still use local presentation data; do not present that content as canonical scientific data.
 
-Useful checks:
+## Backend commands
 
-    npm run lint
-    npm run build
+Run from `backend/` after copying `.env.example` to `.env` and providing PostgreSQL:
 
-## Documentation
+```text
+npm install
+npm run db:migrate
+npm run db:seed
+npm run job:proof
+npm run dev
+```
 
-- docs/project-context.md — product vision, audience, constraints, and decision principles
-- docs/requirements.md — showcase requirements and acceptance criteria
-- docs/frontend-architecture.md — proposed frontend boundaries, routes, and mock-data approach
+Firebase Google/phone setup and the first-admin invitation procedure are documented in
+[`docs/operations/firebase-auth-setup.md`](docs/operations/firebase-auth-setup.md).
 
-The requirements are a review baseline, not a finalized database contract. Teacher feedback from the showcase should be recorded before backend design begins.
+Quality checks:
 
+```text
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npm audit --omit=dev
+```
+
+The root `compose.yaml` defines the one-server topology. Copy the root `.env.example` to `.env`, replace every placeholder, and read the operations runbooks before using it with real data.

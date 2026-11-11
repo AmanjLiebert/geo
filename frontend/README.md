@@ -1,23 +1,24 @@
 # Geo-Kurdistan frontend
 
-This directory contains the Next.js visitor showcase for Geo-Kurdistan.
+This directory contains the Next.js public experience and will later contain the administration interface.
 
-The current scaffold uses:
+Current stack:
 
 - Next.js App Router
-- TypeScript
 - React
+- TypeScript
+- Vitest
 - ESLint
-- A src-based project layout
 
-The showcase must use mock content and remain independent of any production backend or final database model.
+The public pages currently read local content through a repository boundary. Keep that boundary stable until the NestJS API is ready, then replace repository implementations gradually.
 
 ## Commands
 
-    npm run dev
-    npm run lint
-    npm run build
-    npm run start
+```text
+npm run dev
+npm run test
+npm run lint
+npm run build
+```
 
-See ../docs/frontend-architecture.md before expanding the UI.
-
+Before expanding the application, read the root `PLAN.md`, `MAP.md`, and `DESIGN.md`.
