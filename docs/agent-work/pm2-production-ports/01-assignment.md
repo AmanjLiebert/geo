@@ -1,0 +1,3 @@
+# PM2 production ports
+
+User explicitly chooses API 4200 and frontend 3200 because existing applications own 4000/3000 on the VPS. Standing authorization covers implementation and pushing completed changes. Risk: CRITICAL (deployment). Scope: PM2 production config, internal API URL, regression assertions, production guide/example notes and private VPS export if present. Preserve local dev and Docker internal ports, credentials, databases, auth and other applications. No remote services are modified. Recovery: revert configuration and restore the previous Caddy routing only if its ports are free. Verify config tests and syntax; VPS operator must confirm port availability and startup. Independent approval must not be invented.

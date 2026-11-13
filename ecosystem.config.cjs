@@ -6,8 +6,8 @@
  *     media storage and public Firebase web settings.
  *   - Build both apps with npm run build.
  *
- * Caddy should proxy /api/* and /health/* to 127.0.0.1:4000 and all other
- * paths to 127.0.0.1:3000. The frontend browser uses same-origin API paths.
+ * Caddy should proxy /api/* and /health/* to 127.0.0.1:4200 and all other
+ * paths to 127.0.0.1:3200. The frontend browser uses same-origin API paths.
  */
 const path = require("node:path");
 
@@ -31,7 +31,7 @@ module.exports = {
       env_production: {
         NODE_ENV: "production",
         HOST: "127.0.0.1",
-        PORT: "4000",
+        PORT: "4200",
         TRUST_PROXY: "true",
         AUTH_COOKIE_SECURE: "true",
         SWAGGER_ENABLED: "false",
@@ -56,7 +56,7 @@ module.exports = {
       name: "geo-kurdistan-frontend",
       cwd: frontend,
       script: "scripts/next.cjs",
-      args: "start --hostname 127.0.0.1 --port 3000",
+      args: "start --hostname 127.0.0.1 --port 3200",
       interpreter: "node",
       exec_mode: "fork",
       instances: 1,
@@ -66,10 +66,10 @@ module.exports = {
       time: true,
       env_production: {
         NODE_ENV: "production",
-        PORT: "3000",
+        PORT: "3200",
         HOSTNAME: "127.0.0.1",
         NEXT_PUBLIC_API_BASE_URL: "",
-        API_INTERNAL_BASE_URL: "http://127.0.0.1:4000",
+        API_INTERNAL_BASE_URL: "http://127.0.0.1:4200",
       },
     },
   ],

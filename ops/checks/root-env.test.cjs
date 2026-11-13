@@ -69,9 +69,12 @@ test("PM2 uses the root-aware frontend launcher and preserves private loopback p
   const api = apps.find((app) => app.name === "geo-kurdistan-api");
   const frontend = apps.find((app) => app.name === "geo-kurdistan-frontend");
   assert.equal(api.env_production.HOST, "127.0.0.1");
+  assert.equal(api.env_production.PORT, "4200");
   assert.equal(api.env_production.AUTH_COOKIE_SECURE, "true");
   assert.equal(frontend.script, "scripts/next.cjs");
-  assert.match(frontend.args, /--hostname 127\.0\.0\.1 --port 3000/);
+  assert.match(frontend.args, /--hostname 127\.0\.0\.1 --port 3200/);
+  assert.equal(frontend.env_production.PORT, "3200");
+  assert.equal(frontend.env_production.API_INTERNAL_BASE_URL, "http://127.0.0.1:4200");
   assert.equal(frontend.env_production.NEXT_PUBLIC_API_BASE_URL, "");
   assert.ok(apps.every((app) => !app.node_args?.includes("dotenv/config")));
 });

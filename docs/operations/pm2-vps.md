@@ -13,6 +13,8 @@ On your VPS, change these values in the same root `.env` **before building**:
 | Setting | Production value |
 | --- | --- |
 | `NODE_ENV` | `production` |
+| `PORT` | `4200` (API) |
+| `API_INTERNAL_BASE_URL` | `http://127.0.0.1:4200` |
 | `TRUST_PROXY` | `true` behind Caddy |
 | `AUTH_COOKIE_SECURE` | `true` |
 | `NEXT_PUBLIC_SITE_URL` | `https://your-domain.com` |
@@ -52,12 +54,14 @@ your-domain.com {
         max_size 2MB
     }
     @backend path /api/* /health/*
-    reverse_proxy @backend 127.0.0.1:4000
-    reverse_proxy 127.0.0.1:3000
+    reverse_proxy @backend 127.0.0.1:4200
+    reverse_proxy 127.0.0.1:3200
 }
 ```
 
 Validate the host Caddyfile before reloading. Only Caddy exposes public 80/443. PostgreSQL/PostGIS, ClamAV, Poppler and FFmpeg must already be configured. Keep application, database and scanner ports private. Enable Google/Phone in Firebase and authorize the exact domain. Configure private media-bucket upload CORS for that HTTPS origin.
+
+PM2 production uses API `127.0.0.1:4200` and frontend `127.0.0.1:3200`; local dev remains on 4000/3000. Check `sudo ss -lntp | grep -E ':(4200|3200)\b'` before startup to confirm those ports are unused. Restart only the three Geo-Kurdistan processes through `pm2 restart ecosystem.config.cjs --env production --update-env`, then save. Preserve other Caddy sites and validate with Caddy's existing service environment if it uses DNS-provider credentials. An empty Cloudflare token is a separate configuration issue; changing application ports does not repair it.
 
 Create the first admin invitation with `INITIAL_ADMIN_EMAIL=you@example.com npm --prefix backend run auth:create-initial-admin:prod`; sign in with the matching verified account at the private invitation URL. Ordinary sign-in creates a visitor.
 

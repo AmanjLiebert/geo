@@ -6,12 +6,12 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Exclude test files from migration discovery |
-| Task folder | `docs/agent-work/migration-discovery/` |
+| Task | Move PM2 production to API 4200 and frontend 3200 |
+| Task folder | `docs/agent-work/pm2-production-ports/` |
 | Status | `IMPLEMENTED_AWAITING_REVIEW` |
 | Implementer | Codex (user-authorized override) |
 | Reviewer | Independent review not performed |
-| Plan gate | One root .env for API, worker, backend maintenance and frontend build/start. Preserve injected variables and browser secret boundaries; independent review pending. |
+| Plan gate | Consistent PM2 production ports 4200/3200 and internal API URL, with loopback binding and local development preserved. Independent review pending. |
 
 Previous efficiency task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/project-efficiency/`; no approval is implied by this deployment task.
 Previous single-root-env task remains `IMPLEMENTED_AWAITING_REVIEW`; this follow-up records further corrections and the user's explicit main-merge request, not independent approval.
