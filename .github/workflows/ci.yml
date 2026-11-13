@@ -71,6 +71,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --test ops/checks/root-env.test.cjs
       - run: cp .env.example .env
       - run: docker compose config --quiet
       - run: shellcheck ops/scripts/*.sh

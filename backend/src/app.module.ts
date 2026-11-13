@@ -22,6 +22,7 @@ import { ResearchModule } from './research/research.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      ignoreEnvFile: true,
       isGlobal: true,
       cache: true,
       validate: validateEnvironment,

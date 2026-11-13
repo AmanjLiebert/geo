@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import './config/load-root-environment';
 import helmet from '@fastify/helmet';
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';

@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../config/load-root-environment';
 import { ScientificTrustService } from '../publishing/scientific-trust.service';
 import { assertRecordEditable } from '../scientific-content/record-invariants';
 import { RecordsService } from '../scientific-content/records.service';

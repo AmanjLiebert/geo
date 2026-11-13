@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../config/load-root-environment';
 import { randomUUID } from 'node:crypto';
 import PgBoss from 'pg-boss';
 import { validateEnvironment } from '../config/environment';

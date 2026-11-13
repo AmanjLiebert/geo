@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import './config/load-root-environment';
 import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
 import { WorkerModule } from './worker.module';

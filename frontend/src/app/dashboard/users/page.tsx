@@ -3,10 +3,8 @@
 import {
   AlertTriangle,
   Check,
-  Clock,
   Copy,
   ExternalLink,
-  Lock,
   Mail,
   Phone,
   RotateCcw,
@@ -180,7 +178,10 @@ function UsersDashboardContent() {
   useEffect(() => {
     if (!isAdmin) return;
     const controller = new AbortController();
-    loadInvitations(controller.signal);
+    // Defer the initial request so an immediately cleaned-up effect cannot start it.
+    void Promise.resolve().then(() => {
+      if (!controller.signal.aborted) return loadInvitations(controller.signal);
+    });
     return () => controller.abort();
   }, [isAdmin]);
 

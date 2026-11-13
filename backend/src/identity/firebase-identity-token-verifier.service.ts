@@ -4,6 +4,7 @@ import { App, applicationDefault, cert, getApps, initializeApp } from 'firebase-
 import { Auth, getAuth } from 'firebase-admin/auth';
 import { readFile } from 'node:fs/promises';
 import { Environment } from '../config/environment';
+import { resolveRootPath } from '../config/environment-file';
 import { IdentityTokenVerifier, VerifiedIdentity } from './identity-token-verifier';
 
 interface FirebaseServiceAccount {
@@ -63,7 +64,7 @@ export class FirebaseIdentityTokenVerifier implements IdentityTokenVerifier, OnM
       return initializeApp({ credential: applicationDefault(), projectId }, name);
     }
 
-    const raw = await readFile(serviceAccountPath, 'utf8');
+    const raw = await readFile(resolveRootPath(serviceAccountPath), 'utf8');
     const serviceAccount = JSON.parse(raw) as FirebaseServiceAccount;
     return initializeApp(
       {

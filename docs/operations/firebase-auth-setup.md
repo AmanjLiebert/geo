@@ -8,7 +8,7 @@
 4. Configure SMS-region policy, quotas, and abuse monitoring before enabling public phone sign-in.
 5. Register a web application and place its public configuration in the `NEXT_PUBLIC_FIREBASE_*` deployment values.
 6. Create a narrowly controlled Firebase service account for backend token verification. Store its JSON outside Git at
-   the path configured by `FIREBASE_SERVICE_ACCOUNT_FILE` and restrict filesystem access to the deployment account.
+   the path configured by `AUTH_FIREBASE_SERVICE_ACCOUNT_PATH` for PM2/local execution (relative paths resolve from the repository root), and restrict filesystem access to the deployment account. Docker Compose uses `FIREBASE_SERVICE_ACCOUNT_FILE` to mount that JSON as a secret instead.
 7. Enable Identity Platform MFA before setting `AUTH_PRIVILEGED_MFA_REQUIRED=true`.
 
 ## Initial administrator
