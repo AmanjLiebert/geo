@@ -24,7 +24,8 @@ export function createDataSourceOptions(environment: DatabaseEnvironment): DataS
     migrationsRun: false,
     migrationsTableName: 'schema_migrations',
     migrationsTransactionMode: 'all',
-    migrations: [join(__dirname, 'migrations', '*.{js,ts}')],
+    // Only timestamp-prefixed migration files; never import colocated Vitest specs.
+    migrations: [join(__dirname, 'migrations', '[0-9]*-*.{js,ts}')],
     entities: [join(__dirname, '..', '**', '*.entity.{js,ts}')],
   };
 }

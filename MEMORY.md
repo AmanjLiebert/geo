@@ -6,8 +6,8 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Finalize root-only local and production environment configuration |
-| Task folder | `docs/agent-work/root-env-finalization/` |
+| Task | Exclude test files from migration discovery |
+| Task folder | `docs/agent-work/migration-discovery/` |
 | Status | `IMPLEMENTED_AWAITING_REVIEW` |
 | Implementer | Codex (user-authorized override) |
 | Reviewer | Independent review not performed |
