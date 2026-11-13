@@ -1,0 +1,11 @@
+# Hosted content seed
+
+User requests one seed run restoring the six category profiles and ten sourced records previously entered locally. Read-only public hosted API check on 2026-11-13: categories exist with null summaries/descriptions/images and zero published records. Existing curated catalogue is a different dataset and must not be used as a substitute.
+
+Scope: explicit opt-in command, packaged original public content/images with hashes/rights, preflight/dry-run, repeat protection, normal category/record/reference/media services, honest operational instructions. Preserve clean category prose from the subsequent correction. No automatic bootstrap changes, schema changes, deletes, unrelated overwrite, auth changes, remote execution/deployment or paid new service. Never copy database dumps or credentials to the bundle.
+
+Safety: fresh target backup before actual hosted run; existing admin/teacher, current migrations, storage and scanner required. Only run rehearsal against a disposable local database or mocks. Existing records retained; differing nonempty category profiles/drafts refused. Serialize seed runs; each record and its evidence/publication checkpoint transactional; media uses quarantine-confirm-scan-process and cannot be manually approved. Explicit command publishes only the requested manifest after normal readiness checks. Preserve audit history. Codex continues prior session implementation override; independent review remains pending and no remote release approved.
+
+Verification: exact counts, nonduplicate ten record images, checksums, source/caption/copy preservation; dry-run no mutation; repeat-run no duplicate content; conflict preservation, transaction rollback, media failure refusal; focused tests/types/lint/build and isolated rehearsal where available. Recovery: database backup plus existing object-store recovery procedure; seeded published content can be unpublished/archived through normal workflows, never hard-deleted by this command.
+
+Read: MAP category draft/publication and private media boundaries; PLAN opt-in maintenance/release boundaries; docs/agent-work/README; prior category correction and two record manifests; current owner services, seed/build/env-loader source. Graph metadata changed; direct source verification required.

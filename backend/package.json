@@ -30,7 +30,8 @@
     "auth:create-initial-admin": "tsx src/identity/create-initial-admin.ts",
     "auth:create-initial-admin:prod": "node dist/identity/create-initial-admin.js",
     "job:proof": "tsx src/jobs/proof.ts",
-    "typeorm": "typeorm-ts-node-commonjs"
+    "typeorm": "typeorm-ts-node-commonjs",
+    "db:seed:teacher:prod": "node scripts/seed-teacher-content.cjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1141.0",

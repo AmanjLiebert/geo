@@ -18,6 +18,8 @@ RUN apk add --no-cache ffmpeg poppler-utils \
 COPY --from=build --chown=geo:geo /app/package.json /app/package-lock.json ./
 COPY --from=build --chown=geo:geo /app/node_modules ./node_modules
 COPY --from=build --chown=geo:geo /app/dist ./dist
+COPY --chown=geo:geo scripts/seed-teacher-content.cjs ./scripts/seed-teacher-content.cjs
+COPY --chown=geo:geo assets/teacher-content-v1 ./assets/teacher-content-v1
 USER geo
 EXPOSE 4000
 CMD ["node", "dist/main.js"]

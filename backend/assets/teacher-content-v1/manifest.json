@@ -1,0 +1,497 @@
+{
+  "version": 1,
+  "key": "teacher-content-v1",
+  "categories": [
+    {
+      "slug": "stratigraphy-units",
+      "title": "Stratigraphy and geological units",
+      "summary": "Explore Kurdistan's rock layers, geological formations and stratigraphic sections.",
+      "description": "Kurdistan's geological history is recorded in successive rock layers. This collection brings together documented formations and stratigraphic sections, with descriptions of their lithology, thickness, boundaries and age evidence where available.",
+      "image": "category-stratigraphy-units"
+    },
+    {
+      "slug": "fossils",
+      "title": "Fossils",
+      "summary": "Explore fossil evidence and the history of life recorded in Kurdistan's rocks.",
+      "description": "This collection documents body fossils, microfossils and trace fossils associated with geological research in Kurdistan. Records distinguish observed features from interpretations and link identifications, ages and localities to supporting evidence.",
+      "image": "category-fossils"
+    },
+    {
+      "slug": "rocks-minerals",
+      "title": "Rocks and minerals",
+      "summary": "Discover Kurdistan's rocks and minerals through documented specimens and outcrops.",
+      "description": "Explore the materials that make up Kurdistan's geological landscape, from sedimentary rocks to igneous and metamorphic rocks and mineral specimens. Records describe observable textures, composition and geological context, with identifications supported by evidence where available.",
+      "image": "category-rocks-minerals"
+    },
+    {
+      "slug": "structural-geology",
+      "title": "Structural geology",
+      "summary": "Explore folds, faults and fractures that shape Kurdistan's geological structure.",
+      "description": "Kurdistan lies within the wider Zagros mountain system, where geological structures record deformation of the crust. This collection brings together documented folds, faults, shear zones, joints and fractures, including measurements and interpretations where supported by evidence.",
+      "image": "category-structural-geology"
+    },
+    {
+      "slug": "hydrogeology",
+      "title": "Hydrogeology",
+      "summary": "Explore groundwater, springs, wells and aquifers across Kurdistan.",
+      "description": "Hydrogeology examines how water is stored and moves through rock and sediment. This collection brings together documented springs, wells and aquifers in Kurdistan, with information on geological setting, flow and water characteristics where measured.",
+      "image": "category-hydrogeology"
+    },
+    {
+      "slug": "surface-geology",
+      "title": "Surface geology and landforms",
+      "summary": "Explore Kurdistan's landforms and the deposits and processes shaping its surface.",
+      "description": "Kurdistan's surface landscape includes incised valleys, rocky slopes, caves and younger sediment deposits. This collection documents Quaternary and other surficial deposits alongside karst and erosional landforms, linking descriptions and interpretations to field observations or published evidence.",
+      "image": "category-surface-geology"
+    }
+  ],
+  "records": [
+    {
+      "slug": "rawandiz-canyon",
+      "category": "karst-erosional-landforms",
+      "type": "landform_profile",
+      "title": "Rawandiz Canyon",
+      "summary": "A deeply incised limestone gorge in the Rawanduz area of the Kurdistan Region of Iraq.",
+      "description": "Rawandiz Canyon forms part of the mountainous landscape around Rawanduz in the Kurdistan Region of Iraq. Published research describes the Ruwandiz Gorge as cutting across a limestone anticline. The accompanying photograph shows steep exposed walls, visible rock layers and a river corridor.\n\nRegional research also documents terraces, erosional features and glacio-alluvial deposits within the wider Rawanduz River drainage. Those regional interpretations do not establish the age or origin of every feature visible in this photograph.",
+      "attributes": {
+        "feature_kind": "River gorge / canyon",
+        "morphology": "A deeply incised valley with steep rock walls and exposed bedding. Regional research describes the Ruwandiz Gorge crossing a limestone anticline; the photograph documents the visible canyon landscape rather than measured dimensions.",
+        "host_rock": "Limestone, as described for the gorge in the cited regional study; no specific formation is assigned."
+      },
+      "caption": "Rawandiz Canyon (Kharand), Kurdistan Region of Iraq.",
+      "alt": "Steep layered rock walls and a river corridor in Rawandiz Canyon.",
+      "sources": [
+        {
+          "title": "Pleistocene glaciation in Kurdistan",
+          "url": "https://egqsj.copernicus.org/articles/12/131/1962/egqsj-12-131-1962.pdf",
+          "year": 1962,
+          "publication": "Eiszeitalter und Gegenwart",
+          "type": "journal",
+          "pages": "Page 149: Ruwandiz Gorge"
+        },
+        {
+          "title": "Glacial Activity Signs During the Pleistocene Epoch in Rawanduz River Valley, Kurdistan Region, Northeast Iraq",
+          "url": "https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/418",
+          "year": 2020,
+          "publication": "Iraqi Bulletin of Geology and Mining, 16(2), 75–93",
+          "type": "journal"
+        },
+        {
+          "title": "Rawandiz Canyon (Kharand) 01 — original photograph",
+          "url": "https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_01.jpg",
+          "year": 2024,
+          "type": "website",
+          "authors": [
+            {
+              "name": "Khoshhat"
+            }
+          ]
+        }
+      ],
+      "image": "category-surface-geology"
+    },
+    {
+      "slug": "bekhal-spring",
+      "category": "springs",
+      "type": "water_point_profile",
+      "title": "Bekhal Spring",
+      "summary": "The spring and cascading water at Bekhal in the Kurdistan Region of Iraq.",
+      "description": "Bekhal Spring is documented in the Kurdistan Region of Iraq by the cited original photograph. The image, dated 26 April 2025, shows water emerging at the base of a rocky slope and descending over several cascades beside visitor facilities.\n\nThis is a water-point site profile. The photograph supports the site's appearance and identification, but it provides no measured discharge, water chemistry, seasonal record or identified host aquifer. It therefore does not establish water quality or suitability for drinking.",
+      "attributes": {
+        "site_name": "Bekhal Spring (Kani Bekhal)",
+        "water_point_kind": "Spring with cascades",
+        "host_aquifer": "Not identified in the cited source; an aquifer assignment requires hydrogeological evidence."
+      },
+      "caption": "Bekhal Spring, photographed on 26 April 2025 by Khoshhat.",
+      "alt": "Water cascades below a rocky hillside at Bekhal Spring beside visitor facilities.",
+      "sources": [
+        {
+          "title": "Bekhal Spring 01 — original photograph and site identification",
+          "url": "https://commons.wikimedia.org/wiki/File:Bekhal_Spring_01.jpg",
+          "year": 2025,
+          "type": "website",
+          "authors": [
+            {
+              "name": "Khoshhat"
+            }
+          ]
+        }
+      ],
+      "image": "category-hydrogeology"
+    },
+    {
+      "slug": "shanidar-cave",
+      "category": "karst-erosional-landforms",
+      "type": "landform_profile",
+      "title": "Shanidar Cave",
+      "summary": "A large karstic cave in the Baradost Mountains of Iraqi Kurdistan, documented by geological and archaeological research.",
+      "description": "Shanidar Cave lies in the Baradost Mountains in Iraqi Kurdistan. Published research describes it as a large, south-facing karstic cave. A 2022 study reports an entrance approximately 25 metres wide and 8 metres high, an inward extent of about 40 metres and a maximum internal width of 53 metres. These are published site dimensions, not measurements made for this record.\n\nThe cave's sediments also preserve important evidence of past environments and human occupation. This record describes the cave as a landform; it does not assign an age to the host rock or to the formation of the cave.",
+      "attributes": {
+        "feature_kind": "Karstic cave",
+        "morphology": "Large south-facing entrance, approximately 25 m wide and 8 m high. Reported inward extent is about 40 m and maximum internal width 53 m (2022 study, section 1.1). These are source-reported dimensions.",
+        "host_rock": "Limestone cliff, shown and identified in the cited Cambridge research figure; formation and geological age are not assigned."
+      },
+      "caption": "View from inside Shanidar Cave towards its entrance and the surrounding landscape.",
+      "alt": "A view through the broad cave entrance from inside Shanidar Cave towards trees and mountains.",
+      "sources": [
+        {
+          "title": "The Microvertebrates of Shanidar Cave: Preliminary Taphonomic Findings",
+          "url": "https://api.repository.cam.ac.uk/server/api/core/bitstreams/f5092e7b-0bce-4443-8cd7-0b9051862e7e/content",
+          "year": 2022,
+          "publication": "Quaternary 5, 4",
+          "type": "journal",
+          "pages": "Section 1.1, The Site"
+        },
+        {
+          "title": "Shanidar Cave excavations — research figures",
+          "url": "https://api.repository.cam.ac.uk/server/api/core/bitstreams/28a37602-755d-4cab-a94c-948c76411372/content",
+          "type": "research",
+          "pages": "Figure 1B: cave entrance in limestone cliff"
+        },
+        {
+          "title": "Shanidar Cave overview — original photograph",
+          "url": "https://commons.wikimedia.org/wiki/File:Shanidar_Cave_-_overview.jpg",
+          "type": "website",
+          "authors": [
+            {
+              "name": "Hardscarf"
+            }
+          ]
+        }
+      ],
+      "image": "record-shanidar"
+    },
+    {
+      "slug": "gali-ali-beg-waterfall",
+      "category": "karst-erosional-landforms",
+      "type": "landform_profile",
+      "title": "Gali Ali Beg Waterfall",
+      "summary": "A waterfall descending through a rocky gorge in Erbil Governorate, Kurdistan Region of Iraq.",
+      "description": "Gali Ali Beg Waterfall is documented in Erbil Governorate by the cited original photograph. The image shows a narrow waterfall falling between steep rock walls into a pool. The exposed walls and the watercourse form the visible setting of this landform.\n\nThis record describes the photographed waterfall and gorge. Waterfall height, discharge and the age of the exposed rock are not measured in the source photograph.",
+      "attributes": {
+        "feature_kind": "Waterfall in a rocky gorge",
+        "morphology": "A narrow fall between steep exposed rock walls, descending into a pool. People and small boats appear near the base; no scale measurement is inferred from them."
+      },
+      "caption": "Gali Ali Beg waterfall, Erbil Governorate, Kurdistan Region of Iraq.",
+      "alt": "A waterfall between steep rock walls falling into a pool with people and small boats nearby.",
+      "sources": [
+        {
+          "type": "website",
+          "title": "Gali Ali Beg waterfall in Erbil, the Kurdistan Region of Iraq 01 — original photograph",
+          "url": "https://commons.wikimedia.org/wiki/File:Gali_Ali_Beg_waterfall_in_Erbil,_the_Kurdistan_Region_of_Iraq_01.jpg",
+          "authors": [
+            {
+              "name": "Levi Clancy"
+            }
+          ]
+        }
+      ],
+      "image": "record-gali-ali-beg"
+    },
+    {
+      "slug": "halgurd-mountain-landscape",
+      "category": "karst-erosional-landforms",
+      "type": "landform_profile",
+      "title": "Halgurd Mountain",
+      "summary": "A mountain landscape in the Kurdistan Region of Iraq, documented by an original photograph of Halgurd.",
+      "description": "Halgurd is documented by the cited original photograph, whose source identifies the subject as Helgurd peak. This record presents the mountain as a landform in the Kurdistan Region of Iraq.\n\nNo summit-height ranking, permanent-glacier claim or named geological formation is assigned from the photograph.",
+      "attributes": {
+        "feature_kind": "Mountain peak",
+        "morphology": "A snow-covered pointed peak rises above darker lower slopes, with neighbouring mountain ridges visible under broken cloud. These visible features do not establish snow persistence or a measured elevation."
+      },
+      "caption": "Halgurd mountain landscape, original photograph by Burhan br.",
+      "alt": "A snow-covered pointed peak at Halgurd above darker lower slopes and neighbouring ridges.",
+      "sources": [
+        {
+          "type": "website",
+          "title": "Halgurd 1.JPG — original photograph of Helgurd peak",
+          "url": "https://commons.wikimedia.org/wiki/File:Halgurd_1.JPG",
+          "authors": [
+            {
+              "name": "Burhan br"
+            }
+          ]
+        }
+      ],
+      "image": "record-halgurd-landscape"
+    },
+    {
+      "slug": "korek-mountain-landscape",
+      "category": "karst-erosional-landforms",
+      "type": "landform_profile",
+      "title": "Korek Mountain landscape",
+      "summary": "A winter mountain view at Korek in the Kurdistan Region of Iraq.",
+      "description": "The cited original photograph identifies Korek Mountain in Kurdistan, Iraq. It shows snow-covered foreground slopes and a wide view of the surrounding ridges and valleys. This record documents the visible mountain landscape and the source's place identification.\n\nSnow in one photograph does not establish permanent ice, annual snowfall or a climatic trend. Rock units and structural orientations require separate geological evidence.",
+      "attributes": {
+        "feature_kind": "Mountain landscape",
+        "morphology": "Snow-covered foreground slopes overlook a broad valley and successive mountain ridges. The photograph provides a landscape view rather than a measured terrain survey."
+      },
+      "caption": "Winter view at Korek Mountain, photograph by Alli Khalil.",
+      "alt": "Snow-covered slopes and a broad valley with distant mountain ridges at Korek.",
+      "sources": [
+        {
+          "type": "website",
+          "title": "Korek Mountain in Kurdistan Iraq — original photograph",
+          "url": "https://commons.wikimedia.org/wiki/File:Korek_Mountain_in_Kurdistan_Iraq.jpg",
+          "authors": [
+            {
+              "name": "Alli Khalil"
+            }
+          ]
+        }
+      ],
+      "image": "record-korek"
+    },
+    {
+      "slug": "bradost-mountain-landscape",
+      "category": "karst-erosional-landforms",
+      "type": "landform_profile",
+      "title": "Bradost Mountain landscape",
+      "summary": "Steep exposed rock faces on Bradost Mountain in Erbil, Kurdistan Region of Iraq.",
+      "description": "The cited photograph identifies Bradost Mountain in Erbil. It shows a prominent rock face above wooded lower slopes, with visible layering and stepped cliff edges. The image documents the landscape appearance of the mountain.\n\nThe photograph alone does not establish a formal rock unit, geological age or the orientation of a fold or fault. This record therefore describes visible morphology without assigning those interpretations.",
+      "attributes": {
+        "feature_kind": "Mountain cliff and ridge",
+        "morphology": "A steep, layered rock face with stepped cliff edges rises above vegetated lower slopes. Layering is visible, but bed thickness and structural orientation are not measured."
+      },
+      "caption": "Bradost Mountain, Erbil; photograph by Sarchia Khursheed.",
+      "alt": "Layered rocky cliffs of Bradost Mountain above green wooded slopes.",
+      "sources": [
+        {
+          "type": "website",
+          "title": "Bradost Mountain, Erbil — original photograph",
+          "url": "https://commons.wikimedia.org/wiki/File:Bradost_Mountain,_Erbil.jpg",
+          "authors": [
+            {
+              "name": "Sarchia Khursheed"
+            }
+          ]
+        }
+      ],
+      "image": "record-bradost"
+    },
+    {
+      "slug": "dukan-dam-rock-exposure",
+      "category": "sedimentary-rocks",
+      "type": "outcrop_observation",
+      "title": "Exposed slopes beside Dukan Dam",
+      "summary": "A photographic record of exposed rocky slopes beside Dukan Dam in the Kurdistan Region of Iraq.",
+      "description": "The cited U.S. Army Corps of Engineers image shows the front of Dukan Dam and adjoining exposed slopes. Rock faces are visible beside the engineered structure, providing a documented view of the dam-site setting.\n\nThis is a photographic outcrop observation, not a field rock-identification or engineering-safety assessment. The view does not establish lithology, geological age, discontinuity orientation or slope stability.",
+      "attributes": {
+        "observation_notes": "Exposed rocky slopes flank the dam structure in the source photograph. The distant view supports documentation of the exposure and its setting, but not a reliable rock classification, structural measurement or stability assessment."
+      },
+      "caption": "Front of Dukan Dam and adjoining exposed slopes; U.S. Army Corps of Engineers image.",
+      "alt": "Dukan Dam spans a rocky opening with exposed slopes on both sides and water below.",
+      "sources": [
+        {
+          "type": "website",
+          "title": "Dukan Dam — U.S. Army Corps of Engineers photograph",
+          "url": "https://commons.wikimedia.org/wiki/File:Dukan_Dam.jpg",
+          "authors": [
+            {
+              "name": "U.S. Army Corps of Engineers"
+            }
+          ]
+        }
+      ],
+      "image": "record-dukan"
+    },
+    {
+      "slug": "erbil-starfish-fossil",
+      "category": "invertebrate-fossils",
+      "type": "fossil_specimen",
+      "title": "Starfish fossil displayed in Erbil",
+      "summary": "A starfish fossil photographed at the Erbil Stones and Gems Museum in the Kurdistan Region of Iraq.",
+      "description": "The cited original photograph documents a specimen identified in its source as a starfish fossil at the Erbil Stones and Gems Museum, Erbil Citadel. It is recorded here as a museum specimen, with identification following the photograph's description.\n\nThe source does not establish an original collection locality, geological period or catalogue number. Display in Erbil is not evidence that the specimen was collected in Kurdistan, and no local fossil occurrence is asserted.",
+      "attributes": {
+        "identification": "Starfish fossil, following the original photograph's identification; no species assigned.",
+        "repository": "Erbil Stones and Gems Museum, Erbil Citadel, Kurdistan Region of Iraq."
+      },
+      "caption": "Starfish fossil on display at the Erbil Stones and Gems Museum; original locality and age unreported.",
+      "alt": "The starfish fossil specimen photographed on display at the Erbil Stones and Gems Museum.",
+      "sources": [
+        {
+          "type": "website",
+          "title": "Starfish fossil — Erbil Stones and Gems Museum, original photograph",
+          "url": "https://commons.wikimedia.org/wiki/File:Starfish_fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+          "year": 2023,
+          "authors": [
+            {
+              "name": "Osama Shukir Muhammed Amin FRCP(Glasg)"
+            }
+          ]
+        }
+      ],
+      "image": "record-erbil-starfish-fossil"
+    },
+    {
+      "slug": "erbil-trilobite-fossil",
+      "category": "invertebrate-fossils",
+      "type": "fossil_specimen",
+      "title": "Trilobite fossil displayed in Erbil",
+      "summary": "A trilobite fossil photographed at the Erbil Stones and Gems Museum in the Kurdistan Region of Iraq.",
+      "description": "The cited original photograph records a specimen identified as a trilobite fossil on display at the Erbil Stones and Gems Museum, Erbil Citadel. This record documents the museum specimen and retains the source's broad identification without adding a genus or species.\n\nIts original collecting locality, geological period and catalogue number are not documented by the source. The museum location identifies where it was displayed, not where the fossil was found.",
+      "attributes": {
+        "identification": "Trilobite fossil, following the original photograph's identification; genus and species not assigned.",
+        "repository": "Erbil Stones and Gems Museum, Erbil Citadel, Kurdistan Region of Iraq."
+      },
+      "caption": "Trilobite fossil displayed at the Erbil Stones and Gems Museum; original locality and age unreported.",
+      "alt": "The trilobite fossil specimen photographed on display at the Erbil Stones and Gems Museum.",
+      "sources": [
+        {
+          "type": "website",
+          "title": "Trilobite fossil — Erbil Stones and Gems Museum, original photograph",
+          "url": "https://commons.wikimedia.org/wiki/File:Trilobite_fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+          "year": 2023,
+          "authors": [
+            {
+              "name": "Osama Shukir Muhammed Amin FRCP(Glasg)"
+            }
+          ]
+        }
+      ],
+      "image": "record-erbil-trilobite-fossil"
+    }
+  ],
+  "images": [
+    {
+      "key": "category-stratigraphy-units",
+      "source": "https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_03.jpg",
+      "licence": "CC BY 4.0",
+      "credit": "Khoshhat",
+      "rightsStatement": "Khoshhat; CC BY 4.0 (https://creativecommons.org/licenses/by/4.0). Resized for display. Source: https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_03.jpg",
+      "filename": "category-stratigraphy-units.jpg",
+      "sha256": "df7bbfc7c1b59868147dcabaab0fb46cfe751d99e98e6f81ba01bf8a78e4891e",
+      "originalSha256": "0d1884d5697a79e3ce1327e3a7e6cd086197068971225dd5de591c1b4c85d194"
+    },
+    {
+      "key": "category-fossils",
+      "source": "https://commons.wikimedia.org/wiki/File:Fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Osama Shukir Muhammed Amin FRCP(Glasg)",
+      "rightsStatement": "Osama Shukir Muhammed Amin FRCP(Glasg); CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0). Resized for display. Source: https://commons.wikimedia.org/wiki/File:Fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+      "filename": "category-fossils.jpg",
+      "sha256": "e9d11821dd1c91533e1fb1d8453969c5c3da868c205eba5806a574842b8b76dc",
+      "originalSha256": "4dfb05cc32a1ca876e0f42e5ec7acb314ea6202d5638e6cb6218ae43ec7e8876"
+    },
+    {
+      "key": "category-rocks-minerals",
+      "source": "https://commons.wikimedia.org/wiki/File:Agate_from_Kurdistan,_Iraq_(the_so-called_Peshmerga_agate)._Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Osama Shukir Muhammed Amin FRCP(Glasg)",
+      "rightsStatement": "Osama Shukir Muhammed Amin FRCP(Glasg); CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0). Resized for display. Source: https://commons.wikimedia.org/wiki/File:Agate_from_Kurdistan,_Iraq_(the_so-called_Peshmerga_agate)._Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+      "filename": "category-rocks-minerals.jpg",
+      "sha256": "cbe6f588d365a825782303840813ab00613f79a0a22b89794affcaf69cfd3cfd",
+      "originalSha256": "e52571108c7bc7a236ddbc9bcca4ac9c8690e3eb22ad51fcceaf17ac823277d2"
+    },
+    {
+      "key": "category-structural-geology",
+      "source": "https://commons.wikimedia.org/wiki/File:Zagros_Folded_Zone.jpg",
+      "licence": "CC BY-SA 3.0",
+      "credit": "Joshua Doubek",
+      "rightsStatement": "Joshua Doubek; CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0). Resized for display. Source: https://commons.wikimedia.org/wiki/File:Zagros_Folded_Zone.jpg",
+      "filename": "category-structural-geology.jpg",
+      "sha256": "286d688fd7addf902f01a61aee5128dd4ab8dda15e47f153e9601fb0a27b9e86",
+      "originalSha256": "9ec4774cadf2637ee683eb5f409f475ca93b5bb4f5921b54db0a1bf7d8399711"
+    },
+    {
+      "key": "category-hydrogeology",
+      "source": "https://commons.wikimedia.org/wiki/File:Bekhal_Spring_01.jpg",
+      "licence": "CC BY 4.0",
+      "credit": "Khoshhat",
+      "rightsStatement": "Khoshhat; CC BY 4.0 (https://creativecommons.org/licenses/by/4.0). Resized for display. Source: https://commons.wikimedia.org/wiki/File:Bekhal_Spring_01.jpg",
+      "filename": "category-hydrogeology.jpg",
+      "sha256": "26e53cb4d13181d6b12057dba42a0f15171c1cb251a6e85851944e8f1c5e28ba",
+      "originalSha256": "96df791e7735c8ea6293623b0cf31bc45dcc6cd35a98aa8042af0862942dae1f"
+    },
+    {
+      "key": "category-surface-geology",
+      "source": "https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_01.jpg",
+      "licence": "CC BY 4.0",
+      "credit": "Khoshhat",
+      "rightsStatement": "Khoshhat; CC BY 4.0 (https://creativecommons.org/licenses/by/4.0). Resized for display. Source: https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_01.jpg",
+      "filename": "category-surface-geology.jpg",
+      "sha256": "37108130a60fe33bc48d14a08016fcc941ce62b269c189adc4dae871905942d5",
+      "originalSha256": "9690fe3c8b9925c903f950291b791c289f53d87ae5b8353251e9bc611598cb91"
+    },
+    {
+      "key": "record-shanidar",
+      "source": "https://commons.wikimedia.org/wiki/File:Shanidar_Cave_-_overview.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Hardscarf",
+      "rightsStatement": "CC BY-SA 4.0; attribution required where applicable. Source: https://commons.wikimedia.org/wiki/File:Shanidar_Cave_-_overview.jpg",
+      "filename": "record-shanidar.jpg",
+      "sha256": "4f36ace86e0803a7be247b8ae5489d3bc4721c8e970701261cd8b69106e0775e",
+      "originalSha256": "4b71cb19726f557cb9ec9b87be75e430b14142daba371044cb65385a2c2cb738"
+    },
+    {
+      "key": "record-gali-ali-beg",
+      "source": "https://commons.wikimedia.org/wiki/File:Gali_Ali_Beg_waterfall_in_Erbil,_the_Kurdistan_Region_of_Iraq_01.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Levi Clancy",
+      "rightsStatement": "CC BY-SA 4.0; attribution required where applicable. Source: https://commons.wikimedia.org/wiki/File:Gali_Ali_Beg_waterfall_in_Erbil,_the_Kurdistan_Region_of_Iraq_01.jpg",
+      "filename": "record-gali-ali-beg.jpg",
+      "sha256": "060edd5bcd1f3490924ae03cb31c60f17337a404ce77ad8e394212f772ad96d9",
+      "originalSha256": "01b67a465e670d664d017e09cd2f049931f44b1a7583fddecf8409b63d4c44fc"
+    },
+    {
+      "key": "record-halgurd-landscape",
+      "source": "https://commons.wikimedia.org/wiki/File:Halgurd_1.JPG",
+      "licence": "Public domain",
+      "credit": "Burhan br (talk)",
+      "rightsStatement": "Burhan br (talk); Public domain. Resized for display. Source: https://commons.wikimedia.org/wiki/File:Halgurd_1.JPG",
+      "filename": "record-halgurd-landscape.jpg",
+      "sha256": "aabd3e5fcac67aafa74848a9f8c92a9a0022243c53a52362fd56dbec19e7d86e",
+      "originalSha256": "f94739e38ff39d7dc5967eaa87b590f6c5ebc1865861e510c6b1d086d8cd1f30"
+    },
+    {
+      "key": "record-korek",
+      "source": "https://commons.wikimedia.org/wiki/File:Korek_Mountain_in_Kurdistan_Iraq.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Alli Khalil",
+      "rightsStatement": "CC BY-SA 4.0; attribution required where applicable. Source: https://commons.wikimedia.org/wiki/File:Korek_Mountain_in_Kurdistan_Iraq.jpg",
+      "filename": "record-korek.jpg",
+      "sha256": "3986352924940c87e4461f975dc682751375ca8f70a0ae6868c2d2f9e846a53f",
+      "originalSha256": "1e576fb8e55dc0e81fa57c6ce4357aa844909eca70456fead3173702487ccc8d"
+    },
+    {
+      "key": "record-bradost",
+      "source": "https://commons.wikimedia.org/wiki/File:Bradost_Mountain,_Erbil.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Sarchia Khursheed",
+      "rightsStatement": "CC BY-SA 4.0; attribution required where applicable. Source: https://commons.wikimedia.org/wiki/File:Bradost_Mountain,_Erbil.jpg",
+      "filename": "record-bradost.jpg",
+      "sha256": "5c6970875d25d0b945a1237a0e9ca7ed6971485f19e3946149faa936a42ba7fd",
+      "originalSha256": "cedb95da7fef6104bfb0a623d92df3f225a77b71c703ccbd29aabbb4bd7ee989"
+    },
+    {
+      "key": "record-dukan",
+      "source": "https://commons.wikimedia.org/wiki/File:Dukan_Dam.jpg",
+      "licence": "Public domain",
+      "credit": "U.S. Army Corps of Engineers",
+      "rightsStatement": "Public domain; attribution required where applicable. Source: https://commons.wikimedia.org/wiki/File:Dukan_Dam.jpg",
+      "filename": "record-dukan.jpg",
+      "sha256": "171a85379f8eb825e5752113a13fc8f287cb4b71563d8fd8c999fa69737d878b",
+      "originalSha256": "8b1270f3028f8569fa3b15bf030fcae7e001f0e285ebcfeeecbe62526d86ce8d"
+    },
+    {
+      "key": "record-erbil-starfish-fossil",
+      "source": "https://commons.wikimedia.org/wiki/File:Starfish_fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Osama Shukir Muhammed Amin FRCP(Glasg)",
+      "rightsStatement": "Osama Shukir Muhammed Amin FRCP(Glasg); CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0). Resized for display. Source: https://commons.wikimedia.org/wiki/File:Starfish_fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+      "filename": "record-erbil-starfish-fossil.jpg",
+      "sha256": "fa330e5125c765f5c66a21017bc37a813c8266ceb157ade553d9b2cdf32d800f",
+      "originalSha256": "a9174f4c6076fdd2fda00e63f6d3451bb3aa9325438ce50c9bc60414c9221fbf"
+    },
+    {
+      "key": "record-erbil-trilobite-fossil",
+      "source": "https://commons.wikimedia.org/wiki/File:Trilobite_fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Osama Shukir Muhammed Amin FRCP(Glasg)",
+      "rightsStatement": "Osama Shukir Muhammed Amin FRCP(Glasg); CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0). Resized for display. Source: https://commons.wikimedia.org/wiki/File:Trilobite_fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+      "filename": "record-erbil-trilobite-fossil.jpg",
+      "sha256": "38b4fa7f7e371fdd0c9a85a2092dccbf606f7dd745371094759e0264adac328e",
+      "originalSha256": "f2d498f09ad2f2f4211dd9a8c267fd5b16e063d91c8e8d1c7d1b45fca9cc26e4"
+    }
+  ]
+}
