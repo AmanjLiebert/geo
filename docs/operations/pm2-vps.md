@@ -2,7 +2,23 @@
 
 Use Node.js 24.11+ and one repository-root `.env`, based on root `.env.example`. Fill in database URL, HTTPS domain/CORS, Firebase Admin project/path, public Firebase web settings and private media storage. For PM2 set `MEDIA_SCANNER_HOST=localhost`. Firebase service-account JSON remains a separate protected file outside Git. Never commit populated settings.
 
-For an existing installation, manually transfer required values and move old backend/frontend `.env*` files into protected backups outside the module directories. Do not delete private files before verifying the replacement. Backend ignores module-local files; Next.js can still use old frontend files as fallback if root values are missing, so retire those copies. No real secrets are automatically read, copied or changed during this implementation.
+For an existing installation, manually transfer required values and move old backend/frontend `.env*` files into protected backups outside the module directories. Do not delete private files before verifying the replacement. Backend ignores module-local files; the frontend launcher rejects old module-local files so Next.js cannot silently load conflicting settings. No real secrets are automatically copied or changed.
+
+The template defaults to local development. Set real `DATABASE_URL`, Firebase and media settings on each machine. `POSTGRES_PASSWORD` alone does not create a PostgreSQL user or configure its password, and `COMPOSE_DATABASE_URL` is not used by directly running applications. The database and its role must already exist. Use URL-encoded credentials and the actual database host in `DATABASE_URL`.
+
+On your VPS, change these values in the same root `.env` **before building**:
+
+| Setting | Production value |
+| --- | --- |
+| `NODE_ENV` | `production` |
+| `TRUST_PROXY` | `true` behind Caddy |
+| `AUTH_COOKIE_SECURE` | `true` |
+| `NEXT_PUBLIC_SITE_URL` | `https://your-domain.com` |
+| `CORS_ORIGINS` | `https://your-domain.com` |
+| `NEXT_PUBLIC_API_BASE_URL` | empty |
+| `AUTH_FIREBASE_SERVICE_ACCOUNT_PATH` | protected JSON path on that server |
+
+Relative Firebase JSON paths resolve from the repository root in both local and compiled builds; absolute paths work too. Keep the JSON out of Git. Do not overwrite a populated `.env` when pulling or updating code.
 
 From the repository root, as the non-root deployment user:
 

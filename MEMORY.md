@@ -6,14 +6,15 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Single root environment file for PM2/Caddy |
-| Task folder | `docs/agent-work/single-root-env/` |
+| Task | Finalize root-only local and production environment configuration |
+| Task folder | `docs/agent-work/root-env-finalization/` |
 | Status | `IMPLEMENTED_AWAITING_REVIEW` |
 | Implementer | Codex (user-authorized override) |
 | Reviewer | Independent review not performed |
 | Plan gate | One root .env for API, worker, backend maintenance and frontend build/start. Preserve injected variables and browser secret boundaries; independent review pending. |
 
 Previous efficiency task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/project-efficiency/`; no approval is implied by this deployment task.
+Previous single-root-env task remains `IMPLEMENTED_AWAITING_REVIEW`; this follow-up records further corrections and the user's explicit main-merge request, not independent approval.
 
 Previous image-delivery task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/explore-image-delivery/`; eligibility-preserving revalidation and smaller scientific thumbnails are preserved.
 

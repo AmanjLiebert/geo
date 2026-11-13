@@ -1,8 +1,8 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { loadEnvironmentFile } from './environment-file';
+import { loadEnvironmentFile, resolveRootPath } from './environment-file';
 
 const directories: string[] = [];
 function fixtureDirectory(): string {
@@ -15,6 +15,13 @@ afterEach(() => {
 });
 
 describe('root environment loading', () => {
+  it('resolves root-relative Firebase paths and preserves absolute paths', () => {
+    expect(resolveRootPath('secrets/firebase.json')).toBe(
+      resolve(__dirname, '../../../secrets/firebase.json'),
+    );
+    const absolute = join(fixtureDirectory(), 'firebase.json');
+    expect(resolveRootPath(absolute)).toBe(absolute);
+  });
   it('loads quoted values while preserving injected deployment values', () => {
     const file = join(fixtureDirectory(), '.env');
     writeFileSync(file, 'DATABASE_URL="postgresql://example.invalid/test"\nNODE_ENV=development\n');

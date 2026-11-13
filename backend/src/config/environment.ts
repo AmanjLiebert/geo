@@ -56,7 +56,11 @@ export const environmentSchema = Joi.object<Environment>({
     .default('info'),
   DATABASE_URL: Joi.string()
     .uri({ scheme: ['postgres', 'postgresql'] })
-    .required(),
+    .required()
+    .messages({
+      'any.required':
+        'Set DATABASE_URL in the repository-root .env; COMPOSE_DATABASE_URL is only for Docker Compose',
+    }),
   DATABASE_SSL: Joi.boolean().truthy('true').falsy('false').default(false),
   DATABASE_POOL_SIZE: Joi.number().integer().min(1).max(50).default(10),
   DATABASE_CONNECT_TIMEOUT_MS: Joi.number().integer().min(500).max(60_000).default(5_000),

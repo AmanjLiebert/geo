@@ -22,6 +22,8 @@ The existing Next.js visitor experience is the visual baseline. The repository n
 
 For PM2/Caddy VPS hosting, use a single repository-root `.env` based on root `.env.example`; see [`docs/operations/pm2-vps.md`](docs/operations/pm2-vps.md). Module-local settings are unnecessary for this setup.
 
+For local development, create root `.env` from `.env.example` only if it does not exist, then fill in your actual database/Firebase/media settings. Run the frontend and backend dev commands in separate terminals. On production, use a separate root `.env` on that server with the production values in the VPS guide. Never overwrite your populated configuration with the template. The template is named `.env.example`, not `.example.env`.
+
 Run from `frontend/`:
 
 ```text

@@ -33,6 +33,7 @@ module.exports = {
         HOST: "127.0.0.1",
         PORT: "4000",
         TRUST_PROXY: "true",
+        AUTH_COOKIE_SECURE: "true",
         SWAGGER_ENABLED: "false",
       },
     },
