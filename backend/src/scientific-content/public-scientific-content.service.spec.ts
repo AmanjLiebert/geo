@@ -41,6 +41,7 @@ describe('PublicScientificContentService', () => {
           summary: 'Rock collections',
           description: 'Published rock collections.',
           record_count: '3',
+          total_count: '1',
           image_ready: true,
         },
       ])
@@ -69,12 +70,32 @@ describe('PublicScientificContentService', () => {
       limit: 20,
       offset: 0,
     });
+    expect(query).toHaveBeenCalledTimes(1);
     const sql = query.mock.calls[0]?.[0] as string;
+    expect(sql).toContain('COUNT(*) OVER () AS total_count');
+    expect(sql.indexOf('LIMIT $2 OFFSET $3')).toBeLessThan(sql.indexOf('LEFT JOIN LATERAL'));
     expect(sql).toContain("c.status = 'active'");
     expect(sql).toContain("c.publication_status = 'published'");
     expect(sql).toContain("rt.status = 'published'");
     expect(sql).not.toContain('storage_key');
     expect(sql).not.toContain('owner_user_id');
+  });
+
+  it.each([0, 100])('retains exact totals when page at offset %s is empty', async (offset) => {
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ total: offset ? '22' : '0' }]);
+    const service = new PublicScientificContentService({ query } as unknown as DataSource);
+    expect(await service.listCategories('en', 20, offset)).toEqual({
+      items: [],
+      total: offset ? 22 : 0,
+      limit: 20,
+      offset,
+    });
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query.mock.calls[1]?.[0]).toContain("p.publication_status = 'published'");
+    expect(query.mock.calls[1]?.[1]).toEqual(['en']);
   });
 
   it('returns neutral not-found for a hidden category', async () => {

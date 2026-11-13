@@ -183,17 +183,17 @@ export function AccountPanel() {
     <section className={styles.panel} aria-labelledby="account-heading">
       <div className={styles.panelHeader}>
         <ShieldCheck aria-hidden="true" />
-        <div><span>Identity check</span><h2 id="account-heading">Sign in securely</h2></div>
+        <div><span>Geo-Kurdistan</span><h1 id="account-heading">Welcome back</h1><p className={styles.subtitle}>Sign in to your account to continue.</p></div>
       </div>
       {invitationToken && <p className={styles.invitation}><strong>Invitation detected.</strong> Sign in with the exact email or phone that received it.</p>}
       {!configured ? (
-        <p className={styles.message} role="status">Sign-in is prepared but not enabled in this environment. Firebase public configuration is still required.</p>
+        <p className={styles.message} role="status">Sign-in is currently unavailable. Please try again later. You can still explore the public archive.</p>
       ) : (
         <>
           <button className={styles.primaryAction} type="button" onClick={signInWithGoogle} disabled={activity !== "idle"}>
             <span>G</span>{activity === "google" ? "Verifying…" : "Continue with Google"}<ArrowRight aria-hidden="true" />
           </button>
-          <div className={styles.divider}><span>or verify a phone</span></div>
+          <div className={styles.divider}><span>or continue with phone</span></div>
           {!confirmation ? (
             <form className={styles.form} onSubmit={sendPhoneCode}>
               <label htmlFor="account-phone">Phone number</label>
@@ -212,7 +212,7 @@ export function AccountPanel() {
         </>
       )}
       {message && <p className={styles.message} role="alert">{message}</p>}
-      <p className={styles.privacy}>Google and phone verify who you are. Geo-Kurdistan—not the provider—decides your application role.</p>
+      <p className={styles.privacy}>No password needed. Use Google or a one-time phone code.</p>
     </section>
   );
 }

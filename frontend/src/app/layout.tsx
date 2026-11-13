@@ -28,8 +28,8 @@ export const metadata: Metadata = {
     "Explore the rocks, formations, fossils, landscapes and geological research of the Kurdistan Region.",
   robots: { index: false, follow: false },
   icons: {
-    icon: "/brand/geo-kurdistan-mark-v2.png",
-    apple: "/brand/geo-kurdistan-mark-v2.png",
+    icon: "/assets/optimized/icon-367178be9b9ddd24.png",
+    apple: "/assets/optimized/apple-87fef50f2d68fd9b.png",
   },
   openGraph: {
     title: "Geo-Kurdistan — Read the Ground",

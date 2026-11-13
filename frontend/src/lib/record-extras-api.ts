@@ -340,6 +340,7 @@ export async function detachRecordMedia(
 
 export async function getOnlineMediaPages(
   mediaAssetId: string,
+  options: { includeThumbnails?: boolean } = {},
 ): Promise<OnlineMediaPage[]> {
   const response = await requestRecordResource(
     `/api/v1/media/${encodeURIComponent(mediaAssetId)}/view`,
@@ -372,6 +373,7 @@ export async function getOnlineMediaPages(
       url: item.url,
     } as OnlineMediaPage;
   });
+  if (options.includeThumbnails) return pages;
   const displayPages = pages.filter((page) => page.kind !== "thumbnail");
   return displayPages.length ? displayPages : pages;
 }

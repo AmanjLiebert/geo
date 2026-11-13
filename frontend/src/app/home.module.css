@@ -14,6 +14,7 @@
 
 .archiveIndex { margin-top: 38px; background: var(--fossil); }
 .archiveIndex .moduleBar { background: var(--limestone); }
+.collectionEmpty { min-height: 180px; display: grid; place-items: center; margin: 0; padding: 28px; color: var(--ink-soft); background: var(--fossil); border-bottom: 2px solid var(--carbon); font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-align: center; text-transform: uppercase; }
 .categoryIndex { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 2px; padding: 2px; background: var(--carbon); }
 .categoryTile { min-width: 0; display: grid; grid-template-rows: 174px 72px; background: var(--limestone); }
 .categoryVisual { position: relative; min-width: 0; overflow: hidden; background: var(--shale); }

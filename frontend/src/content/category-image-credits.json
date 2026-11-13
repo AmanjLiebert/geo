@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "stratigraphy-units",
+    "file": "Rawandiz Canyon (Kharand) 03.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_03.jpg",
+    "licence": "CC BY 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by/4.0",
+    "credit": "Khoshhat"
+  },
+  {
+    "slug": "fossils",
+    "file": "Fossil. From? Period? Erbil Stones and Gems Museum, Erbil Citadel, Hawler, Iraq.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "credit": "Osama Shukir Muhammed Amin FRCP(Glasg)"
+  },
+  {
+    "slug": "rocks-minerals",
+    "file": "Agate from Kurdistan, Iraq (the so-called Peshmerga agate). Erbil Stones and Gems Museum, Erbil Citadel, Hawler, Iraq.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Agate_from_Kurdistan,_Iraq_(the_so-called_Peshmerga_agate)._Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+    "licence": "CC BY-SA 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "credit": "Osama Shukir Muhammed Amin FRCP(Glasg)"
+  },
+  {
+    "slug": "structural-geology",
+    "file": "Zagros Folded Zone.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Zagros_Folded_Zone.jpg",
+    "licence": "CC BY-SA 3.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "credit": "Joshua Doubek"
+  },
+  {
+    "slug": "hydrogeology",
+    "file": "Bekhal Spring 01.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Bekhal_Spring_01.jpg",
+    "licence": "CC BY 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by/4.0",
+    "credit": "Khoshhat"
+  },
+  {
+    "slug": "surface-geology",
+    "file": "Rawandiz Canyon (Kharand) 01.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_01.jpg",
+    "licence": "CC BY 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by/4.0",
+    "credit": "Khoshhat"
+  }
+]

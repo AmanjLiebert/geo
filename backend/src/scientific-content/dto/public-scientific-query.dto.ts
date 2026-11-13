@@ -14,6 +14,12 @@ export class PublicLocaleQueryDto {
   locale?: 'en';
 }
 
+export class PublicImageQueryDto {
+  @IsOptional()
+  @IsIn(['display', 'thumbnail'])
+  size?: 'display' | 'thumbnail';
+}
+
 export class PublicCategoryListQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsIn(['en'])

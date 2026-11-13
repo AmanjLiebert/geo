@@ -3,54 +3,53 @@
 import Image from "next/image";
 import Link from "@/components/safe-link";
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import type { GeologicalCategory } from "@/content/types";
+import { GeoArchiveIcon } from "./geo-icons";
 import { NeoBadge } from "./neo-badge";
 import styles from "./category-marquee.module.css";
 
-export interface CollectionHighlight {
-  slug: string;
-  name: string;
-  href: string;
-  recordCount: number;
-  image: GeologicalCategory["image"];
-}
-
-type CollectionRailItem = CollectionHighlight;
+type CollectionRailItem = GeologicalCategory;
 
 const AUTO_SCROLL_SPEED = 0.065;
+const DRAG_THRESHOLD = 8;
+
+function CollectionVisual({ image, duplicate = false }: { image: GeologicalCategory["image"]; duplicate?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  if (!image.src || failed) {
+    return <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>;
+  }
+  return <Image src={image.src} alt={duplicate ? "" : image.alt} fill draggable={false} sizes="(max-width: 680px) 265px, (max-width: 1200px) 28vw, 340px" onError={() => setFailed(true)} />;
+}
 
 function CategoryGroup({ items, duplicate = false }: { items: CollectionRailItem[]; duplicate?: boolean }) {
   return (
     <div className={styles.group} aria-hidden={duplicate || undefined}>
       {items.map((item) => (
-        <Link className={styles.tile} href={item.href} tabIndex={duplicate ? -1 : undefined} key={`${duplicate ? "duplicate-" : ""}${item.slug}`}>
+        <Link className={styles.tile} href={`/explore/${item.slug}`} tabIndex={duplicate ? -1 : undefined} key={`${duplicate ? "duplicate-" : ""}${item.slug}`}>
           <div className={styles.visual}>
-            <Image src={item.image.src} alt={duplicate ? "" : item.image.alt} fill draggable={false} sizes="(max-width: 680px) 265px, (max-width: 1200px) 28vw, 340px" />
+            <CollectionVisual image={item.image} duplicate={duplicate} />
           </div>
           <div className={styles.copy}>
             <div className={styles.meta}><NeoBadge className={styles.countBadge}>{item.recordCount} records</NeoBadge><span>Collection</span></div>
             <h3>{item.name}</h3>
-            <p>{item.image.caption}</p>
-            <div className={styles.cardFooter}><span>Open collection</span><ArrowUpRight aria-hidden="true" /></div>
+            <p>{item.description}</p>
           </div>
+          <div className={styles.cardFooter}><span>Open collection</span><ArrowUpRight aria-hidden="true" /></div>
         </Link>
       ))}
     </div>
   );
 }
 
-export function CategoryMarquee({ categories, counts, highlights = [] }: { categories: GeologicalCategory[]; counts: Record<string, number>; highlights?: CollectionHighlight[] }) {
+export function CategoryMarquee({ categories }: { categories: GeologicalCategory[] }) {
   const viewportRef = useRef<HTMLElement>(null);
   const dragRef = useRef<{ pointerId: number; startX: number; startScroll: number; moved: boolean } | null>(null);
   const suppressClickRef = useRef(false);
   const touchRef = useRef(false);
   const resumeTimerRef = useRef<number | null>(null);
-  const items: CollectionRailItem[] = [
-    ...categories.map((category) => ({ slug: category.slug, name: category.name, href: `/explore/${category.slug}`, recordCount: counts[category.slug] ?? category.recordCount, image: category.image })),
-    ...highlights,
-  ];
+  const items: CollectionRailItem[] = categories;
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -129,12 +128,6 @@ export function CategoryMarquee({ categories, counts, highlights = [] }: { categ
     }
     touchRef.current = event.pointerType !== "mouse";
     dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startScroll: event.currentTarget.scrollLeft, moved: false };
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      // Older mobile browsers can reject pointer capture; document-level pointer
-      // delivery still lets the gesture continue while the finger is on the rail.
-    }
     event.currentTarget.classList.add(styles.dragging);
   };
 
@@ -142,8 +135,17 @@ export function CategoryMarquee({ categories, counts, highlights = [] }: { categ
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     const distance = event.clientX - drag.startX;
-    if (Math.abs(distance) > 5) {
-      drag.moved = true;
+    if (Math.abs(distance) > DRAG_THRESHOLD) {
+      if (!drag.moved) {
+        drag.moved = true;
+        try {
+          // Capture only once a real drag starts. Capturing on pointerdown
+          // retargets the click to the rail and prevents the card link from opening.
+          event.currentTarget.setPointerCapture(event.pointerId);
+        } catch {
+          // Capture can be unavailable in older browsers; the drag still works.
+        }
+      }
       if (event.cancelable) event.preventDefault();
     }
     event.currentTarget.scrollLeft = drag.startScroll - distance;

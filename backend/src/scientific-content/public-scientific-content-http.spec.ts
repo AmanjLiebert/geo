@@ -77,6 +77,7 @@ describe('public scientific HTTP boundary', () => {
     content.getRecordImageAssetId.mockResolvedValue('image-1');
     content.getRecordAttachmentImageAssetId.mockResolvedValue('image-2');
     media.publicInlineImage.mockResolvedValue({
+      etag: '"test-image"',
       stream: Readable.from(Buffer.from('public-image')),
       contentType: 'image/webp',
       contentLength: 12,
@@ -140,11 +141,11 @@ describe('public scientific HTTP boundary', () => {
       url: `/api/v1/public/scientific/records/${publicId}/image`,
     });
     expect(response.statusCode).toBe(200);
-    expect(response.headers['cache-control']).toBe('private, no-store');
+    expect(response.headers['cache-control']).toBe('private, no-cache, max-age=0, must-revalidate');
     expect(response.headers['content-type']).toContain('image/webp');
     expect(response.body).toBe('public-image');
     expect(content.getRecordImageAssetId).toHaveBeenCalledWith(publicId);
-    expect(media.publicInlineImage).toHaveBeenCalledWith('image-1');
+    expect(media.publicInlineImage).toHaveBeenCalledWith('image-1', 'display', undefined);
   });
 
   it('streams an attached image only after record and attachment eligibility succeed', async () => {
@@ -154,9 +155,9 @@ describe('public scientific HTTP boundary', () => {
       url: `/api/v1/public/scientific/records/${publicId}/images/${mediaAssetId}`,
     });
     expect(response.statusCode).toBe(200);
-    expect(response.headers['cache-control']).toBe('private, no-store');
+    expect(response.headers['cache-control']).toBe('private, no-cache, max-age=0, must-revalidate');
     expect(content.getRecordAttachmentImageAssetId).toHaveBeenCalledWith(publicId, mediaAssetId);
-    expect(media.publicInlineImage).toHaveBeenCalledWith('image-2');
+    expect(media.publicInlineImage).toHaveBeenCalledWith('image-2', 'display', undefined);
   });
 
   it('does not call media delivery when a category image is not publicly eligible', async () => {
@@ -168,6 +169,40 @@ describe('public scientific HTTP boundary', () => {
       url: '/api/v1/public/scientific/categories/rocks/image',
     });
     expect(response.statusCode).toBe(404);
+    expect(media.publicInlineImage).not.toHaveBeenCalled();
+  });
+
+  it('revalidates thumbnails with an empty private 304 response', async () => {
+    media.publicInlineImage.mockResolvedValueOnce({ etag: '"test-image"', stream: null });
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/v1/public/scientific/records/${publicId}/image?size=thumbnail`,
+      headers: { 'if-none-match': '"test-image"' },
+    });
+    expect(response.statusCode).toBe(304);
+    expect(response.body).toBe('');
+    expect(response.headers.etag).toBe('"test-image"');
+    expect(response.headers['cache-control']).toBe('private, no-cache, max-age=0, must-revalidate');
+    expect(media.publicInlineImage).toHaveBeenCalledWith('image-1', 'thumbnail', '"test-image"');
+  });
+
+  it('denies an unpublished record before considering a matching image validator', async () => {
+    content.getRecordImageAssetId.mockRejectedValueOnce(new NotFoundException());
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/v1/public/scientific/records/${publicId}/image`,
+      headers: { 'if-none-match': '"test-image"' },
+    });
+    expect(response.statusCode).toBe(404);
+    expect(media.publicInlineImage).not.toHaveBeenCalled();
+  });
+
+  it('rejects an original/unknown image size', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/v1/public/scientific/records/${publicId}/image?size=original`,
+    });
+    expect(response.statusCode).toBe(400);
     expect(media.publicInlineImage).not.toHaveBeenCalled();
   });
 });

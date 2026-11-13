@@ -275,6 +275,12 @@ function internalApiBaseUrl(): string {
   ).replace(/\/$/, "");
 }
 
+const publicApiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
+
+export function publicAssetUrl(path: string): string {
+  return path.startsWith("/") ? `${publicApiBaseUrl}${path}` : path;
+}
+
 async function request(path: string): Promise<unknown> {
   let response: Response;
   try {

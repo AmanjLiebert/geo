@@ -2,16 +2,20 @@ import {
   Controller,
   Get,
   Header,
+  Headers,
   Param,
   ParseUUIDPipe,
   Query,
+  Res,
   StreamableFile,
 } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { Public } from '../identity/access.decorators';
 import { MediaService } from '../media/media.service';
 import {
   PublicCategoryListQueryDto,
   PublicLocaleQueryDto,
+  PublicImageQueryDto,
   PublicRecordListQueryDto,
 } from './dto/public-scientific-query.dto';
 import { PublicScientificContentService } from './public-scientific-content.service';
@@ -40,10 +44,15 @@ export class PublicScientificContentController {
   }
 
   @Get('categories/:slug/image')
-  @Header('Cache-Control', 'private, no-store')
-  async getCategoryImage(@Param('slug', PublicSlugPipe) slug: string) {
+  @Header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate')
+  async getCategoryImage(
+    @Param('slug', PublicSlugPipe) slug: string,
+    @Query() query: PublicImageQueryDto,
+    @Headers('if-none-match') tag: string | undefined,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
     const mediaAssetId = await this.content.getCategoryImageAssetId(slug);
-    return this.streamPublicImage(mediaAssetId);
+    return this.streamPublicImage(mediaAssetId, query.size, tag, reply);
   }
 
   @Get('records')
@@ -67,27 +76,45 @@ export class PublicScientificContentController {
   }
 
   @Get('records/:publicId/image')
-  @Header('Cache-Control', 'private, no-store')
-  async getRecordImage(@Param('publicId', ParseUUIDPipe) publicId: string) {
+  @Header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate')
+  async getRecordImage(
+    @Param('publicId', ParseUUIDPipe) publicId: string,
+    @Query() query: PublicImageQueryDto,
+    @Headers('if-none-match') tag: string | undefined,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
     const mediaAssetId = await this.content.getRecordImageAssetId(publicId);
-    return this.streamPublicImage(mediaAssetId);
+    return this.streamPublicImage(mediaAssetId, query.size, tag, reply);
   }
 
   @Get('records/:publicId/images/:mediaAssetId')
-  @Header('Cache-Control', 'private, no-store')
+  @Header('Cache-Control', 'private, no-cache, max-age=0, must-revalidate')
   async getRecordAttachmentImage(
     @Param('publicId', ParseUUIDPipe) publicId: string,
     @Param('mediaAssetId', ParseUUIDPipe) mediaAssetId: string,
+    @Query() query: PublicImageQueryDto,
+    @Headers('if-none-match') tag: string | undefined,
+    @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const approvedAssetId = await this.content.getRecordAttachmentImageAssetId(
       publicId,
       mediaAssetId,
     );
-    return this.streamPublicImage(approvedAssetId);
+    return this.streamPublicImage(approvedAssetId, query.size, tag, reply);
   }
 
-  private async streamPublicImage(mediaAssetId: string) {
-    const image = await this.media.publicInlineImage(mediaAssetId);
+  private async streamPublicImage(
+    mediaAssetId: string,
+    size: 'display' | 'thumbnail' = 'display',
+    tag: string | undefined,
+    reply: FastifyReply,
+  ) {
+    const image = await this.media.publicInlineImage(mediaAssetId, size, tag);
+    reply.header('ETag', image.etag);
+    if (!image.stream) {
+      reply.code(304);
+      return;
+    }
     return new StreamableFile(image.stream, {
       type: image.contentType,
       length: image.contentLength,

@@ -79,7 +79,7 @@ const OPERATIONAL_SECTION: NavSection = {
     {
       id: "users",
       label: "Users",
-      href: undefined,
+      href: "/dashboard/users",
       description: "Invite teachers, activate or disable accounts.",
     },
   ],

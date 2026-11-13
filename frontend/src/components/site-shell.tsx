@@ -13,7 +13,7 @@ import { AccountNav } from "./account-nav";
 function BrutalBrand({ light = false }: { light?: boolean }) {
   return (
     <Link className={`brutal-brand${light ? " brutal-brand-light" : " brutal-header-brand"}`} href="/" aria-label="Geo-Kurdistan home">
-      <Image className="brutal-brand-image" src="/brand/geo-kurdistan-mark-v2.png" alt="" width={190} height={109} priority={!light} />
+      <Image className="brutal-brand-image" src="/assets/optimized/brand-mark-1145eca27c6fed77.webp" alt="" width={190} height={109} priority={!light} />
       <span className="brutal-brand-copy"><strong>Geo—Kurdistan</strong><small>Geological archive</small></span>
     </Link>
   );
@@ -83,6 +83,7 @@ export function SiteFooter() {
               <h3>Project</h3>
               <Link href="/about">About the project</Link>
               <Link href="/account">Account</Link>
+              <Link href="/image-credits">Image credits</Link>
               <span>English interface</span>
             </section>
           </nav>

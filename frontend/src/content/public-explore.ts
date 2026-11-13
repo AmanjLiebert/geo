@@ -3,6 +3,7 @@ import type {
   PublicRecordDetail,
   PublicRecordSummary,
 } from "@/lib/public-scientific-api";
+import { publicAssetUrl } from "@/lib/public-scientific-api";
 import type {
   ContentReference,
   GeologicalCategory,
@@ -150,7 +151,7 @@ export function mapPublicCategories(
     recordCount: category.recordCount,
     image: category.image
       ? {
-          src: category.image.viewEndpoint,
+          src: publicAssetUrl(category.image.viewEndpoint),
           alt: "",
           caption: `${category.name} collection image`,
         }
@@ -213,8 +214,13 @@ export function mapPublicRecordDetail(
     detail.description ?? "No public description is available yet.";
   record.locality = firstLocation?.label ?? "";
   record.region = firstLocation?.regionLabel ?? "";
-  record.sourceNote = detail.references.length
-    ? `${detail.references.length} ${detail.references.length === 1 ? "source" : "sources"}`
+  const references = detail.references.map(referencePresentation).filter(
+    (reference, index, all) => all.findIndex((candidate) =>
+      candidate.label === reference.label && candidate.detail === reference.detail && candidate.href === reference.href
+    ) === index,
+  );
+  record.sourceNote = references.length
+    ? `${references.length} ${references.length === 1 ? "source" : "sources"}`
     : "No references are displayed for this record.";
 
   const fieldItems = detail.fields.flatMap((field) => {
@@ -263,7 +269,6 @@ export function mapPublicRecordDetail(
     }
     return facts;
   });
-  const references = detail.references.map(referencePresentation);
   const mediaItems: RecordMediaItem[] = detail.media.map((item) => ({
     id: item.id,
     kind: item.kind,

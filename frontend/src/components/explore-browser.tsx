@@ -30,6 +30,7 @@ import type {
 } from "@/content/types";
 import {
   buildExploreHref,
+  parseExploreQuery,
   EXPLORE_PAGE_SIZE,
   exploreFilterKeys,
   filterExploreRecords,
@@ -69,6 +70,10 @@ const emptyQuery: ExploreQueryState = {
 
 const COLLECTIONS_PER_PAGE = 6;
 
+function thumbnailSrc(src: string): string {
+  return src.startsWith("/api/v1/public/scientific/") ? `${src}?size=thumbnail` : src;
+}
+
 function CollectionChooser({
   collections,
   onSelect,
@@ -100,7 +105,7 @@ function CollectionChooser({
     {rootCollections.length > COLLECTIONS_PER_PAGE && <label className="catalog-chooser-search"><GeoSearchIcon aria-hidden="true" /><span className="sr-only">Find a collection</span><input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Find a collection" /></label>}
     <div className="catalog-chooser-grid">
       {visible.map(({ category, count }) => <button type="button" className="catalog-collection-button" onClick={() => onSelect(category.slug)} key={category.slug}>
-        <span className="catalog-collection-image">{category.image.src ? <Image src={category.image.src} alt="" fill sizes="(max-width: 620px) 100vw, (max-width: 1120px) 50vw, (max-width: 1504px) 33vw, 480px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</span>
+        <span className="catalog-collection-image">{category.image.src ? <Image src={thumbnailSrc(category.image.src)} alt="" fill sizes="(max-width: 620px) 100vw, (max-width: 1120px) 50vw, (max-width: 1504px) 33vw, 480px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</span>
         <span className="catalog-collection-body">
           <span className="catalog-collection-meta"><NeoBadge className="catalog-collection-count-badge">{count} records</NeoBadge><small>Collection</small></span>
           <strong className="catalog-collection-title">{category.name}</strong>
@@ -137,7 +142,7 @@ function CollectionGuide({ category }: { category: GeologicalCategory }) {
     </button>
     <div className="catalog-collection-guide-panel" id={panelId}>
       <div className="catalog-collection-guide-panel-inner">
-        <div className="catalog-collection-introduction-image">{category.image.src ? <Image src={category.image.src} alt={category.image.alt} fill sizes="(max-width: 760px) 100vw, 300px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</div>
+        <div className="catalog-collection-introduction-image">{category.image.src ? <Image src={thumbnailSrc(category.image.src)} alt={category.image.alt} fill sizes="(max-width: 760px) 100vw, 300px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</div>
         <div className="catalog-collection-introduction-copy"><p className="eyebrow">Collection guide</p><h3 id="catalog-collection-about-title">About {category.name}</h3><p>{category.overview}</p><ul>{category.themes.map((theme) => <li key={theme}>{theme}</li>)}</ul></div>
         <dl>{category.facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
       </div>
@@ -241,9 +246,11 @@ function RecordReader({
           </div>
           <figcaption>
             <span>{image?.caption ?? "No public image is available."}</span>
-            {primaryMedia?.rightsStatement && <small>Rights: {primaryMedia.rightsStatement}</small>}
-            {primaryMedia?.licence && <small>Licence: {primaryMedia.licence}</small>}
-            {image?.credit && <small>Credit: {image.credit}</small>}
+            {(primaryMedia?.rightsStatement || primaryMedia?.licence || image?.credit) && <details className="catalog-record-image-credits"><summary>Image credits</summary><dl>
+              {image?.credit && <div><dt>Photographer / credit</dt><dd>{image.credit}</dd></div>}
+              {primaryMedia?.licence && <div><dt>Licence</dt><dd>{primaryMedia.licence}</dd></div>}
+              {primaryMedia?.rightsStatement && <div><dt>Rights and source</dt><dd>{primaryMedia.rightsStatement}</dd></div>}
+            </dl></details>}
           </figcaption>
           {image && <button type="button" data-ui-action="secondary" className="catalog-record-nav-button" onClick={() => setFullscreen(true)}><ZoomIn aria-hidden="true" /> Open image</button>}
         </figure>
@@ -289,7 +296,7 @@ function RecordReader({
 
     {(publicRelatedRecords.length > 0 || relatedBundles.length > 0) && <section className="catalog-record-related" aria-labelledby="catalog-related-title">
       <header><p className="eyebrow">Related evidence</p><h3 id="catalog-related-title">Continue exploring</h3></header>
-      <div>{publicRelatedRecords.map((related) => <Link href={`/explore/${related.category}/${related.slug}`} key={`${related.category}-${related.slug}`}><span className="catalog-record-related-image">{related.image?.src ? <Image src={related.image.src} alt="" fill sizes="180px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /></span>}</span><span><small>{related.relationshipType}</small><strong>{related.title}</strong><p>{related.notes ?? related.summary}</p></span><ArrowRight aria-hidden="true" /></Link>)}{publicRelatedRecords.length === 0 && relatedBundles.map(({ bundle: related, reason }) => <button type="button" onClick={() => onRelated(related.record)} key={related.record.slug}><span className="catalog-record-related-image">{related.record.image.src ? <Image src={related.record.image.src} alt="" fill sizes="180px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /></span>}</span><span><small>{reason}</small><strong>{related.record.name}</strong></span><ArrowRight aria-hidden="true" /></button>)}</div>
+      <div>{publicRelatedRecords.map((related) => <Link href={`/explore/${related.category}/${related.slug}`} key={`${related.category}-${related.slug}`}><span className="catalog-record-related-image">{related.image?.src ? <Image src={thumbnailSrc(related.image.src)} alt="" fill sizes="180px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /></span>}</span><span><small>{related.relationshipType}</small><strong>{related.title}</strong><p>{related.notes ?? related.summary}</p></span><ArrowRight aria-hidden="true" /></Link>)}{publicRelatedRecords.length === 0 && relatedBundles.map(({ bundle: related, reason }) => <button type="button" onClick={() => onRelated(related.record)} key={related.record.slug}><span className="catalog-record-related-image">{related.record.image.src ? <Image src={thumbnailSrc(related.record.image.src)} alt="" fill sizes="180px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /></span>}</span><span><small>{reason}</small><strong>{related.record.name}</strong></span><ArrowRight aria-hidden="true" /></button>)}</div>
     </section>}
     {fullscreen && image && <FullscreenImage image={image} recordName={record.name} onClose={() => setFullscreen(false)} />}
   </section>;
@@ -323,12 +330,27 @@ export function ExploreBrowser({
   const activeImage = selectedBundle ? Math.min(query.image ?? 0, Math.max(0, selectedBundle.gallery.length - 1)) : 0;
   const filterDefinitions = collectionFilters.find((item) => item.categorySlug === categorySlug)?.definitions ?? [];
 
+  useEffect(() => {
+    const pathname = window.location.pathname;
+    const restoreQuery = () => {
+      if (window.location.pathname !== pathname) return;
+      const restored = parseExploreQuery(Object.fromEntries(new URLSearchParams(window.location.search)));
+      setQuery(restored);
+      setSearchDraft(restored.q);
+    };
+    window.addEventListener("popstate", restoreQuery);
+    return () => window.removeEventListener("popstate", restoreQuery);
+  }, []);
+
   const commitView = useCallback((nextCategory: string | undefined, nextRecord: string | undefined, nextQuery: ExploreQueryState, mode: "push" | "replace" = "push", scroll = true) => {
     const pathname = nextRecord ? `/explore/${nextCategory}/${nextRecord}` : nextCategory ? `/explore/${nextCategory}` : "/explore";
     const href = buildExploreHref(pathname, nextQuery);
     const pathChanged = nextCategory !== categorySlug || nextRecord !== recordSlug;
-    router[mode](href, { scroll: pathChanged ? scroll : false });
-    if (!pathChanged) {
+    if (pathChanged) {
+      router[mode](href, { scroll });
+    } else {
+      // These controls operate on the loaded collection; retain shareable URLs without refetching it.
+      window.history[mode === "push" ? "pushState" : "replaceState"](null, "", href);
       setQuery(nextQuery);
       setSearchDraft(nextQuery.q);
       if (scroll) requestAnimationFrame(() => document.getElementById("catalog-explorer-surface")?.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -412,7 +434,7 @@ export function ExploreBrowser({
         {pagination.items.length ? <div className="catalog-record-grid">{pagination.items.map((record) => {
           const facts = getRecordPreviewFacts(record);
           return <article className="catalog-record-card" key={record.slug}>
-            <div className="catalog-record-image">{record.image.src ? <Image src={record.image.src} alt={record.image.alt} fill sizes="(max-width: 460px) 100vw, (max-width: 820px) 50vw, (max-width: 1944px) 33vw, 640px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</div>
+            <div className="catalog-record-image">{record.image.src ? <Image src={thumbnailSrc(record.image.src)} alt={record.image.alt} fill sizes="(max-width: 460px) 100vw, (max-width: 820px) 50vw, (max-width: 1944px) 33vw, 640px" /> : <span className="catalog-media-placeholder"><GeoArchiveIcon aria-hidden="true" /><small>No image</small></span>}</div>
             <div className="catalog-record-card-copy"><p className="catalog-record-type">{record.recordType}</p><h3>{record.name}</h3><p>{record.summary}</p><dl>{facts.slice(0, 3).map((fact) => <div key={`${fact.label}-${fact.value}`}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>
             <button type="button" className="catalog-record-open" onClick={() => openRecord(record)}><span>Open record</span><em><ArrowRight aria-hidden="true" /></em></button>
           </article>;

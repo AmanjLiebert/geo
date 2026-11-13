@@ -6,9 +6,13 @@ import { CategoryMarquee } from "@/components/category-marquee";
 import { InteractiveMap } from "@/components/interactive-map";
 import { NeoAction } from "@/components/neo-action";
 import { NeoBadge } from "@/components/neo-badge";
-import { collectionHighlights, homeUpdates, shopProducts } from "@/content/home-data";
-import { categories, fieldObservations, getCategoryRecordCount, locations, research } from "@/content/mock-data";
+import { homeUpdates, shopProducts } from "@/content/home-data";
+import { mapPublicCategories } from "@/content/public-explore";
+import { fieldObservations, locations, research } from "@/content/mock-data";
+import { listPublicCategories } from "@/lib/public-scientific-api";
 import styles from "./home.module.css";
+
+export const dynamic = "force-dynamic";
 
 function ModuleBar({ icon: Icon, title, titleId, note, link }: { icon: LucideIcon; title: string; titleId: string; note?: string; link?: { href: string; label: string } }) {
   return (
@@ -19,17 +23,20 @@ function ModuleBar({ icon: Icon, title, titleId, note, link }: { icon: LucideIco
   );
 }
 
-export default function Home() {
+export default async function Home() {
   const [leadUpdate, ...updateFeed] = homeUpdates;
-  const categoryCounts = Object.fromEntries(categories.map((category) => [category.slug, getCategoryRecordCount(category.slug)]));
+  const publishedCategories = await listPublicCategories();
+  const categories = mapPublicCategories(publishedCategories).filter((category) => !category.parentSlug);
 
   return (
     <main className={styles.home}>
       <BrutalHomeHero />
 
       <section id="collections" className={styles.archiveIndex} aria-labelledby="archive-index-title">
-        <ModuleBar icon={Archive} title="Collections" titleId="archive-index-title" note={`${categories.length + collectionHighlights.length} exploration collections`} />
-        <CategoryMarquee categories={categories} counts={categoryCounts} highlights={[...collectionHighlights]} />
+        <ModuleBar icon={Archive} title="Collections" titleId="archive-index-title" note={`${categories.length} exploration collections`} />
+        {categories.length > 0
+          ? <CategoryMarquee categories={categories} />
+          : <p className={styles.collectionEmpty}>No published collections yet.</p>}
       </section>
 
       <section id="discoveries" className={styles.updates} aria-labelledby="updates-title">

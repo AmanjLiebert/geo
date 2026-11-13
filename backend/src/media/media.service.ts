@@ -13,7 +13,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { DataSource } from 'typeorm';
 import { Environment } from '../config/environment';
@@ -626,7 +626,11 @@ export class MediaService {
     return { items, expiresInSeconds: 120, disposition: 'inline' };
   }
 
-  async publicInlineImage(mediaAssetId: string) {
+  async publicInlineImage(
+    mediaAssetId: string,
+    size: 'display' | 'thumbnail' = 'display',
+    ifNoneMatch?: string,
+  ) {
     const client = this.requireStorage();
     const media = await this.dataSource.query<
       Array<{ id: string; media_kind: string; processing_status: string }>
@@ -641,20 +645,26 @@ export class MediaService {
     }
 
     const derivatives = await this.dataSource.query<
-      Array<{ storage_key: string; content_type: string }>
+      Array<{ storage_key: string; content_type: string; sha256: string; derivative_kind: string }>
     >(
-      `SELECT storage_key, content_type
+      `SELECT storage_key, content_type, sha256, derivative_kind
        FROM media_derivatives
        WHERE media_asset_id = $1
          AND derivative_kind IN ('display', 'thumbnail')
-       ORDER BY CASE derivative_kind WHEN 'display' THEN 0 ELSE 1 END,
+       ORDER BY CASE WHEN derivative_kind = $2 THEN 0 ELSE 1 END,
          page_number NULLS FIRST
        LIMIT 1`,
-      [mediaAssetId],
+      [mediaAssetId, size],
     );
     const derivative = derivatives[0];
     if (!derivative) {
       throw new NotFoundException('Approved public image not found.');
+    }
+
+    const etag = `"${createHash('sha256').update(`${mediaAssetId}:${derivative.derivative_kind}:${derivative.sha256}`).digest('hex')}"`;
+    // Eligibility and current derivative metadata are checked before any 304.
+    if (ifNoneMatch?.split(',').some((tag) => tag.trim().replace(/^W\//, '') === etag)) {
+      return { etag, stream: null, contentType: derivative.content_type, contentLength: undefined };
     }
 
     const object = await client.send(
@@ -665,6 +675,7 @@ export class MediaService {
     }
 
     return {
+      etag,
       stream: object.Body,
       contentType: object.ContentType || derivative.content_type,
       contentLength: object.ContentLength,

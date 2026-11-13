@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardApiError } from "./dashboard-api";
 import {
   addRecordRelationship,
+  getOnlineMediaPages,
   detachRecordMedia,
   listRecordMedia,
   listRecordRelationships,
@@ -27,6 +28,17 @@ function ok(data: unknown, status = 200): Response {
 describe("record extras API", () => {
   beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
   afterEach(() => vi.unstubAllGlobals());
+
+  it("keeps full-size viewer pages by default and exposes thumbnails only when requested", async () => {
+    const display = { kind: "display", pageNumber: null, url: "https://example.org/display" };
+    const thumbnail = { kind: "thumbnail", pageNumber: null, url: "https://example.org/thumb" };
+    vi.mocked(fetch).mockImplementation(async () => ok({ disposition: "inline", items: [display, thumbnail] }));
+    expect(await getOnlineMediaPages(mediaId)).toEqual([display]);
+    expect(await getOnlineMediaPages(mediaId, { includeThumbnails: true })).toEqual([display, thumbnail]);
+    for (const [, init] of vi.mocked(fetch).mock.calls) {
+      expect(init).toMatchObject({ method: "POST", credentials: "include", cache: "no-store" });
+    }
+  });
 
   it("distinguishes required identity confirmation from a real permission denial", async () => {
     vi.mocked(fetch)

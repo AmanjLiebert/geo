@@ -167,5 +167,13 @@ describe("public Explore mapping", () => {
     expect(presentation).toContain("About 10,000 metres");
     expect(presentation).not.toContain("Evidence: supporting");
     expect(presentation).not.toContain("44.99999");
+    detail.references.push({ ...detail.references[0] });
+    const duplicateMapped = mapPublicRecordDetail(detail, categories);
+    expect(duplicateMapped.record.sourceNote).toBe("1 source");
+    expect(duplicateMapped.detail.sections.find((section) => section.kind === "references")).toMatchObject({
+      items: [expect.objectContaining({ label: expect.stringContaining("Regional granites") })],
+    });
+    detail.references.push({ ...detail.references[0], pagesOrFigure: "19–20" });
+    expect(mapPublicRecordDetail(detail, categories).record.sourceNote).toBe("2 sources");
   });
 });

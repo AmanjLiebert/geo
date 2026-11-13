@@ -150,32 +150,30 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
       setError(null);
       setActiveTemplate(null);
       try {
-        const catRes = await listStructureCategories();
+        const [catRes, record] = await Promise.all([
+          listStructureCategories(),
+          mode === "edit" && recordId ? getRecord(recordId) : Promise.resolve(null),
+        ]);
         if (ignore) return;
         setCategories(catRes.items);
 
         if (mode === "edit") {
-          if (!recordId) {
+          if (!recordId || !record) {
             setLoading(false);
             return;
           }
 
-          const record = await getRecord(recordId);
-          if (ignore) return;
           setRecordDetail(record);
           setInitialAttributes(record.attributes ?? {});
           setInitialSlug(record.slug ?? "");
 
           if (record.categoryId && record.recordTypeId) {
-            let tmpl: ActiveScientificTemplate;
-            if (record.templateVersionId) {
-              tmpl = await getTemplateVersion(record.templateVersionId);
-            } else {
-              tmpl = await getActiveTemplate(
-                record.categoryId,
-                record.recordTypeId,
-              );
-            }
+            const [tmpl, rtRes] = await Promise.all([
+              record.templateVersionId
+                ? getTemplateVersion(record.templateVersionId)
+                : getActiveTemplate(record.categoryId, record.recordTypeId),
+              listCategoryRecordTypes(record.categoryId),
+            ]);
             if (ignore) return;
             setActiveTemplate(tmpl);
 
@@ -192,8 +190,6 @@ export function RecordEditor({ mode, recordId, returnTo }: RecordEditorProps) {
               recordTypeId: record.recordTypeId,
             });
 
-            const rtRes = await listCategoryRecordTypes(record.categoryId);
-            if (ignore) return;
             setRecordTypes(rtRes.items);
             setStep("fields");
           } else {

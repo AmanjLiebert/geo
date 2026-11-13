@@ -1,0 +1,11 @@
+# Three sourced Kurdistan records
+
+Status: `IMPLEMENTED_AWAITING_REVIEW`. Added and published locally: `rawandiz-canyon`, `bekhal-spring`, `shanidar-cave`. Exact translations, scientific fields and source links are recorded in `content.json`.
+
+Normal RecordsService create/translation/review/publication, ScientificTrustService reference/evidence and MediaService attachment workflows were used. All three records have all three fields defined by their selected templates, meaningful title/summary/description, matching primary image, caption/alternative text and real sources. Rawandiz and Bekhal reuse approved images from their category profiles. Archived Shanidar imagery was re-quarantined and processed through the actual scanner/derivative pipeline before reuse. No fake verification, source-review independence or publisher independence is claimed. The existing trusted teacher/admin evidence policy permits these records; no policy was bypassed.
+
+Rawandiz: regional limestone-gorge description and wider catchment research are distinguished from what the photograph establishes. Shanidar: dimensions explicitly attributed to a 2022 study, host-rock description to the research figure. Bekhal: source-supported water-point profile, not a hydrochemical or discharge observation. Unknown aquifer identity is stated explicitly. No precise locations, field-visit dates, invented samples, unsupported numerical water measurements, relationships or supplementary files were added.
+
+The browser check identified an interior-facing Shanidar photograph; its caption/alt were corrected through normal unpublish/edit/review/publish so the viewpoint is accurately described. Revisions and audit events were preserved. Operational importer uses existing active content owner following the repository's curated-import convention; it does not prove authenticated dashboard browser interaction.
+
+No application source/schema change or new commit. Existing unrelated work preserved. Recovery: normal unpublish/archive of only these three slugs; created identifiers and executed script are in ignored `backups/sourced-teacher-records-2026-11-12/`. References and image objects remain recoverable. No hard deletion needed.

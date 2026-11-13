@@ -100,7 +100,7 @@ export function MobileNavigation() {
       <div ref={panelRef} className={`mobile-menu-panel${open ? " mobile-menu-panel--open" : " mobile-menu-panel--closing"}`} id="mobile-navigation-panel" role="dialog" aria-modal="true" aria-label="Site navigation">
         <header>
           <div className="mobile-menu-panel-brand">
-            <Image src="/brand/geo-kurdistan-mark-v2.png" alt="" width={190} height={109} />
+            <Image src="/assets/optimized/brand-mark-1145eca27c6fed77.webp" alt="" width={190} height={109} />
             <span><strong>Geo—Kurdistan</strong><small>Menu</small></span>
           </div>
           <button type="button" aria-label="Close navigation" onClick={closeMenu}><GeoCloseIcon aria-hidden="true" /></button>

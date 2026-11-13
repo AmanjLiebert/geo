@@ -3,6 +3,7 @@ import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import * as navConfig from "./dashboard-nav-config";
 import { DashboardSidebar } from "./dashboard-sidebar";
 
 const navigationState = vi.hoisted(() => ({ pathname: "/dashboard" }));
@@ -123,24 +124,40 @@ describe("DashboardSidebar", () => {
     expect(html).toContain('aria-hidden="false"');
   });
 
-  it("shows section labels, availability state, and active state when expanded", () => {
+  it("shows section labels and active state when expanded", () => {
     const html = renderSidebar("admin", { pinnedExpanded: true });
 
     expect(html).toContain("Scientific workspace");
     expect(html).toContain("Operations");
     expect(html).toContain('href="/dashboard/news"');
     expect(html).toContain('href="/dashboard/site-pages"');
-    expect(html).toContain("Soon");
+    expect(html).toContain('href="/dashboard/users"');
   });
 
   it("keeps coming-next destinations non-interactive but keyboard discoverable", () => {
-    const html = renderSidebar("admin");
+    vi.spyOn(navConfig, "getDashboardNavigation").mockReturnValueOnce({
+      sections: [
+        {
+          id: "operational",
+          label: "Operations",
+          items: [
+            {
+              id: "future-feature",
+              label: "Future feature",
+              href: undefined,
+              description: "A feature that will be available in a later release.",
+            },
+          ],
+        },
+      ],
+    });
+    const html = renderSidebar("admin", { pinnedExpanded: true });
 
-    expect(html).toContain('aria-label="Users — coming next"');
+    expect(html).toContain('aria-label="Future feature — coming next"');
     expect(html).toContain('aria-disabled="true"');
     expect(html).toContain('role="link"');
     expect(html).toContain('tabindex="0"');
-    expect(html).not.toContain('href="/dashboard/users"');
+    expect(html).toContain("Soon");
   });
 
   it("keeps the active destination obvious without relying on a tooltip", () => {

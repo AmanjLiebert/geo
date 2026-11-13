@@ -5,7 +5,7 @@ import styles from "./brutal-home-hero.module.css";
 export function BrutalHomeHero() {
   return (
     <section className={styles.hero} aria-labelledby="hero-title">
-      <Image className={styles.terrain} src="/images/atlas/geo-kurdistan-hero-v3.png" alt="Folded sedimentary mountains with an ammonite, calcite crystals and a banded rock specimen in the foreground" fill priority sizes="100vw" />
+      <Image className={styles.terrain} src="/assets/optimized/home-hero-f4d25960aa73c40e.webp" alt="Folded sedimentary mountains with an ammonite, calcite crystals and a banded rock specimen in the foreground" fill priority sizes="100vw" />
 
       <div className={styles.copy}>
         <span><Layers3 aria-hidden="true" /> Geological archive</span>

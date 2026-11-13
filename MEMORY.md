@@ -6,12 +6,24 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Teacher record editor simplification |
-| Task folder | `docs/agent-work/record-editor-simplification/` |
+| Task | Measured project efficiency pass |
+| Task folder | `docs/agent-work/project-efficiency/` |
 | Status | `IMPLEMENTED_AWAITING_REVIEW` |
 | Implementer | Codex (user-authorized override) |
-| Reviewer | Codex |
-| Plan gate | A teacher completes the required record, evidence, main-image, and review path through four clear stages; optional location, relationships, and additional files stay progressively disclosed and preserved; public citations and locations use only verified/public-safe projections; retained permission, geography, media, publication, revision, and audit boundaries pass independent review. |
+| Reviewer | Independent review not performed |
+| Plan gate | Reduce repeat Explore requests, static image weight, hidden thumbnail work and category query round trips; overlap independent dashboard reads. Preserve data, eligibility, permissions and route behavior; independent review pending. |
+
+Previous image-delivery task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/explore-image-delivery/`; eligibility-preserving revalidation and smaller scientific thumbnails are preserved.
+
+Previous additional-record task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/more-sourced-records/`; its ten records and images were not changed by this performance correction.
+
+Previous three-record task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/sourced-teacher-records/`. Its records are preserved; this task adds seven distinct subjects/images under the user's subsequent authorization.
+
+Previous category-profile task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/main-category-profiles/`. The user explicitly authorized repopulating scientific records after the earlier reset; its zero-record state is intentionally superseded.
+
+Previous local reset remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/teacher-content-reset/`. New category profiles intentionally supersede its empty-category-image state under the user's subsequent authorization; no scientific records were repopulated.
+
+Previous task: Teacher record editor simplification remains `CHANGES_REQUIRED`; its assignment, implementation report, findings and original gate remain in `docs/agent-work/record-editor-simplification/`. This operational reset does not approve or resolve that work.
 
 ## Required file order
 

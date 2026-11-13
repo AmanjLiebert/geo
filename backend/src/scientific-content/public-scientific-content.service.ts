@@ -9,6 +9,7 @@ interface PublicCategoryRow {
   summary: string | null;
   description: string | null;
   record_count: string;
+  total_count: string;
   image_ready: boolean;
 }
 
@@ -104,15 +105,19 @@ export class PublicScientificContentService {
     const safeLimit = Math.min(Math.max(limit, 1), 100);
     const safeOffset = Math.max(offset, 0);
     const rows = await this.loadCategories(locale, safeLimit, safeOffset);
-    const counts = await this.dataSource.query<CountRow[]>(
-      `SELECT COUNT(*)::text AS total
+    const firstRow = rows[0];
+    // Empty/out-of-range pages have no window total, so retain an exact fallback count.
+    const counts = firstRow
+      ? [{ total: firstRow.total_count }]
+      : await this.dataSource.query<CountRow[]>(
+          `SELECT COUNT(*)::text AS total
        FROM categories c
        LEFT JOIN categories p ON p.id = c.parent_id
        JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = $1
        WHERE c.status = 'active' AND c.publication_status = 'published'
          AND (p.id IS NULL OR (p.status = 'active' AND p.publication_status = 'published'))`,
-      [locale],
-    );
+          [locale],
+        );
     return {
       items: rows.map((row) => this.presentCategory(row, locale)),
       total: Number(counts[0]?.total ?? 0),
@@ -422,13 +427,24 @@ export class PublicScientificContentService {
 
   private async loadCategories(locale: string, limit: number, offset: number, slug?: string) {
     return this.dataSource.query<PublicCategoryRow[]>(
-      `SELECT c.slug, p.slug AS parent_slug, c.records_allowed,
-              ct.name, ct.summary, ct.description,
-              counts.record_count::text,
+      `WITH selected_categories AS (
+         SELECT c.id, c.slug, c.parent_id, c.position, p.slug AS parent_slug,
+                c.records_allowed, c.image_media_asset_id,
+                ct.name, ct.summary, ct.description, COUNT(*) OVER () AS total_count
+         FROM categories c
+         LEFT JOIN categories p ON p.id = c.parent_id
+         JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = $1
+         WHERE c.status = 'active' AND c.publication_status = 'published'
+           AND (p.id IS NULL OR (p.status = 'active' AND p.publication_status = 'published'))
+           AND ($4::text IS NULL OR c.slug = $4)
+         ORDER BY c.parent_id NULLS FIRST, c.position, c.slug
+         LIMIT $2 OFFSET $3
+       )
+       SELECT c.slug, c.parent_slug, c.records_allowed,
+              c.name, c.summary, c.description,
+              counts.record_count::text, c.total_count::text,
               (m.id IS NOT NULL) AS image_ready
-       FROM categories c
-       LEFT JOIN categories p ON p.id = c.parent_id
-       JOIN category_translations ct ON ct.category_id = c.id AND ct.locale = $1
+       FROM selected_categories c
        LEFT JOIN media_assets m ON m.id = c.image_media_asset_id
          AND m.media_kind = 'image' AND m.processing_status = 'approved'
          AND btrim(m.rights_statement) <> ''
@@ -447,11 +463,7 @@ export class PublicScientificContentService {
            ON rt.record_id = r.id AND rt.locale = $1 AND rt.status = 'published'
          WHERE r.status = 'published'
        ) counts ON true
-       WHERE c.status = 'active' AND c.publication_status = 'published'
-         AND (p.id IS NULL OR (p.status = 'active' AND p.publication_status = 'published'))
-         AND ($4::text IS NULL OR c.slug = $4)
-       ORDER BY c.parent_id NULLS FIRST, c.position, c.slug
-       LIMIT $2 OFFSET $3`,
+       ORDER BY c.parent_id NULLS FIRST, c.position, c.slug`,
       [locale, limit, offset, slug ?? null],
     );
   }

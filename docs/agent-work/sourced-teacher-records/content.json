@@ -1,0 +1,117 @@
+[
+  {
+    "slug": "rawandiz-canyon",
+    "category": "karst-erosional-landforms",
+    "type": "landform_profile",
+    "imageCategory": "surface-geology",
+    "title": "Rawandiz Canyon",
+    "summary": "A deeply incised limestone gorge in the Rawanduz area of the Kurdistan Region of Iraq.",
+    "description": "Rawandiz Canyon forms part of the mountainous landscape around Rawanduz in the Kurdistan Region of Iraq. Published research describes the Ruwandiz Gorge as cutting across a limestone anticline. The accompanying photograph shows steep exposed walls, visible rock layers and a river corridor.\n\nRegional research also documents terraces, erosional features and glacio-alluvial deposits within the wider Rawanduz River drainage. Those regional interpretations do not establish the age or origin of every feature visible in this photograph.",
+    "attributes": {
+      "feature_kind": "River gorge / canyon",
+      "morphology": "A deeply incised valley with steep rock walls and exposed bedding. Regional research describes the Ruwandiz Gorge crossing a limestone anticline; the photograph documents the visible canyon landscape rather than measured dimensions.",
+      "host_rock": "Limestone, as described for the gorge in the cited regional study; no specific formation is assigned."
+    },
+    "caption": "Rawandiz Canyon (Kharand), Kurdistan Region of Iraq.",
+    "alt": "Steep layered rock walls and a river corridor in Rawandiz Canyon.",
+    "sources": [
+      {
+        "title": "Pleistocene glaciation in Kurdistan",
+        "url": "https://egqsj.copernicus.org/articles/12/131/1962/egqsj-12-131-1962.pdf",
+        "year": 1962,
+        "publication": "Eiszeitalter und Gegenwart",
+        "type": "journal",
+        "pages": "Page 149: Ruwandiz Gorge"
+      },
+      {
+        "title": "Glacial Activity Signs During the Pleistocene Epoch in Rawanduz River Valley, Kurdistan Region, Northeast Iraq",
+        "url": "https://ibgm-iq.org/ibgm/index.php/ibgm/article/view/418",
+        "year": 2020,
+        "publication": "Iraqi Bulletin of Geology and Mining, 16(2), 75–93",
+        "type": "journal"
+      },
+      {
+        "title": "Rawandiz Canyon (Kharand) 01 — original photograph",
+        "url": "https://commons.wikimedia.org/wiki/File:Rawandiz_Canyon_(Kharand)_01.jpg",
+        "year": 2024,
+        "type": "website",
+        "authors": [
+          {
+            "name": "Khoshhat"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "bekhal-spring",
+    "category": "springs",
+    "type": "water_point_profile",
+    "imageCategory": "hydrogeology",
+    "title": "Bekhal Spring",
+    "summary": "The spring and cascading water at Bekhal in the Kurdistan Region of Iraq.",
+    "description": "Bekhal Spring is documented in the Kurdistan Region of Iraq by the cited original photograph. The image, dated 26 April 2025, shows water emerging at the base of a rocky slope and descending over several cascades beside visitor facilities.\n\nThis is a water-point site profile. The photograph supports the site's appearance and identification, but it provides no measured discharge, water chemistry, seasonal record or identified host aquifer. It therefore does not establish water quality or suitability for drinking.",
+    "attributes": {
+      "site_name": "Bekhal Spring (Kani Bekhal)",
+      "water_point_kind": "Spring with cascades",
+      "host_aquifer": "Not identified in the cited source; an aquifer assignment requires hydrogeological evidence."
+    },
+    "caption": "Bekhal Spring, photographed on 26 April 2025 by Khoshhat.",
+    "alt": "Water cascades below a rocky hillside at Bekhal Spring beside visitor facilities.",
+    "sources": [
+      {
+        "title": "Bekhal Spring 01 — original photograph and site identification",
+        "url": "https://commons.wikimedia.org/wiki/File:Bekhal_Spring_01.jpg",
+        "year": 2025,
+        "type": "website",
+        "authors": [
+          {
+            "name": "Khoshhat"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "shanidar-cave",
+    "category": "karst-erosional-landforms",
+    "type": "landform_profile",
+    "imageKey": "shanidar",
+    "title": "Shanidar Cave",
+    "summary": "A large karstic cave in the Baradost Mountains of Iraqi Kurdistan, documented by geological and archaeological research.",
+    "description": "Shanidar Cave lies in the Baradost Mountains in Iraqi Kurdistan. Published research describes it as a large, south-facing karstic cave. A 2022 study reports an entrance approximately 25 metres wide and 8 metres high, an inward extent of about 40 metres and a maximum internal width of 53 metres. These are published site dimensions, not measurements made for this record.\n\nThe cave's sediments also preserve important evidence of past environments and human occupation. This record describes the cave as a landform; it does not assign an age to the host rock or to the formation of the cave.",
+    "attributes": {
+      "feature_kind": "Karstic cave",
+      "morphology": "Large south-facing entrance, approximately 25 m wide and 8 m high. Reported inward extent is about 40 m and maximum internal width 53 m (2022 study, section 1.1). These are source-reported dimensions.",
+      "host_rock": "Limestone cliff, shown and identified in the cited Cambridge research figure; formation and geological age are not assigned."
+    },
+    "caption": "View from inside Shanidar Cave towards its entrance and the surrounding landscape.",
+    "alt": "A view through the broad cave entrance from inside Shanidar Cave towards trees and mountains.",
+    "sources": [
+      {
+        "title": "The Microvertebrates of Shanidar Cave: Preliminary Taphonomic Findings",
+        "url": "https://api.repository.cam.ac.uk/server/api/core/bitstreams/f5092e7b-0bce-4443-8cd7-0b9051862e7e/content",
+        "year": 2022,
+        "publication": "Quaternary 5, 4",
+        "type": "journal",
+        "pages": "Section 1.1, The Site"
+      },
+      {
+        "title": "Shanidar Cave excavations — research figures",
+        "url": "https://api.repository.cam.ac.uk/server/api/core/bitstreams/28a37602-755d-4cab-a94c-948c76411372/content",
+        "type": "research",
+        "pages": "Figure 1B: cave entrance in limestone cliff"
+      },
+      {
+        "title": "Shanidar Cave overview — original photograph",
+        "url": "https://commons.wikimedia.org/wiki/File:Shanidar_Cave_-_overview.jpg",
+        "type": "website",
+        "authors": [
+          {
+            "name": "Hardscarf"
+          }
+        ]
+      }
+    ]
+  }
+]

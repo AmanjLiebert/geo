@@ -1,0 +1,192 @@
+[
+  {
+    "slug": "gali-ali-beg-waterfall",
+    "category": "karst-erosional-landforms",
+    "type": "landform_profile",
+    "imageKey": "gali-ali-beg",
+    "title": "Gali Ali Beg Waterfall",
+    "summary": "A waterfall descending through a rocky gorge in Erbil Governorate, Kurdistan Region of Iraq.",
+    "description": "Gali Ali Beg Waterfall is documented in Erbil Governorate by the cited original photograph. The image shows a narrow waterfall falling between steep rock walls into a pool. The exposed walls and the watercourse form the visible setting of this landform.\n\nThis record describes the photographed waterfall and gorge. Waterfall height, discharge and the age of the exposed rock are not measured in the source photograph.",
+    "attributes": {
+      "feature_kind": "Waterfall in a rocky gorge",
+      "morphology": "A narrow fall between steep exposed rock walls, descending into a pool. People and small boats appear near the base; no scale measurement is inferred from them."
+    },
+    "caption": "Gali Ali Beg waterfall, Erbil Governorate, Kurdistan Region of Iraq.",
+    "alt": "A waterfall between steep rock walls falling into a pool with people and small boats nearby.",
+    "sources": [
+      {
+        "type": "website",
+        "title": "Gali Ali Beg waterfall in Erbil, the Kurdistan Region of Iraq 01 — original photograph",
+        "url": "https://commons.wikimedia.org/wiki/File:Gali_Ali_Beg_waterfall_in_Erbil,_the_Kurdistan_Region_of_Iraq_01.jpg",
+        "authors": [
+          {
+            "name": "Levi Clancy"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "halgurd-mountain-landscape",
+    "category": "karst-erosional-landforms",
+    "type": "landform_profile",
+    "newImage": "halgurd-landscape",
+    "title": "Halgurd Mountain",
+    "summary": "A mountain landscape in the Kurdistan Region of Iraq, documented by an original photograph of Halgurd.",
+    "description": "Halgurd is documented by the cited original photograph, whose source identifies the subject as Helgurd peak. This record presents the mountain as a landform in the Kurdistan Region of Iraq.\n\nNo summit-height ranking, permanent-glacier claim or named geological formation is assigned from the photograph.",
+    "attributes": {
+      "feature_kind": "Mountain peak",
+      "morphology": "A snow-covered pointed peak rises above darker lower slopes, with neighbouring mountain ridges visible under broken cloud. These visible features do not establish snow persistence or a measured elevation."
+    },
+    "caption": "Halgurd mountain landscape, original photograph by Burhan br.",
+    "alt": "A snow-covered pointed peak at Halgurd above darker lower slopes and neighbouring ridges.",
+    "sources": [
+      {
+        "type": "website",
+        "title": "Halgurd 1.JPG — original photograph of Helgurd peak",
+        "url": "https://commons.wikimedia.org/wiki/File:Halgurd_1.JPG",
+        "authors": [
+          {
+            "name": "Burhan br"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "korek-mountain-landscape",
+    "category": "karst-erosional-landforms",
+    "type": "landform_profile",
+    "imageKey": "korek",
+    "title": "Korek Mountain landscape",
+    "summary": "A winter mountain view at Korek in the Kurdistan Region of Iraq.",
+    "description": "The cited original photograph identifies Korek Mountain in Kurdistan, Iraq. It shows snow-covered foreground slopes and a wide view of the surrounding ridges and valleys. This record documents the visible mountain landscape and the source's place identification.\n\nSnow in one photograph does not establish permanent ice, annual snowfall or a climatic trend. Rock units and structural orientations require separate geological evidence.",
+    "attributes": {
+      "feature_kind": "Mountain landscape",
+      "morphology": "Snow-covered foreground slopes overlook a broad valley and successive mountain ridges. The photograph provides a landscape view rather than a measured terrain survey."
+    },
+    "caption": "Winter view at Korek Mountain, photograph by Alli Khalil.",
+    "alt": "Snow-covered slopes and a broad valley with distant mountain ridges at Korek.",
+    "sources": [
+      {
+        "type": "website",
+        "title": "Korek Mountain in Kurdistan Iraq — original photograph",
+        "url": "https://commons.wikimedia.org/wiki/File:Korek_Mountain_in_Kurdistan_Iraq.jpg",
+        "authors": [
+          {
+            "name": "Alli Khalil"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "bradost-mountain-landscape",
+    "category": "karst-erosional-landforms",
+    "type": "landform_profile",
+    "imageKey": "bradost",
+    "title": "Bradost Mountain landscape",
+    "summary": "Steep exposed rock faces on Bradost Mountain in Erbil, Kurdistan Region of Iraq.",
+    "description": "The cited photograph identifies Bradost Mountain in Erbil. It shows a prominent rock face above wooded lower slopes, with visible layering and stepped cliff edges. The image documents the landscape appearance of the mountain.\n\nThe photograph alone does not establish a formal rock unit, geological age or the orientation of a fold or fault. This record therefore describes visible morphology without assigning those interpretations.",
+    "attributes": {
+      "feature_kind": "Mountain cliff and ridge",
+      "morphology": "A steep, layered rock face with stepped cliff edges rises above vegetated lower slopes. Layering is visible, but bed thickness and structural orientation are not measured."
+    },
+    "caption": "Bradost Mountain, Erbil; photograph by Sarchia Khursheed.",
+    "alt": "Layered rocky cliffs of Bradost Mountain above green wooded slopes.",
+    "sources": [
+      {
+        "type": "website",
+        "title": "Bradost Mountain, Erbil — original photograph",
+        "url": "https://commons.wikimedia.org/wiki/File:Bradost_Mountain,_Erbil.jpg",
+        "authors": [
+          {
+            "name": "Sarchia Khursheed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "dukan-dam-rock-exposure",
+    "category": "sedimentary-rocks",
+    "type": "outcrop_observation",
+    "imageKey": "dukan",
+    "title": "Exposed slopes beside Dukan Dam",
+    "summary": "A photographic record of exposed rocky slopes beside Dukan Dam in the Kurdistan Region of Iraq.",
+    "description": "The cited U.S. Army Corps of Engineers image shows the front of Dukan Dam and adjoining exposed slopes. Rock faces are visible beside the engineered structure, providing a documented view of the dam-site setting.\n\nThis is a photographic outcrop observation, not a field rock-identification or engineering-safety assessment. The view does not establish lithology, geological age, discontinuity orientation or slope stability.",
+    "attributes": {
+      "observation_notes": "Exposed rocky slopes flank the dam structure in the source photograph. The distant view supports documentation of the exposure and its setting, but not a reliable rock classification, structural measurement or stability assessment."
+    },
+    "caption": "Front of Dukan Dam and adjoining exposed slopes; U.S. Army Corps of Engineers image.",
+    "alt": "Dukan Dam spans a rocky opening with exposed slopes on both sides and water below.",
+    "sources": [
+      {
+        "type": "website",
+        "title": "Dukan Dam — U.S. Army Corps of Engineers photograph",
+        "url": "https://commons.wikimedia.org/wiki/File:Dukan_Dam.jpg",
+        "authors": [
+          {
+            "name": "U.S. Army Corps of Engineers"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "erbil-starfish-fossil",
+    "category": "invertebrate-fossils",
+    "type": "fossil_specimen",
+    "newImage": "erbil-starfish-fossil",
+    "title": "Starfish fossil displayed in Erbil",
+    "summary": "A starfish fossil photographed at the Erbil Stones and Gems Museum in the Kurdistan Region of Iraq.",
+    "description": "The cited original photograph documents a specimen identified in its source as a starfish fossil at the Erbil Stones and Gems Museum, Erbil Citadel. It is recorded here as a museum specimen, with identification following the photograph's description.\n\nThe source does not establish an original collection locality, geological period or catalogue number. Display in Erbil is not evidence that the specimen was collected in Kurdistan, and no local fossil occurrence is asserted.",
+    "attributes": {
+      "identification": "Starfish fossil, following the original photograph's identification; no species assigned.",
+      "repository": "Erbil Stones and Gems Museum, Erbil Citadel, Kurdistan Region of Iraq."
+    },
+    "caption": "Starfish fossil on display at the Erbil Stones and Gems Museum; original locality and age unreported.",
+    "alt": "The starfish fossil specimen photographed on display at the Erbil Stones and Gems Museum.",
+    "sources": [
+      {
+        "type": "website",
+        "title": "Starfish fossil — Erbil Stones and Gems Museum, original photograph",
+        "url": "https://commons.wikimedia.org/wiki/File:Starfish_fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+        "year": 2023,
+        "authors": [
+          {
+            "name": "Osama Shukir Muhammed Amin FRCP(Glasg)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "erbil-trilobite-fossil",
+    "category": "invertebrate-fossils",
+    "type": "fossil_specimen",
+    "newImage": "erbil-trilobite-fossil",
+    "title": "Trilobite fossil displayed in Erbil",
+    "summary": "A trilobite fossil photographed at the Erbil Stones and Gems Museum in the Kurdistan Region of Iraq.",
+    "description": "The cited original photograph records a specimen identified as a trilobite fossil on display at the Erbil Stones and Gems Museum, Erbil Citadel. This record documents the museum specimen and retains the source's broad identification without adding a genus or species.\n\nIts original collecting locality, geological period and catalogue number are not documented by the source. The museum location identifies where it was displayed, not where the fossil was found.",
+    "attributes": {
+      "identification": "Trilobite fossil, following the original photograph's identification; genus and species not assigned.",
+      "repository": "Erbil Stones and Gems Museum, Erbil Citadel, Kurdistan Region of Iraq."
+    },
+    "caption": "Trilobite fossil displayed at the Erbil Stones and Gems Museum; original locality and age unreported.",
+    "alt": "The trilobite fossil specimen photographed on display at the Erbil Stones and Gems Museum.",
+    "sources": [
+      {
+        "type": "website",
+        "title": "Trilobite fossil — Erbil Stones and Gems Museum, original photograph",
+        "url": "https://commons.wikimedia.org/wiki/File:Trilobite_fossil._From%3F_Period%3F_Erbil_Stones_and_Gems_Museum,_Erbil_Citadel,_Hawler,_Iraq.jpg",
+        "year": 2023,
+        "authors": [
+          {
+            "name": "Osama Shukir Muhammed Amin FRCP(Glasg)"
+          }
+        ]
+      }
+    ]
+  }
+]

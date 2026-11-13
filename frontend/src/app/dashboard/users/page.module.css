@@ -1,0 +1,643 @@
+/*
+ * page.module.css
+ * Styles for the Geo-Kurdistan dashboard users and invitation management workspace.
+ * Follows brutalist neo-scientific design tokens, hard shadows, and 44px touch targets.
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: min(1200px, 100%);
+  margin-inline: auto;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.titleArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.titleMark {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--limestone);
+  background: var(--shale);
+  border: 2px solid var(--carbon);
+  border-radius: var(--neo-radius);
+  box-shadow: 2px 2px 0 var(--carbon);
+}
+
+.titleMark svg {
+  width: 22px;
+  height: 22px;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: clamp(24px, 3.5vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--carbon);
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* Primary actions */
+.primaryAction {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: var(--carbon);
+  color: #fff;
+  box-shadow: 2px 2px 0 var(--carbon);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.primaryAction:hover:not(:disabled) {
+  background: var(--iron);
+  border-color: var(--iron);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--carbon);
+}
+
+.primaryAction:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tabs */
+.tabNav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--carbon);
+  padding-bottom: 2px;
+}
+
+.tabButton {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--carbon);
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.tabButton:hover {
+  background: var(--fossil);
+}
+
+.tabButtonActive {
+  background: var(--carbon);
+  color: #fff;
+  border-color: var(--carbon);
+}
+
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 999px;
+  background: var(--ochre);
+  color: var(--carbon);
+}
+
+.tabButtonActive .tabBadge {
+  background: #fff;
+  color: var(--carbon);
+}
+
+/* Invite Form Card */
+.formCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: 6px;
+  box-shadow: 4px 4px 0 var(--carbon);
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--carbon);
+  padding-bottom: 12px;
+}
+
+.formTitle {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--carbon);
+}
+
+.closeButton {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--carbon);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--carbon);
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: var(--iron);
+  color: #fff;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--carbon);
+}
+
+.selectInput,
+.textInput {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--carbon);
+}
+
+.selectInput:focus-visible,
+.textInput:focus-visible {
+  outline: 3px solid var(--iron);
+  outline-offset: 2px;
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.secondaryAction {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: var(--limestone);
+  color: var(--carbon);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.secondaryAction:hover {
+  background: var(--fossil);
+}
+
+/* Success Box / Token Display */
+.tokenCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #eef7ed;
+  border: 2px solid var(--shale);
+  border-radius: 6px;
+  box-shadow: 3px 3px 0 var(--carbon);
+}
+
+.tokenHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--shale);
+  font-weight: 800;
+  font-family: var(--sans);
+  font-size: 15px;
+}
+
+.tokenText {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--carbon);
+}
+
+.tokenRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.tokenInput {
+  flex: 1;
+  min-width: 240px;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--carbon);
+}
+
+.copyButton {
+  min-height: 44px;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: var(--shale);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.copyButton:hover {
+  background: var(--carbon);
+}
+
+/* List view */
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  padding: 16px 20px;
+  background: var(--limestone);
+  border: 2px solid var(--carbon);
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 var(--carbon);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 280px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cardRecipient {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--carbon);
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  border: 1px solid var(--carbon);
+}
+
+.badgeTeacher {
+  background: var(--ochre);
+  color: var(--carbon);
+}
+
+.badgeAdmin {
+  background: var(--iron);
+  color: #fff;
+}
+
+.badgeVisitor {
+  background: var(--fossil);
+  color: var(--carbon);
+}
+
+.badgePending {
+  background: #fdf5d6;
+  color: #795500;
+  border-color: #795500;
+}
+
+.badgeAccepted {
+  background: #d8f3dc;
+  color: #1b4332;
+  border-color: #1b4332;
+}
+
+.badgeRevoked {
+  background: #f1f1f1;
+  color: #666;
+  border-color: #999;
+}
+
+.badgeExpired {
+  background: #fde2e2;
+  color: #9b2226;
+  border-color: #9b2226;
+}
+
+.badgeActive {
+  background: #d8f3dc;
+  color: #1b4332;
+  border-color: #1b4332;
+}
+
+.badgeDisabled {
+  background: #fde2e2;
+  color: #9b2226;
+  border-color: #9b2226;
+}
+
+/* Action buttons */
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.revokeButton {
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--iron);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.revokeButton:hover {
+  background: var(--iron);
+  color: #fff;
+}
+
+.confirmRevokeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.confirmYesButton {
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: var(--iron);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.confirmNoButton {
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 2px solid var(--carbon);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--carbon);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* States */
+.loadingState,
+.emptyState,
+.errorState {
+  margin: 0;
+  padding: 28px 20px;
+  border: 2px solid var(--carbon);
+  border-radius: 6px;
+  background: var(--limestone);
+  box-shadow: 3px 3px 0 var(--carbon);
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--carbon);
+}
+
+.loadingDot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--carbon);
+  border-radius: 50%;
+  background: var(--shale);
+}
+
+.errorState {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-color: var(--iron);
+  box-shadow: 3px 3px 0 var(--iron);
+}
+
+.errorIcon {
+  color: var(--iron);
+  flex-shrink: 0;
+}
+
+.errorContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.errorTitle {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--iron);
+}
+
+.errorText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.reauthLink {
+  margin-top: 6px;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--carbon);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  align-items: center;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--carbon);
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  max-width: 480px;
+}
+
+@media (max-width: 760px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primaryAction {
+    width: 100%;
+  }
+
+  .card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cardActions {
+    justify-content: flex-end;
+  }
+}
