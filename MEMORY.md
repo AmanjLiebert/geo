@@ -8,10 +8,10 @@ This file is the small, durable index for delegated work. It is not a combined p
 | --- | --- |
 | Task | One-run restoration of six profiles and ten sourced records |
 | Task folder | `docs/agent-work/hosted-content-seed/` |
-| Status | `IMPLEMENTED_AWAITING_REVIEW` |
+| Status | `COMPLETE` |
 | Implementer | Codex (user-authorized override) |
-| Reviewer | Independent review not performed |
-| Plan gate | Explicit opt-in seed with packaged sourced content/images, normal scan/publication services, no-overwrite dry-run/repeat safety and isolated rehearsal. No hosted execution; independent review pending. |
+| Reviewer | Codex hosting-support session (reviewed supplied runner; did not implement it) |
+| Plan gate | Seed source review and focused checks passed; operator dry-run/readiness/backup creation reported. Explicit operator import remains to be executed and its result checked; no platform-wide launch approval or live import success claimed. |
 
 Previous PM2 production-port task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/pm2-production-ports/`; this seed does not approve its release.
 
