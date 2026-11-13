@@ -1,0 +1,5 @@
+# Implementation report
+
+Commit: 68bfae0c0cb5119558c7e6863388d1672ee7556c. PM2 production API now binds loopback port 4200; frontend CLI args/env use loopback 3200; frontend internal API URL uses 4200. Updated Caddy guide, root-template production notes and regression assertions. Local dev/Docker internal ports are unchanged. Existing private VPS export was updated only for PORT/internal API URL; credentials were neither printed nor committed, and local .env was unchanged.
+
+Checks: all five root-env/PM2 regression tests passed, node syntax check and git diff check passed. No source/runtime application logic changed, so prior app test/build results were not repeated or claimed as new evidence. Direct source reads used because graph coverage was stale/unknown. No VPS startup, port availability or HTTPS verification performed. Existing Cloudflare token validation error is separate and is not repaired by changing ports. No databases or other app processes were modified. Status: IMPLEMENTED_AWAITING_REVIEW; standing user authorization covers push, not independent approval.
