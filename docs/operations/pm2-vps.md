@@ -6,6 +6,8 @@ For an existing installation, manually transfer required values and move old bac
 
 The template defaults to local development. Set real `DATABASE_URL`, Firebase and media settings on each machine. `POSTGRES_PASSWORD` alone does not create a PostgreSQL user or configure its password, and `COMPOSE_DATABASE_URL` is not used by directly running applications. The database and its role must already exist. Use URL-encoded credentials and the actual database host in `DATABASE_URL`.
 
+The current local configuration uses database `geo_kurdistan` and user `postgres`. `POSTGRES_DB`, `POSTGRES_USER` and `POSTGRES_PASSWORD` describe that connection, while the application actually connects through `DATABASE_URL`. Keep these values consistent; Docker uses `COMPOSE_DATABASE_URL` with host `database`. The GitHub template uses password placeholders, never your actual password. The same variable names are used locally and on the VPS; each machine keeps its own private root `.env`.
+
 On your VPS, change these values in the same root `.env` **before building**:
 
 | Setting | Production value |
