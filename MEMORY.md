@@ -6,12 +6,14 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Move PM2 production to API 4200 and frontend 3200 |
-| Task folder | `docs/agent-work/pm2-production-ports/` |
+| Task | One-run restoration of six profiles and ten sourced records |
+| Task folder | `docs/agent-work/hosted-content-seed/` |
 | Status | `IMPLEMENTED_AWAITING_REVIEW` |
 | Implementer | Codex (user-authorized override) |
 | Reviewer | Independent review not performed |
-| Plan gate | Consistent PM2 production ports 4200/3200 and internal API URL, with loopback binding and local development preserved. Independent review pending. |
+| Plan gate | Explicit opt-in seed with packaged sourced content/images, normal scan/publication services, no-overwrite dry-run/repeat safety and isolated rehearsal. No hosted execution; independent review pending. |
+
+Previous PM2 production-port task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/pm2-production-ports/`; this seed does not approve its release.
 
 Previous efficiency task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/project-efficiency/`; no approval is implied by this deployment task.
 Previous single-root-env task remains `IMPLEMENTED_AWAITING_REVIEW`; this follow-up records further corrections and the user's explicit main-merge request, not independent approval.
