@@ -20,6 +20,8 @@ The existing Next.js visitor experience is the visual baseline. The repository n
 
 ## Frontend commands
 
+For PM2/Caddy VPS hosting, use a single repository-root `.env` based on root `.env.example`; see [`docs/operations/pm2-vps.md`](docs/operations/pm2-vps.md). Module-local settings are unnecessary for this setup.
+
 Run from `frontend/`:
 
 ```text
@@ -34,7 +36,7 @@ Public Explore reads published PostgreSQL content through the public scientific 
 
 ## Backend commands
 
-Run from `backend/` after copying `.env.example` to `.env` and providing PostgreSQL:
+Run from `backend/` after configuring the repository-root `.env` and providing PostgreSQL:
 
 ```text
 npm install

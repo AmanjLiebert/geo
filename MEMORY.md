@@ -6,12 +6,14 @@ This file is the small, durable index for delegated work. It is not a combined p
 
 | Field | Value |
 | --- | --- |
-| Task | Measured project efficiency pass |
-| Task folder | `docs/agent-work/project-efficiency/` |
+| Task | Single root environment file for PM2/Caddy |
+| Task folder | `docs/agent-work/single-root-env/` |
 | Status | `IMPLEMENTED_AWAITING_REVIEW` |
 | Implementer | Codex (user-authorized override) |
 | Reviewer | Independent review not performed |
-| Plan gate | Reduce repeat Explore requests, static image weight, hidden thumbnail work and category query round trips; overlap independent dashboard reads. Preserve data, eligibility, permissions and route behavior; independent review pending. |
+| Plan gate | One root .env for API, worker, backend maintenance and frontend build/start. Preserve injected variables and browser secret boundaries; independent review pending. |
+
+Previous efficiency task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/project-efficiency/`; no approval is implied by this deployment task.
 
 Previous image-delivery task remains `IMPLEMENTED_AWAITING_REVIEW` in `docs/agent-work/explore-image-delivery/`; eligibility-preserving revalidation and smaller scientific thumbnails are preserved.
 

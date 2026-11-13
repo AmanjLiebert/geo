@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "build:sites": "next build",
-    "start": "next start",
+    "dev": "node scripts/next.cjs dev --port 3000",
+    "build": "node scripts/next.cjs build",
+    "build:sites": "node scripts/next.cjs build",
+    "start": "node scripts/next.cjs start --port 3000",
     "start:sites": "wrangler dev",
     "lint": "eslint",
     "test": "vitest run"

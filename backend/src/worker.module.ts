@@ -12,6 +12,7 @@ import { MediaModule } from './media/media.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      ignoreEnvFile: true,
       isGlobal: true,
       cache: true,
       validate: validateEnvironment,

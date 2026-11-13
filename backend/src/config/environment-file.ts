@@ -1,0 +1,9 @@
+import { config } from 'dotenv';
+
+/** Existing injected values win; Docker does not need a mounted dotenv file. */
+export function loadEnvironmentFile(path: string, target: NodeJS.ProcessEnv = process.env): void {
+  const result = config({ path, processEnv: target, quiet: true });
+  if (result.error && (result.error as NodeJS.ErrnoException).code !== 'ENOENT') {
+    throw new Error('Unable to read the root environment file. Check file permissions.');
+  }
+}
